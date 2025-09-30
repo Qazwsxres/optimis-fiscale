@@ -1,0 +1,30 @@
+# Barèmes France 2025 (simplifiés, à adapter)
+country: FR
+year: 2025
+cit:
+  standard_rate: 0.25              # Taux normal IS
+  sme_reduced_rate: 0.15           # Taux réduit PME
+  sme_reduced_threshold: 42500     # Plafond bénéfice à 15€%
+  sme_turnover_ceiling: 10000000   # CA <= 10 M€
+  sme_shareholding_individuals_pct_min: 0.75  # >= 75% personnes physiques (indicatif)
+  capital_fully_paid: true         # capital libéré (indicatif)
+  social_contribution_rate: 0.033  # Contribution sociale sur l'IS
+  social_contribution_turnover_threshold: 7630000  # CA > 7,63 M€
+  social_contribution_allowance: 763000            # Abattement sur l'IS pour la contribution
+vat:
+  collected_accounts_prefix: ["44571", "4457"]
+  deductible_accounts_prefix: ["44566", "44562", "4456"]
+pcg_mapping:
+  sales_prefix: ["70"]         # Produits d'exploitation
+  purchases_prefix: ["60"]     # Achats
+  external_charges_prefix: ["61", "62"]  # Services extérieurs
+  taxes_prefix: ["63"]
+  payroll_prefix: ["64"]
+  depreciation_prefix: ["68"]
+  financial_income_prefix: ["76"]
+  financial_expenses_prefix: ["66"]
+  exceptional_income_prefix: ["77"]
+  exceptional_expenses_prefix: ["67"]
+  cash_prefix: ["512"]
+  receivables_prefix: ["411"]
+  payables_prefix: ["401"]

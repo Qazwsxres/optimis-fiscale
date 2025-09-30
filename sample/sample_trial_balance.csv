@@ -1,0 +1,14 @@
+account,label,debit,credit
+701,VENTES,0,300000
+6061,ACHATS MATIERES,120000,0
+611,SERVICES EXT,30000,0
+623,Publicité,15000,0
+635,Impôts et taxes,8000,0
+641,Rémunérations du personnel,70000,0
+645,Charges sociales,35000,0
+681,Dotations aux amortissements,12000,0
+44571,TVA collectée,0,60000
+44566,TVA déductible,40000,0
+512,Banque,100000,0
+411,Clients,60000,0
+401,Fournisseurs,0,45000
