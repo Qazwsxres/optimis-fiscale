@@ -1,57 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Optimis Fiscale</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; background: #f9f9f9; }
-    h1 { color: #2c3e50; }
-    label { display:block; margin-top:1rem; }
-    input, button { margin-top:0.5rem; padding:0.5rem; font-size:1rem; }
-    button { cursor: pointer; background:#3498db; color:white; border:none; border-radius:4px; }
-    pre { background:#eee; padding:1rem; margin-top:1rem; white-space:pre-wrap; }
+    :root {
+      --bg: #0b1020;
+      --card: #11172c;
+      --muted: #a3adbf;
+      --line: #243155;
+      --accent: #3a71ff;
+      --text: #e6e9ef;
+      --ok: #2ecc71;
+      --err: #e74c3c;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    h1 { font-size: 22px; margin: 0; }
+    .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 12px 28px rgba(0,0,0,.25); }
+    .controls { display:grid; gap:12px; }
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .field { background:#0e1428; border:1px solid var(--line); border-radius:12px; padding: 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .field label { font-size:14px; color:var(--muted); }
+    input[type="number"] { width: 180px; background:#0e1428; border:1px solid var(--line); color:var(--text); border-radius: 10px; padding:8px 10px; }
+    input[type="file"] { display:none; }
+    .btn, .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding: 12px 16px; border-radius: 12px; font-weight:600; cursor:pointer; border:1px solid transparent; }
+    .btn { background:var(--accent); color:white; }
+    .btn:disabled { opacity: .6; cursor:not-allowed; }
+    .btn-secondary { background:#0e1428; color:var(--text); border-color:var(--line); }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .status { font-size: 13px; color:var(--muted); }
+    .status.ok { color: var(--ok); } .status.err { color: var(--err); }
+    .tiles { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-top: 14px; }
+    .tile { background:#0e1428; border:1px solid var(--line); border-radius:14px; padding:14px; }
+    .tile h3 { margin:0 0 8px; font-size:16px; color:#c6d0f5; }
+    .kv { display:grid; gap:6px; font-size:14px; }
+    .kv div { display:flex; justify-content:space-between; gap:8px; }
+    .badge { display:inline-block; padding:4px 8px; border:1px solid var(--line); border-radius:999px; color:#c6d0f5; font-size:12px; }
+    details { margin-top:10px; }
+    pre { background:#0e1428; border:1px solid var(--line); border-radius:12px; padding:12px; white-space:pre-wrap; word-break:break-word; font-size: 13px; }
+    footer { margin-top:16px; color:var(--muted); font-size:13px; }
+    /* settings modal */
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; place-items:center; }
+    .modal { width:min(560px, 92vw); background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; }
+    .modal h2 { margin:0 0 8px; font-size:18px; }
+    .modal .row { justify-content:space-between; }
+    .gear { background:#0e1428; border:1px solid var(--line); width:40px; height:40px; display:grid; place-items:center; border-radius:12px; cursor:pointer; }
+    .hint { color: var(--muted); font-size: 12px; }
+    @media (max-width:720px){ .grid2{ grid-template-columns: 1fr; } header{flex-direction:column; align-items:flex-start;} }
   </style>
 </head>
 <body>
-  <h1>Optimis Fiscale</h1>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Optimis Fiscale</h1>
+        <div class="sub">Analyse de balance & estimation fiscale (FR)</div>
+      </div>
+      <div class="row">
+        <div class="gear" id="openSettings" title="Paramètres (API)">
+          ⚙️
+        </div>
+        <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank" rel="noreferrer">API Docs</a>
+      </div>
+    </header>
 
-  <p><strong>API base URL</strong></p>
-  <input id="api" style="width:400px"
-         value="https://optimis-fiscale.onrender.com">
+    <div class="card">
+      <div class="controls">
+        <div class="grid2">
+          <div class="field">
+            <div>
+              <strong>Fichier CSV</strong><br>
+              <span class="hint">Colonnes: <code>account,label,debit,credit</code></span>
+            </div>
+            <div class="row">
+              <label class="btn-secondary" for="csvInput">Choisir un fichier</label>
+              <input id="csvInput" type="file" accept=".csv" />
+              <span id="fileName" class="badge" style="display:none"></span>
+            </div>
+          </div>
 
-  <label for="turnover">Turnover (optional):</label>
-  <input id="turnover" type="number" step="0.01">
+          <div class="field">
+            <div>
+              <strong>Chiffre d'affaires (optionnel)</strong><br>
+              <span class="hint">Pour affiner les ratios</span>
+            </div>
+            <input id="turnover" type="number" step="0.01" placeholder="Ex: 100000" />
+          </div>
+        </div>
 
-  <label for="file">Trial balance CSV:</label>
-  <input id="file" type="file" accept=".csv">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <button id="analyzeBtn" class="btn">Analyser</button>
+          <div class="status" id="status">Prêt</div>
+        </div>
+      </div>
 
-  <button id="go">Analyser</button>
+      <div id="results" style="display:none; margin-top: 10px;">
+        <div class="tiles">
+          <div class="tile">
+            <h3>KPIs</h3>
+            <div class="kv" id="kpi"></div>
+          </div>
+          <div class="tile">
+            <h3>Fiscalité</h3>
+            <div class="kv" id="tax"></div>
+          </div>
+        </div>
 
-  <pre id="out"></pre>
+        <div class="tile" style="margin-top:12px">
+          <h3>Suggestions</h3>
+          <ul id="suggs" style="margin:0; padding-left: 18px;"></ul>
+        </div>
+
+        <details class="tile" style="margin-top:12px">
+          <summary>Advanced → Show details (JSON brut)</summary>
+          <pre id="raw"></pre>
+        </details>
+      </div>
+    </div>
+
+    <footer>
+      Astuce : si la page ne répond pas, vérifiez l’URL de l’API dans les paramètres (⚙️).  
+    </footer>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <h2>Paramètres</h2>
+      <div class="field" style="margin-top:8px; display:block;">
+        <label for="apiBase"><strong>API Base URL</strong></label>
+        <input id="apiBase" type="text" style="width:100%; margin-top:8px; padding:10px; border-radius:10px; background:#0e1428; border:1px solid var(--line); color:var(--text);" value="https://optimis-fiscale-production.up.railway.app" />
+        <div class="hint" style="margin-top:6px">Ex: https://optimis-fiscale-production.up.railway.app</div>
+      </div>
+      <div class="row" style="margin-top:12px; justify-content:flex-end;">
+        <button class="btn-secondary" id="closeSettings">Annuler</button>
+        <button class="btn" id="saveSettings">Enregistrer</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    document.getElementById('go').onclick = async () => {
-      const base = document.getElementById('api').value.replace(/\/$/, '');
-      const file = document.getElementById('file').files[0];
+    // --- UI helpers ---
+    const statusEl = document.getElementById('status');
+    const showStatus = (msg, type) => {
+      statusEl.textContent = msg;
+      statusEl.className = 'status' + (type ? ' ' + type : '');
+    };
+    const euro = v => typeof v === 'number' ? v.toLocaleString(undefined, { style:'currency', currency:'EUR' }) : '—';
+    const pct = v => (v ?? v === 0) ? (Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%') : '—';
+
+    // Persist API base in localStorage
+    const apiKey = 'optimis_api_base';
+    const apiInput = document.getElementById('apiBase');
+    const loadApiBase = () => localStorage.getItem(apiKey) || apiInput.value;
+    const saveApiBase = (v) => localStorage.setItem(apiKey, v);
+
+    // File name display
+    const csvInput = document.getElementById('csvInput');
+    const fileName = document.getElementById('fileName');
+    csvInput.addEventListener('change', () => {
+      fileName.style.display = csvInput.files[0] ? 'inline-block' : 'none';
+      fileName.textContent = csvInput.files[0]?.name || '';
+    });
+
+    // Modal
+    const modal = document.getElementById('modal');
+    document.getElementById('openSettings').onclick = () => {
+      apiInput.value = loadApiBase();
+      modal.style.display = 'grid';
+    };
+    document.getElementById('closeSettings').onclick = () => modal.style.display = 'none';
+    document.getElementById('saveSettings').onclick = () => {
+      saveApiBase(apiInput.value.trim().replace(/\/$/, ''));
+      modal.style.display = 'none';
+      showStatus('Paramètres enregistrés', 'ok');
+      setTimeout(() => showStatus('Prêt'), 1200);
+    };
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+
+    // Analyze click handler
+    document.getElementById('analyzeBtn').onclick = async () => {
+      const base = (loadApiBase() || '').replace(/\/$/, '');
+      const file = csvInput.files[0];
       const turnover = document.getElementById('turnover').value;
-      if (!file) { alert("Please choose a CSV file"); return; }
+      if (!base) { showStatus('API URL manquante (ouvrir ⚙️)', 'err'); return; }
+      if (!file) { showStatus('Veuillez choisir un CSV', 'err'); return; }
 
       const fd = new FormData();
       fd.append('file', file);
       if (turnover) fd.append('turnover', turnover);
 
-      document.getElementById('out').textContent = "Sending request...";
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      showStatus('Analyse en cours…');
 
       try {
-        const res = await fetch(base + "/analyze/trial-balance", { method:"POST", body: fd });
-        const text = await res.text();
-        let json;
-        try { json = JSON.parse(text); } catch { json = text; }
-        document.getElementById('out').textContent = typeof json === "string"
-          ? json
-          : JSON.stringify(json, null, 2);
+        const res = await fetch(base + '/analyze/trial-balance', { method:'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.detail || 'Erreur API');
+
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('raw').textContent = JSON.stringify(data, null, 2);
+
+        const k = data.kpi || {};
+        document.getElementById('kpi').innerHTML = `
+          <div><span>Chiffre d'affaires</span><strong>${euro(k.revenue)}</strong></div>
+          <div><span>Marge brute</span><strong>${euro(k.gross_margin)}</strong></div>
+          <div><span>EBITDA approx.</span><strong>${euro(k.ebitda_approx)} (${pct(k.ebitda_margin_pct)})</strong></div>
+          <div><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>
+          <div><span>BFR</span><strong>${euro(k.working_capital_need)}</strong></div>
+          <div><span>Trésorerie</span><strong>${euro(k.cash)}</strong></div>
+        `;
+
+        const t = data.tax || {};
+        document.getElementById('tax').innerHTML = `
+          <div><span>IS estimé</span><strong>${euro(t.corporate_income_tax)}</strong></div>
+          <div><span>Contribution sociale (3,3%)</span><strong>${euro(t.social_contribution_on_cit)}</strong></div>
+          <div><span>TVA nette</span><strong>${euro(t.vat_balance)}</strong></div>
+          <div><span>PME taux 15%</span><strong>${t.eligible_sme_reduced_rate === null ? '—' : (t.eligible_sme_reduced_rate ? 'Oui' : 'Non')}</strong></div>
+          <details style="margin-top:6px"><summary>Détails</summary><pre>${JSON.stringify(t.details || {}, null, 2)}</pre></details>
+        `;
+
+        const ul = document.getElementById('suggs');
+        ul.innerHTML = '';
+        (data.suggestions || []).forEach(s => {
+          const li = document.createElement('li');
+          li.style.marginBottom = '8px';
+          li.innerHTML = `<strong>${s.title}</strong><br><span class="hint">${s.rationale}</span>`;
+          ul.appendChild(li);
+        });
+
+        showStatus('Terminé', 'ok');
       } catch (err) {
-        document.getElementById('out').textContent = "Error: " + err.message;
+        showStatus(err.message || 'Erreur', 'err');
+      } finally {
+        btn.disabled = false;
       }
     };
   </script>
