@@ -22,6 +22,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")   # set in Railway
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")        # set in Railway
+ALGO = "HS256"
+COOKIE_NAME = "session"
+
+def validate_company_password(company_id: str, password: str) -> bool:
+    env_key = f"COMPANY_{company_id}_PASSWORD"
+    expected = os.getenv(env_key)
+    return bool(expected and password == expected)
+
+def make_token(company_id: str, ttl_seconds: int = 60*60) -> str:
+    now = int(time.time())
+    return jwt.encode({"sub": company_id, "iat": now, "exp": now + ttl_seconds}, SECRET_KEY, algorithm=ALGO)
+
+def parse_token(token: str) -> str:
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=[ALGO])
+        return data["sub"]
+    except JWTError:
+        raise HTTPException(401, "Invalid or expired session")
+
+def set_session_cookie(resp: Response, token: str):
+    resp.set_cookie(
+        key=COOKIE_NAME, value=token, httponly=True, secure=True,
+        samesite="strict", path="/", max_age=60*60
+    )
+
+def require_auth(request: Request) -> str:
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        raise HTTPException(401, "Not authenticated")
+    return parse_token(token)
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
