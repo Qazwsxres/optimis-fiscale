@@ -32,7 +32,7 @@
     .btn { background:var(--accent); color:white; }
     .btn:disabled { opacity: .6; cursor:not-allowed; }
     .btn-secondary { background:#0e1428; color:var(--text); border-color:var(--line); }
-    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
     .status { font-size: 13px; color:var(--muted); }
     .status.ok { color: var(--ok); } .status.err { color: var(--err); }
     .tiles { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-top: 14px; }
@@ -44,6 +44,7 @@
     details { margin-top:10px; }
     pre { background:#0e1428; border:1px solid var(--line); border-radius:12px; padding:12px; white-space:pre-wrap; word-break:break-word; font-size: 13px; }
     footer { margin-top:16px; color:var(--muted); font-size:13px; }
+
     /* settings modal */
     .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; place-items:center; }
     .modal { width:min(560px, 92vw); background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; }
@@ -51,10 +52,11 @@
     .modal .row { justify-content:space-between; }
     .gear { background:#0e1428; border:1px solid var(--line); width:40px; height:40px; display:grid; place-items:center; border-radius:12px; cursor:pointer; }
     .hint { color: var(--muted); font-size: 12px; }
-    @media (max-width:720px){ .grid2{ grid-template-columns: 1fr; } header{flex-direction:column; align-items:flex-start;} }
+
     /* Auth bar */
     #authbar { display:flex; gap:8px; align-items:center; }
     #authbar .me { font-size:13px; color:#a3adbf; }
+
     /* Chat widget */
     #chat-btn { position: fixed; right: 20px; bottom: 20px; z-index: 30; }
     #chat-btn button { background:#3a71ff; color:#fff; border:0; padding:14px 16px; border-radius:999px; font-weight:700; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,.35); }
@@ -69,6 +71,8 @@
     #chat-input { display:flex; gap:8px; padding:10px; border-top:1px solid #243155; background:#0e1428; }
     #chat-input input { flex:1; background:#0e1428; border:1px solid #33416d; color:#e6e9ef; border-radius:10px; padding:10px; }
     #chat-input button { background:#3a71ff; color:#fff; border:0; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
+
+    @media (max-width:720px){ .grid2{ grid-template-columns: 1fr; } header{flex-direction:column; align-items:flex-start;} }
   </style>
 </head>
 <body>
@@ -78,11 +82,14 @@
         <h1>Optimis Fiscale</h1>
         <div class="sub">Analyse de balance & estimation fiscale (FR)</div>
       </div>
-      <div class="row">
-        <div class="gear" id="openSettings" title="Paramètres (API)">
-          ⚙️
-        </div>
+
+      <!-- RIGHT SIDE OF HEADER -->
+      <div class="row" id="authbar">
+        <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
         <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank" rel="noreferrer">API Docs</a>
+        <button id="loginBtn" class="btn-secondary">Se connecter</button>
+        <span id="who" class="me" style="display:none"></span>
+        <button id="logoutBtn" class="btn-secondary" style="display:none">Se déconnecter</button>
       </div>
     </header>
 
@@ -110,7 +117,7 @@
           </div>
         </div>
 
-        <div class="row" style="justify-content:space-between; align-items:center;">
+        <div class="row" style="justify-content:space-between;">
           <button id="analyzeBtn" class="btn">Analyser</button>
           <div class="status" id="status">Prêt</div>
         </div>
@@ -141,7 +148,7 @@
     </div>
 
     <footer>
-      Astuce : si la page ne répond pas, vérifiez l’URL de l’API dans les paramètres (⚙️).  
+      Astuce : si la page ne répond pas, vérifiez l’URL de l’API dans les paramètres (⚙️).
     </footer>
   </div>
 
@@ -158,6 +165,42 @@
         <button class="btn-secondary" id="closeSettings">Annuler</button>
         <button class="btn" id="saveSettings">Enregistrer</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Login Modal (MOVED OUT OF <style>) -->
+  <div class="modal-backdrop" id="loginModal" style="display:none">
+    <div class="modal">
+      <h2>Connexion</h2>
+      <div class="field" style="margin-top:8px; display:block;">
+        <label><strong>Identifiant entreprise</strong></label>
+        <input id="companyId" type="text" placeholder="ex: demo" style="width:100%; margin-top:8px; padding:10px; border-radius:10px; background:#0e1428; border:1px solid var(--line); color:var(--text);" />
+      </div>
+      <div class="field" style="margin-top:8px; display:block;">
+        <label><strong>Mot de passe</strong></label>
+        <input id="companyPwd" type="password" placeholder="••••••••" style="width:100%; margin-top:8px; padding:10px; border-radius:10px; background:#0e1428; border:1px solid var(--line); color:var(--text);" />
+      </div>
+      <div class="row" style="margin-top:12px; justify-content:flex-end;">
+        <button class="btn-secondary" id="cancelLogin">Annuler</button>
+        <button class="btn" id="doLogin">Connexion</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat widget HTML (MOVED OUT OF <script>) -->
+  <div id="chat-btn"><button id="openChat">Chat</button></div>
+  <div id="chat-box">
+    <div id="chat-head">
+      <div class="name">
+        <img src="https://via.placeholder.com/56x56.png?text=A" alt="Albert">
+        <span>Albert — Assistant Fiscal</span>
+      </div>
+      <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px;">Fermer</button>
+    </div>
+    <div id="chat-log"></div>
+    <div id="chat-input">
+      <input id="chatText" type="text" placeholder="Posez votre question…" />
+      <button id="sendChat">Envoyer</button>
     </div>
   </div>
 
@@ -185,7 +228,7 @@
       fileName.textContent = csvInput.files[0]?.name || '';
     });
 
-    // Modal
+    // Settings modal
     const modal = document.getElementById('modal');
     document.getElementById('openSettings').onclick = () => {
       apiInput.value = loadApiBase();
@@ -200,7 +243,7 @@
     };
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 
-    // Analyze click handler
+    // Analyze click handler (add credentials if you want this private too)
     document.getElementById('analyzeBtn').onclick = async () => {
       const base = (loadApiBase() || '').replace(/\/$/, '');
       const file = csvInput.files[0];
@@ -217,7 +260,11 @@
       showStatus('Analyse en cours…');
 
       try {
-        const res = await fetch(base + '/analyze/trial-balance', { method:'POST', body: fd });
+        const res = await fetch(base + '/analyze/trial-balance', {
+          method:'POST',
+          body: fd,
+          credentials: 'include'   // <— include cookie if you protect this route
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.detail || 'Erreur API');
 
@@ -259,6 +306,104 @@
         btn.disabled = false;
       }
     };
+
+    // --- Auth (cookie session) ---
+    const loginModal = document.getElementById('loginModal');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const who = document.getElementById('who');
+
+    function openLogin() { loginModal.style.display = 'grid'; }
+    function closeLogin() { loginModal.style.display = 'none'; }
+    document.getElementById('cancelLogin').onclick = closeLogin;
+    loginBtn.onclick = openLogin;
+
+    document.getElementById('doLogin').onclick = async () => {
+      const base = (localStorage.getItem('optimis_api_base') || document.getElementById('apiBase')?.value || '').replace(/\/$/, '');
+      const company_id = document.getElementById('companyId').value.trim();
+      const password = document.getElementById('companyPwd').value;
+      if (!base) { showStatus('API URL manquante (ouvrir ⚙️)', 'err'); return; }
+      if (!company_id || !password) { showStatus('Identifiant/mot de passe requis', 'err'); return; }
+      try {
+        const res = await fetch(base + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // cookie
+          body: JSON.stringify({ company_id, password })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.detail || 'Login failed');
+        who.textContent = `Connecté: ${data.company_id}`;
+        who.style.display = 'inline';
+        logoutBtn.style.display = 'inline-flex';
+        loginBtn.style.display = 'none';
+        closeLogin();
+        showStatus('Connecté', 'ok');
+      } catch (e) {
+        showStatus(e.message, 'err');
+      }
+    };
+
+    logoutBtn.onclick = async () => {
+      const base = (localStorage.getItem('optimis_api_base') || document.getElementById('apiBase')?.value || '').replace(/\/$/, '');
+      try { await fetch(base + '/auth/logout', { method: 'POST', credentials: 'include' }); }
+      finally {
+        who.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        loginBtn.style.display = 'inline-flex';
+        showStatus('Déconnecté', 'ok');
+      }
+    };
+
+    // --- Chat widget (Albert) ---
+    const chatBtn = document.getElementById('openChat');
+    const chatBox = document.getElementById('chat-box');
+    const closeChat = document.getElementById('closeChat');
+    const chatLog = document.getElementById('chat-log');
+    const chatText = document.getElementById('chatText');
+    const sendChat = document.getElementById('sendChat');
+
+    const appendMsg = (text, whoSide) => {
+      const div = document.createElement('div');
+      div.className = `msg ${whoSide === 'me' ? 'me' : 'bot'}`;
+      div.textContent = text;
+      chatLog.appendChild(div);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    };
+
+    chatBtn.onclick = () => { chatBox.style.display = 'block'; chatText.focus(); };
+    closeChat.onclick = () => { chatBox.style.display = 'none'; };
+
+    async function callChatAPI(question) {
+      const base = (localStorage.getItem('optimis_api_base') || document.getElementById('apiBase')?.value || '').replace(/\/$/, '');
+      if (!base) { appendMsg("Erreur: API non configurée (ouvrir ⚙️)", "bot"); return; }
+      try {
+        const res = await fetch(base + '/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // send cookie
+          body: JSON.stringify({ messages: [
+            { role: 'system', content: 'Tu es Albert, un assistant fiscal clair et concis pour les PME françaises. Présente-toi comme Albert lorsque l’utilisateur te salue.' },
+            { role: 'user', content: question }
+          ]})
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.detail || 'Erreur API');
+        appendMsg(data.reply, 'bot');
+      } catch (e) {
+        appendMsg('Erreur: ' + e.message, 'bot');
+      }
+    }
+
+    function sendCurrent() {
+      const q = chatText.value.trim();
+      if (!q) return;
+      appendMsg(q, 'me');
+      chatText.value = '';
+      callChatAPI(q);
+    }
+    sendChat.onclick = sendCurrent;
+    chatText.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendCurrent(); });
   </script>
 </body>
 </html>
