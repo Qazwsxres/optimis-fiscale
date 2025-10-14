@@ -12,10 +12,12 @@ from .analyzers import analyze_trial_balance
 
 app = FastAPI(title="Optimis Fiscale MVP", version="0.1.0")
 
+ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN") or "https://qazwsxres.github.io"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[ALLOWED_ORIGIN],  # only your Pages site
+    allow_credentials=True,          # allow cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )
