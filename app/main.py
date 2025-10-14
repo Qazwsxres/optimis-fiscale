@@ -52,7 +52,7 @@ def set_session_cookie(resp: Response, token: str):
         value=token,
         httponly=True,
         secure=True,
-        samesite="strict",
+        samesite="none",
         path="/",
         max_age=60 * 60,
     )
