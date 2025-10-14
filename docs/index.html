@@ -52,6 +52,23 @@
     .gear { background:#0e1428; border:1px solid var(--line); width:40px; height:40px; display:grid; place-items:center; border-radius:12px; cursor:pointer; }
     .hint { color: var(--muted); font-size: 12px; }
     @media (max-width:720px){ .grid2{ grid-template-columns: 1fr; } header{flex-direction:column; align-items:flex-start;} }
+    /* Auth bar */
+    #authbar { display:flex; gap:8px; align-items:center; }
+    #authbar .me { font-size:13px; color:#a3adbf; }
+    /* Chat widget */
+    #chat-btn { position: fixed; right: 20px; bottom: 20px; z-index: 30; }
+    #chat-btn button { background:#3a71ff; color:#fff; border:0; padding:14px 16px; border-radius:999px; font-weight:700; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,.35); }
+    #chat-box { position: fixed; right: 20px; bottom: 80px; width: min(380px, 92vw); background:#11172c; border:1px solid #243155; border-radius:16px; overflow:hidden; display:none; z-index:30; }
+    #chat-head { padding:12px 14px; font-weight:700; border-bottom:1px solid #243155; display:flex; justify-content:space-between; align-items:center; }
+    #chat-head .name { display:flex; align-items:center; gap:10px; }
+    #chat-head img { width:28px; height:28px; border-radius:50%; border:1px solid #243155; }
+    #chat-log { height: 280px; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px; }
+    .msg { padding:10px 12px; border-radius:12px; max-width: 85%; font-size:14px; line-height:1.35; }
+    .me  { background:#3a71ff; color:#fff; align-self:flex-end; }
+    .bot { background:#0e1428; border:1px solid #243155; color:#e6e9ef; align-self:flex-start; }
+    #chat-input { display:flex; gap:8px; padding:10px; border-top:1px solid #243155; background:#0e1428; }
+    #chat-input input { flex:1; background:#0e1428; border:1px solid #33416d; color:#e6e9ef; border-radius:10px; padding:10px; }
+    #chat-input button { background:#3a71ff; color:#fff; border:0; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
   </style>
 </head>
 <body>
