@@ -83,3 +83,63 @@ async def analyze_json_endpoint(payload: dict):
         raise HTTPException(status_code=400, detail=f"JSON invalide : {e}")
     turnover = payload.get("turnover")
     return analyze_trial_balance(df, turnover=turnover)
+
+class LoginBody(BaseModel):
+    company_id: str
+    password: str
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+
+class ChatResponse(BaseModel):
+    reply: str
+
+@app.post("/auth/login")
+def login(body: LoginBody, response: Response):
+    if not validate_company_password(body.company_id, body.password):
+        raise HTTPException(401, "Bad credentials")
+    token = make_token(body.company_id)
+    set_session_cookie(response, token)
+    return {"ok": True, "company_id": body.company_id}
+
+@app.post("/auth/logout")
+def logout(response: Response):
+    response.delete_cookie(COOKIE_NAME, path="/")
+    return {"ok": True}
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
+    """Ephemeral chat: no content is stored."""
+    if not OPENAI_API_KEY:
+        raise HTTPException(500, "Server missing OPENAI_API_KEY")
+
+    # Always remind the model it is ALBERT
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "system", "content": "Tu es Albert, un assistant fiscal pour les PME françaises. Sois professionnel, clair et concis."},
+            *[m.model_dump() for m in req.messages],
+        ],
+        "temperature": 0.2,
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
+        r.raise_for_status()
+        data = r.json()
+        reply = data["choices"][0]["message"]["content"]
+        return ChatResponse(reply=reply)
+    except httpx.HTTPError as e:
+        raise HTTPException(500, f"Chat backend error: {e}")
