@@ -1,29 +1,32 @@
 import os, time, httpx, logging
 from typing import List
-from jose import jwt, JWTError
-from fastapi import Request, Response, Depends, HTTPException
+
+from fastapi import FastAPI, UploadFile, File, Request, Response, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+
 import pandas as pd
 from .models import AnalysisResult
 from .analyzers import analyze_trial_balance
 
+# (Optional) keep only errors in access logs so no request lines with payloads get logged
+logging.getLogger("uvicorn.access").disabled = True
+
 app = FastAPI(title="Optimis Fiscale MVP", version="0.1.0")
 
+# --- CORS (lock to your Pages origin) ---
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN") or "https://qazwsxres.github.io"
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[ALLOWED_ORIGIN],  # only your Pages site
-    allow_credentials=True,          # allow cookies
+    allow_origins=[ALLOWED_ORIGIN],
+    allow_credentials=True,   # needed for cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# --- Auth/session + LLM config ---
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")   # set in Railway
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")        # set in Railway
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ALGO = "HS256"
 COOKIE_NAME = "session"
 
@@ -32,7 +35,7 @@ def validate_company_password(company_id: str, password: str) -> bool:
     expected = os.getenv(env_key)
     return bool(expected and password == expected)
 
-def make_token(company_id: str, ttl_seconds: int = 60*60) -> str:
+def make_token(company_id: str, ttl_seconds: int = 60 * 60) -> str:
     now = int(time.time())
     return jwt.encode({"sub": company_id, "iat": now, "exp": now + ttl_seconds}, SECRET_KEY, algorithm=ALGO)
 
@@ -45,8 +48,13 @@ def parse_token(token: str) -> str:
 
 def set_session_cookie(resp: Response, token: str):
     resp.set_cookie(
-        key=COOKIE_NAME, value=token, httponly=True, secure=True,
-        samesite="strict", path="/", max_age=60*60
+        key=COOKIE_NAME,
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        path="/",
+        max_age=60 * 60,
     )
 
 def require_auth(request: Request) -> str:
@@ -55,10 +63,16 @@ def require_auth(request: Request) -> str:
         raise HTTPException(401, "Not authenticated")
     return parse_token(token)
 
+# --- Health & root ---
+@app.get("/")
+def root():
+    return {"ok": True, "service": "optimis-fiscale-api"}
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
+# --- Analysis endpoints ---
 @app.post("/analyze/trial-balance", response_model=AnalysisResult)
 async def analyze_trial_balance_endpoint(file: UploadFile = File(...), turnover: float | None = None):
     if not file.filename.endswith(".csv"):
@@ -83,6 +97,9 @@ async def analyze_json_endpoint(payload: dict):
         raise HTTPException(status_code=400, detail=f"JSON invalide : {e}")
     turnover = payload.get("turnover")
     return analyze_trial_balance(df, turnover=turnover)
+
+# --- Auth + Chat (ephemeral, private) ---
+from jose import jwt, JWTError  # keep after FastAPI app is created
 
 class LoginBody(BaseModel):
     company_id: str
@@ -117,7 +134,6 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     if not OPENAI_API_KEY:
         raise HTTPException(500, "Server missing OPENAI_API_KEY")
 
-    # Always remind the model it is ALBERT
     payload = {
         "model": "gpt-4o-mini",
         "messages": [
