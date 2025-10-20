@@ -1,13 +1,16 @@
 import os, time, logging, asyncio
-from typing import List
+from typing import List, Optional
+from collections import defaultdict
 
 import httpx
 import pandas as pd
 from jose import jwt, JWTError
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Response, Depends
+from fastapi import (
+    FastAPI, UploadFile, File, HTTPException,
+    Request, Response, Depends, Form
+)
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from collections import defaultdict
 
 from .models import AnalysisResult
 from .analyzers import analyze_trial_balance
@@ -15,7 +18,7 @@ from .analyzers import analyze_trial_balance
 # -----------------------------------------------------------------------------
 # App & CORS
 # -----------------------------------------------------------------------------
-app = FastAPI(title="Optimis Fiscale MVP", version="0.1.0")
+app = FastAPI(title="Optimis Fiscale MVP", version="0.2.0")
 
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN") or "https://qazwsxres.github.io"  # your Pages origin
 
@@ -204,3 +207,128 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
 
     reply = await call_openai_with_retry(payload, OPENAI_API_KEY, max_retries=4)
     return ChatResponse(reply=reply)
+
+# -----------------------------------------------------------------------------
+# Audit endpoint (with IFRS / USGAAP selector)
+# -----------------------------------------------------------------------------
+class AuditIssue(BaseModel):
+    code: str
+    severity: str  # "info" | "warning" | "error"
+    message: str
+    count: Optional[int] = None
+
+class AuditSummary(BaseModel):
+    ok: bool
+    total_rows: int
+    total_debit: float
+    total_credit: float
+    imbalance: float
+    framework: str  # "IFRS" or "USGAAP"
+
+class AuditResult(BaseModel):
+    summary: AuditSummary
+    issues: List[AuditIssue]
+    top_accounts: List[dict]  # [{account, label, balance, abs_balance}]
+
+@app.post("/audit/test", response_model=AuditResult)
+async def test_audit(
+    file: UploadFile = File(...),
+    standard: str = Form("IFRS"),
+    company_id: str = Depends(require_auth),
+):
+    """
+    Basic audit with framework flag (IFRS or USGAAP).
+    CSV required columns: account,label,debit,credit.
+    """
+    standard = (standard or "IFRS").strip().upper()
+    if standard in ("IFRS", "USGAAP", "US GAAP"):
+        framework = "USGAAP" if standard.startswith("US") else "IFRS"
+    else:
+        framework = "IFRS"  # default if unknown
+
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(400, "Veuillez fournir un CSV (colonnes: account,label,debit,credit).")
+
+    import io
+    try:
+        df = pd.read_csv(io.BytesIO(await file.read()))
+    except Exception as e:
+        raise HTTPException(400, f"CSV illisible: {e}")
+
+    required = {"account", "label", "debit", "credit"}
+    if not required.issubset(set(df.columns.str.lower())):
+        df.columns = [c.lower() for c in df.columns]
+        if not required.issubset(set(df.columns)):
+            missing = sorted(list(required - set(df.columns)))
+            raise HTTPException(400, f"Colonnes manquantes: {', '.join(missing)}")
+
+    # numeric coercion
+    for c in ["debit", "credit"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
+
+    total_debit = float(df["debit"].sum())
+    total_credit = float(df["credit"].sum())
+    imbalance = float(abs(total_debit - total_credit))
+
+    issues: List[AuditIssue] = []
+
+    # Core checks (same tolerance for both; you can diverge later if needed)
+    if imbalance > 0.01:
+        issues.append(AuditIssue(
+            code="IMBALANCE",
+            severity="error",
+            message=f"Écart entre débits et crédits: {imbalance:,.2f} €"
+        ))
+
+    missing_labels = int(df["label"].isna().sum() + (df["label"].astype(str).str.strip() == "").sum())
+    if missing_labels > 0:
+        issues.append(AuditIssue(
+            code="MISSING_LABELS",
+            severity="warning",
+            message="Libellés manquants",
+            count=missing_labels
+        ))
+
+    neg_debit = int((df["debit"] < 0).sum())
+    neg_credit = int((df["credit"] < 0).sum())
+    if neg_debit > 0:
+        issues.append(AuditIssue(code="NEG_DEBIT", severity="warning", message="Débits négatifs détectés", count=neg_debit))
+    if neg_credit > 0:
+        issues.append(AuditIssue(code="NEG_CREDIT", severity="warning", message="Crédits négatifs détectés", count=neg_credit))
+
+    # Duplicate account codes (informational)
+    dup_accounts = df["account"].astype(str).str.strip()
+    dups = dup_accounts[dup_accounts.duplicated()].nunique()
+    if dups > 0:
+        issues.append(AuditIssue(code="DUP_ACCOUNTS", severity="info", message="Comptes apparaissant plusieurs fois", count=int(dups)))
+
+    # Framework note (informational)
+    issues.append(AuditIssue(
+        code="FRAMEWORK",
+        severity="info",
+        message=f"Contrôles exécutés avec le référentiel {framework}. (Règles génériques v1)"
+    ))
+
+    # Top accounts by absolute balance
+    df["balance"] = df["debit"] - df["credit"]
+    grp = df.groupby(["account", "label"], dropna=False)["balance"].sum().reset_index()
+    grp["abs_balance"] = grp["balance"].abs()
+    top = (grp.sort_values("abs_balance", ascending=False)
+              .head(10)
+              .assign(
+                  account=lambda d: d["account"].astype(str),
+                  label=lambda d: d["label"].astype(str),
+                  balance=lambda d: d["balance"].round(2),
+                  abs_balance=lambda d: d["abs_balance"].round(2),
+              )[["account", "label", "balance", "abs_balance"]]
+              .to_dict(orient="records"))
+
+    summary = AuditSummary(
+        ok=(imbalance <= 0.01 and missing_labels == 0 and neg_debit == 0 and neg_credit == 0),
+        total_rows=int(len(df)),
+        total_debit=round(total_debit, 2),
+        total_credit=round(total_credit, 2),
+        imbalance=round(imbalance, 2),
+        framework=framework,
+    )
+    return AuditResult(summary=summary, issues=issues, top_accounts=top)
