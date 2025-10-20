@@ -1,32 +1,37 @@
-import os, time, httpx, logging
+import os, time, logging, asyncio
 from typing import List
 
-from fastapi import FastAPI, UploadFile, File, Request, Response, Depends, HTTPException
+import httpx
+import pandas as pd
+from jose import jwt, JWTError
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from collections import defaultdict
 
-import pandas as pd
 from .models import AnalysisResult
 from .analyzers import analyze_trial_balance
 
-# (Optional) keep only errors in access logs so no request lines with payloads get logged
-logging.getLogger("uvicorn.access").disabled = True
-
+# -----------------------------------------------------------------------------
+# App & CORS
+# -----------------------------------------------------------------------------
 app = FastAPI(title="Optimis Fiscale MVP", version="0.1.0")
 
-# --- CORS (lock to your Pages origin) ---
-ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN") or "https://qazwsxres.github.io"
+ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN") or "https://qazwsxres.github.io"  # your Pages origin
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[ALLOWED_ORIGIN],
-    allow_credentials=True,   # needed for cookies
+    allow_credentials=True,    # allow cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Auth/session + LLM config ---
+# -----------------------------------------------------------------------------
+# Auth & Secrets
+# -----------------------------------------------------------------------------
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")   # set in Railway
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")        # set in Railway
 ALGO = "HS256"
 COOKIE_NAME = "session"
 
@@ -47,6 +52,7 @@ def parse_token(token: str) -> str:
         raise HTTPException(401, "Invalid or expired session")
 
 def set_session_cookie(resp: Response, token: str):
+    # Cross-site cookie so GitHub Pages (frontend) can use Railway API
     resp.set_cookie(
         key=COOKIE_NAME,
         value=token,
@@ -63,7 +69,9 @@ def require_auth(request: Request) -> str:
         raise HTTPException(401, "Not authenticated")
     return parse_token(token)
 
-# --- Health & root ---
+# -----------------------------------------------------------------------------
+# Health & root
+# -----------------------------------------------------------------------------
 @app.get("/")
 def root():
     return {"ok": True, "service": "optimis-fiscale-api"}
@@ -72,7 +80,9 @@ def root():
 def health():
     return {"status": "ok"}
 
-# --- Analysis endpoints ---
+# -----------------------------------------------------------------------------
+# Analysis endpoints
+# -----------------------------------------------------------------------------
 @app.post("/analyze/trial-balance", response_model=AnalysisResult)
 async def analyze_trial_balance_endpoint(file: UploadFile = File(...), turnover: float | None = None):
     if not file.filename.endswith(".csv"):
@@ -90,7 +100,7 @@ async def analyze_trial_balance_endpoint(file: UploadFile = File(...), turnover:
 
 @app.post("/analyze/json", response_model=AnalysisResult)
 async def analyze_json_endpoint(payload: dict):
-    # Attendu : payload = {"trial_balance": [{account,label,debit,credit}, ...], "turnover": 123456.78}
+    # Attendu : {"trial_balance": [{account,label,debit,credit}, ...], "turnover": 123456.78}
     try:
         df = pd.DataFrame(payload["trial_balance"])
     except Exception as e:
@@ -98,22 +108,12 @@ async def analyze_json_endpoint(payload: dict):
     turnover = payload.get("turnover")
     return analyze_trial_balance(df, turnover=turnover)
 
-# --- Auth + Chat (ephemeral, private) ---
-from jose import jwt, JWTError  # keep after FastAPI app is created
-
+# -----------------------------------------------------------------------------
+# Auth endpoints
+# -----------------------------------------------------------------------------
 class LoginBody(BaseModel):
     company_id: str
     password: str
-
-class ChatMessage(BaseModel):
-    role: str
-    content: str
-
-class ChatRequest(BaseModel):
-    messages: List[ChatMessage]
-
-class ChatResponse(BaseModel):
-    reply: str
 
 @app.post("/auth/login")
 def login(body: LoginBody, response: Response):
@@ -128,11 +128,70 @@ def logout(response: Response):
     response.delete_cookie(COOKIE_NAME, path="/")
     return {"ok": True}
 
+# -----------------------------------------------------------------------------
+# Chat endpoint with retry/backoff + throttle
+# -----------------------------------------------------------------------------
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+
+class ChatResponse(BaseModel):
+    reply: str
+
+# Very small in-memory throttle per company (best-effort, single-process)
+_last_call = defaultdict(float)
+def throttle(company_id: str, min_interval: float = 2.0):
+    now = time.time()
+    if now - _last_call[company_id] < min_interval:
+        raise HTTPException(429, "Trop de requêtes. Réessayez dans 2–3 secondes.")
+    _last_call[company_id] = now
+
+async def call_openai_with_retry(json_payload, api_key, max_retries: int = 4) -> str:
+    """
+    Call OpenAI Chat Completions with exponential backoff.
+    Respects Retry-After when provided. Raises HTTPException on failure.
+    """
+    backoff = 1.5  # seconds
+    async with httpx.AsyncClient(timeout=40) as client:
+        for attempt in range(1, max_retries + 1):
+            r = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json=json_payload,
+            )
+            if r.status_code == 200:
+                data = r.json()
+                return data["choices"][0]["message"]["content"]
+
+            if r.status_code == 429 and attempt < max_retries:
+                retry_after = r.headers.get("retry-after")
+                wait_s = float(retry_after) if retry_after else backoff
+                await asyncio.sleep(wait_s)
+                backoff *= 2
+                continue
+
+            # Other error or no retries left
+            try:
+                r.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"OpenAI error {e.response.status_code}: {e.response.text[:200]}",
+                )
+
+        raise HTTPException(429, "OpenAI rate limit: merci de réessayer dans quelques secondes.")
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     """Ephemeral chat: no content is stored."""
     if not OPENAI_API_KEY:
         raise HTTPException(500, "Server missing OPENAI_API_KEY")
+
+    # avoid accidental spam
+    throttle(company_id, min_interval=2.0)
 
     payload = {
         "model": "gpt-4o-mini",
@@ -143,19 +202,5 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
         "temperature": 0.2,
     }
 
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-            )
-        r.raise_for_status()
-        data = r.json()
-        reply = data["choices"][0]["message"]["content"]
-        return ChatResponse(reply=reply)
-    except httpx.HTTPError as e:
-        raise HTTPException(500, f"Chat backend error: {e}")
+    reply = await call_openai_with_retry(payload, OPENAI_API_KEY, max_retries=4)
+    return ChatResponse(reply=reply)
