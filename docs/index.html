@@ -6,115 +6,97 @@
   <title>Optimis Fiscale</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --card: #11172c;
-      --muted: #a3adbf;
-      --line: #243155;
-      --accent: #3a71ff;
-      --text: #e6e9ef;
-      --ok: #2ecc71;
-      --err: #e74c3c;
+      --bg:#0b1020;--card:#11172c;--muted:#a3adbf;--line:#243155;
+      --accent:#3a71ff;--text:#e6e9ef;--ok:#2ecc71;--err:#e74c3c;
     }
-    * { box-sizing: border-box; }
-    body { margin:0; background:var(--bg); color:var(--text); font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
-    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
-    h1 { font-size: 22px; margin: 0; }
-    .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 12px 28px rgba(0,0,0,.25); }
-    .controls { display:grid; gap:12px; }
-    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    .field { background:#0e1428; border:1px solid var(--line); border-radius:12px; padding: 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .field label { font-size:14px; color:var(--muted); }
-    input[type="number"] { width: 180px; background:#0e1428; border:1px solid var(--line); color:var(--text); border-radius: 10px; padding:8px 10px; }
-    input[type="file"] { display:none; }
-    .btn, .btn-secondary { display:inline-flex; align-items:center; gap:8px; padding: 12px 16px; border-radius: 12px; font-weight:600; cursor:pointer; border:1px solid transparent; }
-    .btn { background:var(--accent); color:white; }
-    .btn:disabled { opacity: .6; cursor:not-allowed; }
-    .btn-secondary { background:#0e1428; color:var(--text); border-color:var(--line); }
-    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
-    .status { font-size: 13px; color:var(--muted); }
-    .status.ok { color: var(--ok); } .status.err { color: var(--err); }
-    .tiles { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-top: 14px; }
-    .tile { background:#0e1428; border:1px solid var(--line); border-radius:14px; padding:14px; }
-    .tile h3 { margin:0 0 8px; font-size:16px; color:#c6d0f5; }
-    .kv { display:grid; gap:6px; font-size:14px; }
-    .kv div { display:flex; justify-content:space-between; gap:8px; }
-    .badge { display:inline-block; padding:4px 8px; border:1px solid var(--line); border-radius:999px; color:#c6d0f5; font-size:12px; }
-    details { margin-top:10px; }
-    pre { background:#0e1428; border:1px solid var(--line); border-radius:12px; padding:12px; white-space:pre-wrap; word-break:break-word; font-size: 13px; }
-    footer { margin-top:16px; color:var(--muted); font-size:13px; }
-
-    /* settings modal */
-    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; place-items:center; }
-    .modal { width:min(560px, 92vw); background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; }
-    .modal h2 { margin:0 0 8px; font-size:18px; }
-    .modal .row { justify-content:space-between; }
-    .gear { background:#0e1428; border:1px solid var(--line); width:40px; height:40px; display:grid; place-items:center; border-radius:12px; cursor:pointer; }
-    .hint { color: var(--muted); font-size: 12px; }
-
-    /* Auth bar */
-    #authbar { display:flex; gap:8px; align-items:center; }
-    #authbar .me { font-size:13px; color:#a3adbf; }
-
-    /* Chat widget */
-    #chat-btn { position: fixed; right: 20px; bottom: 20px; z-index: 30; }
-    #chat-btn button { background:#3a71ff; color:#fff; border:0; padding:14px 16px; border-radius:999px; font-weight:700; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,.35); }
-    #chat-box { position: fixed; right: 20px; bottom: 80px; width: min(380px, 92vw); background:#11172c; border:1px solid #243155; border-radius:16px; overflow:hidden; display:none; z-index:30; }
-    #chat-head { padding:12px 14px; font-weight:700; border-bottom:1px solid #243155; display:flex; justify-content:space-between; align-items:center; }
-    #chat-head .name { display:flex; align-items:center; gap:10px; }
-    #chat-head img { width:28px; height:28px; border-radius:50%; border:1px solid #243155; }
-    #chat-log { height: 280px; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px; }
-    .msg { padding:10px 12px; border-radius:12px; max-width: 85%; font-size:14px; line-height:1.35; }
-    .me  { background:#3a71ff; color:#fff; align-self:flex-end; }
-    .bot { background:#0e1428; border:1px solid #243155; color:#e6e9ef; align-self:flex-start; }
-    #chat-input { display:flex; gap:8px; padding:10px; border-top:1px solid #243155; background:#0e1428; }
-    #chat-input input { flex:1; background:#0e1428; border:1px solid #33416d; color:#e6e9ef; border-radius:10px; padding:10px; }
-    #chat-input button { background:#3a71ff; color:#fff; border:0; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
-
-    @media (max-width:720px){ .grid2{ grid-template-columns: 1fr; } header{flex-direction:column; align-items:flex-start;} }
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);
+    font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    h1{font-size:22px;margin:0}.sub{color:var(--muted);font-size:14px;margin-top:4px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 12px 28px rgba(0,0,0,.25)}
+    .controls{display:grid;gap:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field{background:#0e1428;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .btn,.btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer;border:1px solid transparent}
+    .btn{background:var(--accent);color:#fff}.btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn-secondary{background:#0e1428;color:var(--text);border-color:var(--line)}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.status{font-size:13px;color:var(--muted)}
+    .status.ok{color:var(--ok)}.status.err{color:var(--err)}
+    .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}
+    .tile{background:#0e1428;border:1px solid var(--line);border-radius:14px;padding:14px}
+    footer{margin-top:16px;color:var(--muted);font-size:13px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;place-items:center}
+    .modal{width:min(560px,92vw);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+    .gear{background:#0e1428;border:1px solid var(--line);width:40px;height:40px;display:grid;place-items:center;border-radius:12px;cursor:pointer}
+    #authbar{display:flex;gap:8px;align-items:center}#authbar .me{font-size:13px;color:#a3adbf}
+    #chat-btn{position:fixed;right:20px;bottom:20px;z-index:30}
+    #chat-btn button{background:#3a71ff;color:#fff;border:0;padding:14px 16px;border-radius:999px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+    #chat-box{position:fixed;right:20px;bottom:80px;width:min(380px,92vw);background:#11172c;border:1px solid #243155;border-radius:16px;overflow:hidden;display:none;z-index:30}
+    #chat-head{padding:12px 14px;font-weight:700;border-bottom:1px solid #243155;display:flex;justify-content:space-between;align-items:center}
+    #chat-head img{width:28px;height:28px;border-radius:50%;border:1px solid #243155}
+    #chat-log{height:280px;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+    .msg{padding:10px 12px;border-radius:12px;max-width:85%;font-size:14px;line-height:1.35}
+    .me{background:#3a71ff;color:#fff;align-self:flex-end}.bot{background:#0e1428;border:1px solid #243155;color:#e6e9ef;align-self:flex-start}
+    #chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #243155;background:#0e1428}
+    #chat-input input{flex:1;background:#0e1428;border:1px solid #33416d;color:#e6e9ef;border-radius:10px;padding:10px}
+    #chat-input button{background:#3a71ff;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    /* extras */
+    .banner{background:#0e1428;border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;margin:8px 0}
+    .banner small{color:var(--muted)}.banner .x{margin-left:auto;background:#11172c;border:1px solid var(--line);padding:4px 8px;border-radius:8px;cursor:pointer}
+    .badge-ok{background:rgba(46,204,113,.15);border:1px solid #2ecc71;color:#2ecc71;padding:2px 8px;border-radius:999px;font-weight:700}
+    .badge-no{background:rgba(231,76,60,.15);border:1px solid #e74c3c;color:#e74c3c;padding:2px 8px;border-radius:999px;font-weight:700}
+    .spinner{display:none;gap:8px;align-items:center}.spinner.active{display:inline-flex}
+    .spinner .dot{width:8px;height:8px;border-radius:50%;background:#3a71ff;animation:b 1s infinite}
+    .spinner .dot:nth-child(2){animation-delay:.15s}.spinner .dot:nth-child(3){animation-delay:.3s}
+    @keyframes b{0%,80%,100%{opacity:.2;transform:scale(.9)}40%{opacity:1;transform:scale(1)}}
+    #csvPreview{display:none;margin-top:8px}#csvPreview table{width:100%;border-collapse:collapse;border:1px solid var(--line)}
+    #csvPreview th,#csvPreview td{border:1px solid var(--line);padding:6px;font-size:13px}
+    #csvPreview th{color:#c6d0f5;background:#0f1530}
+    @media print{#chat-btn,#chat-box,header,.controls,.banner,.modal-backdrop{display:none!important}body{background:#fff;color:#000}.card{border:0;box-shadow:none}}
+    @media (max-width:960px){.grid2{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div>
-        <h1>Optimis Fiscale</h1>
-        <div class="sub">Analyse de balance & estimation fiscale (FR)</div>
-      </div>
-
+      <div><h1>Optimis Fiscale</h1><div class="sub">Analyse de balance & estimation fiscale (FR)</div></div>
       <div class="row" id="authbar">
         <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
-        <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank" rel="noreferrer">API Docs</a>
+        <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
         <button id="loginBtn" class="btn-secondary">Se connecter</button>
         <span id="who" class="me" style="display:none"></span>
         <button id="logoutBtn" class="btn-secondary" style="display:none">Se déconnecter</button>
       </div>
     </header>
 
+    <!-- guidance / tools -->
+    <div id="steps" class="banner" style="display:none">
+      <div>🧭 <strong>Comment ça marche ?</strong><br><small>1) Importez un CSV → 2) Choisissez IFRS / US GAAP → 3) Cliquez Analyser ou Test Audit.</small></div>
+      <button class="x" id="hideSteps">OK</button>
+    </div>
+    <div class="row" style="margin:8px 0;gap:8px">
+      <a class="btn-secondary" href="https://raw.githubusercontent.com/Qazwsxres/optimis-fiscale/main/sample_trial_balance.csv" target="_blank">Télécharger un CSV d’exemple</a>
+      <button class="btn-secondary" id="exportBtn">Exporter (PDF)</button>
+      <button class="btn-secondary" id="privacyBtn">Confidentialité</button>
+      <button class="btn-secondary" id="langBtn">EN</button>
+      <span class="spinner" id="globalSpin"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+    </div>
+
     <div class="card">
       <div class="controls">
         <div class="grid2">
-          <div class="field">
-            <div><strong>Fichier CSV</strong><br><span class="hint">Colonnes: <code>account,label,debit,credit</code></span></div>
+          <div class="field"><div><strong>Fichier CSV</strong><br><span class="hint">Colonnes : <code>account,label,debit,credit</code></span></div>
             <div class="row"><label class="btn-secondary" for="csvInput">Choisir un fichier</label><input id="csvInput" type="file" accept=".csv" /><span id="fileName" class="badge" style="display:none"></span></div>
           </div>
-
-          <div class="field">
-            <div><strong>Chiffre d'affaires (optionnel)</strong><br><span class="hint">Pour affiner les ratios</span></div>
-            <input id="turnover" type="number" step="0.01" placeholder="Ex: 100000" />
-          </div>
-
-          <div class="field">
-            <div><strong>Référentiel d’audit</strong><br><span class="hint">Choisir IFRS ou US GAAP</span></div>
+          <div class="field"><div><strong>Chiffre d'affaires (optionnel)</strong><br><span class="hint">Pour affiner les ratios</span></div><input id="turnover" type="number" step="0.01" placeholder="Ex : 100000" /></div>
+          <div class="field"><div><strong>Référentiel d’audit</strong><br><span class="hint">Choisir IFRS ou US GAAP</span></div>
             <select id="framework" style="background:#0e1428;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 10px;">
-              <option value="IFRS" selected>IFRS</option>
-              <option value="USGAAP">US GAAP</option>
+              <option value="IFRS" selected>IFRS</option><option value="USGAAP">US GAAP</option>
             </select>
           </div>
         </div>
 
-        <div class="row" style="justify-content:space-between;">
+        <div class="row" style="justify-content:space-between">
           <div class="row">
             <button id="analyzeBtn" class="btn">Analyser</button>
             <button id="auditBtn" class="btn-secondary">Test Audit</button>
@@ -123,85 +105,54 @@
         </div>
       </div>
 
-      <div id="results" style="display:none; margin-top: 10px;">
+      <!-- CSV preview -->
+      <div id="csvPreview" class="tile"><h3 style="margin:0 0 8px">Aperçu CSV (10 premières lignes)</h3><div id="csvTableWrap"></div></div>
+
+      <div id="results" style="display:none;margin-top:10px">
         <div class="tiles">
           <div class="tile"><h3>KPIs</h3><div class="kv" id="kpi"></div></div>
           <div class="tile"><h3>Fiscalité</h3><div class="kv" id="tax"></div></div>
         </div>
-
         <div class="tiles" style="margin-top:12px">
           <div class="tile"><h3>Audit — Résumé</h3><div class="kv" id="auditSummary"></div></div>
-          <div class="tile"><h3>Audit — Points relevés</h3><ul id="auditIssues" style="margin:0; padding-left:18px;"></ul></div>
+          <div class="tile"><h3>Audit — Points relevés</h3><ul id="auditIssues" style="margin:0;padding-left:18px"></ul></div>
         </div>
-
         <div class="tile" style="margin-top:12px"><h3>Top comptes (par solde absolu)</h3><div id="auditTop"></div></div>
       </div>
     </div>
 
-    <footer>Astuce : si la page ne répond pas, vérifiez l’URL de l’API dans les paramètres (⚙️).</footer>
+    <footer>© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.</footer>
   </div>
 
-  <!-- Chat widget -->
-  <div id="chat-btn"><button id="openChat">Chat</button></div>
-  <div id="chat-box">
-    <div id="chat-head">
-      <div class="name"><img src="https://via.placeholder.com/56x56.png?text=A" alt="Albert"><span>Albert — Assistant Fiscal</span></div>
-      <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px;">Fermer</button>
+  <!-- Privacy Modal -->
+  <div class="modal-backdrop" id="privacyModal" style="display:none">
+    <div class="modal">
+      <h2>Confidentialité</h2>
+      <p>Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse. Aucune donnée n’est stockée ni réutilisée. Le chatbot ne garde aucun historique.</p>
+      <div class="row" style="justify-content:flex-end"><button class="btn" id="closePrivacy">Fermer</button></div>
     </div>
-    <div id="chat-log"></div>
-    <div id="chat-input"><input id="chatText" type="text" placeholder="Posez votre question…" /><button id="sendChat">Envoyer</button></div>
   </div>
 
-  <script>
-    const $ = id => document.getElementById(id);
-    const safeSetHTML = (id, html) => { const el = $(id); if (el) el.innerHTML = html; };
-    const safeSetText = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+  <!-- Chat -->
+  <div id="chat-btn"><button id="openChat">Chat</button></div>
+  <div id="chat-box"><div id="chat-head"><div class="name"><img src="https://via.placeholder.com/56x56.png?text=A" alt="Albert"><span>Albert — Assistant Fiscal</span></div><button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px">Fermer</button></div><div id="chat-log"></div><div id="chat-input"><input id="chatText" type="text" placeholder="Posez votre question…" /><button id="sendChat">Envoyer</button></div></div>
 
-    const statusEl = $('status');
-    const showStatus = (msg, type) => { statusEl.textContent = msg; statusEl.className = 'status' + (type ? ' ' + type : ''); };
-    const euro = v => typeof v === 'number' ? v.toLocaleString(undefined, { style:'currency', currency:'EUR' }) : '—';
-    const pct = v => (v ?? v === 0) ? (Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%') : '—';
-
-    const apiKey = 'optimis_api_base'; const apiInput = $('apiBase');
-    const loadApiBase = () => localStorage.getItem(apiKey) || apiInput.value;
-    const saveApiBase = v => localStorage.setItem(apiKey, v);
-
-    const csvInput = $('csvInput'); const fileName = $('fileName');
-    csvInput.addEventListener('change', () => { fileName.style.display = csvInput.files[0] ? 'inline-block' : 'none'; fileName.textContent = csvInput.files[0]?.name || ''; });
-
-    // --- Test Audit handler ---
-    $('auditBtn').onclick = async () => {
-      const base = (loadApiBase() || '').replace(/\/$/, ''); const file = csvInput.files[0]; const frameworkSel = $('framework').value || 'IFRS';
-      if (!base) return showStatus('API URL manquante', 'err');
-      if (!file) return showStatus('Veuillez choisir un CSV', 'err');
-      const fd = new FormData(); fd.append('file', file); fd.append('standard', frameworkSel);
-      const btn = $('auditBtn'); btn.disabled = true; showStatus('Audit en cours…');
-      try {
-        const res = await fetch(base + '/audit/test', { method:'POST', body: fd, credentials:'include' });
-        const data = await res.json().catch(()=>({}));
-        if (!res.ok) throw new Error(data?.detail || 'Erreur API');
-        $('results').style.display = 'block';
-        const s = data.summary || {};
-        safeSetHTML('auditSummary', `
-          <div><span>OK</span><strong>${s.ok ? 'Oui' : 'Non'}</strong></div>
-          <div><span>Référentiel</span><strong>${s.framework || '—'}</strong></div>
-          <div><span>Lignes</span><strong>${s.total_rows || '—'}</strong></div>
-          <div><span>Total Débits</span><strong>${euro(s.total_debit)}</strong></div>
-          <div><span>Total Crédits</span><strong>${euro(s.total_credit)}</strong></div>
-          <div><span>Écart</span><strong>${euro(s.imbalance)}</strong></div>`);
-        const ul = $('auditIssues'); ul.innerHTML='';
-        (data.issues||[]).forEach(it=>{ const li=document.createElement('li'); const badge=it.severity==='error'?'🔴':it.severity==='warning'?'🟠':'🔵';
-          li.innerHTML=`<span class="hint">${badge} [${it.code}]</span> ${it.message}${it.count?' — <span class="hint">('+it.count+')</span>':''}`; ul.appendChild(li); });
-        if((data.issues||[]).length===0) ul.innerHTML='<li class="hint">Aucun point signalé.</li>';
-        const topDiv=$('auditTop');
-        topDiv.innerHTML=(data.top_accounts||[]).map(r=>`<div class="field" style="justify-content:space-between;">
-          <div><strong>${r.account}</strong> — <span class="hint">${r.label}</span></div>
-          <div><strong>${euro(r.balance)}</strong> <span class="hint">(abs: ${euro(r.abs_balance)})</span></div></div>`).join('')||'<div class="hint">Aucun compte.</div>';
-        showStatus('Audit terminé','ok');
-      } catch(e){ showStatus(e.message,'err'); } finally{ btn.disabled=false; }
-    };
-
-    // (Your analyze & chat code stays the same; the important part here is removal of #raw and guards.)
-  </script>
+<script>
+const $=id=>document.getElementById(id);const spin=s=>$('globalSpin').classList.toggle('active',!!s);
+$('hideSteps').onclick=()=>{$('steps').style.display='none';localStorage.setItem('stepsSeen','1');};
+if(!localStorage.getItem('stepsSeen'))$('steps').style.display='flex';
+$('privacyBtn').onclick=()=>$('privacyModal').style.display='grid';
+$('closePrivacy').onclick=()=>$('privacyModal').style.display='none';
+$('privacyModal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.style.display='none';});
+$('exportBtn').onclick=()=>window.print();
+$('csvInput').addEventListener('change',()=>{const f=$('csvInput').files?.[0];if(!f){$('csvPreview').style.display='none';return;}const r=new FileReader();r.onload=()=>{const t=String(r.result||'');const rows=t.trim().split(/\r?\n/).slice(0,11).map(x=>x.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/));if(rows.length){$('csvPreview').style.display='block';$('csvTableWrap').innerHTML=`<table><thead>${rows[0].map(h=>`<th>${h}</th>`).join('')}</thead><tbody>${rows.slice(1).map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`}};r.readAsText(f);});
+const appendMsg=(t,w)=>{const d=document.createElement('div');d.className=`msg ${w==='me'?'me':'bot'}`;d.textContent=t;$('chat-log').appendChild(d);$('chat-log').scrollTop=$('chat-log').scrollHeight;};
+$('openChat').onclick=()=>{$('chat-box').style.display='block';$('chatText').focus();};
+$('closeChat').onclick=()=>$('chat-box').style.display='none';
+let lastResultSummary="";
+async function callChatAPI(q){const base=(localStorage.getItem('optimis_api_base')||$('apiBase')?.value||'').replace(/\/$/,'');if(!base)return appendMsg("API non configurée","bot");spin(true);try{const msgs=[{role:'system',content:'Tu es Albert, un assistant fiscal clair et concis pour les PME françaises.'}];if(lastResultSummary)msgs.push({role:'system',content:`Contexte: ${lastResultSummary}`});msgs.push({role:'user',content:q});const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({messages:msgs})});const data=await r.json();if(!r.ok)throw new Error(data?.detail||'Erreur API');appendMsg(data.reply,'bot');}catch(e){appendMsg('Erreur: '+(e.message||e),'bot');}finally{spin(false);}}
+$('sendChat').onclick=()=>{const q=$('chatText').value.trim();if(!q)return;appendMsg(q,'me');$('chatText').value='';callChatAPI(q);};
+$('chatText').addEventListener('keydown',e=>{if(e.key==='Enter')$('sendChat').click();});
+</script>
 </body>
 </html>
