@@ -18,12 +18,10 @@
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .field{background:#0e1428;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .btn,.btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer;border:1px solid transparent}
-    .btn{background:var(--accent);color:#fff}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn{background:var(--accent);color:#fff}.btn:disabled{opacity:.6;cursor:not-allowed}
     .btn-secondary{background:#0e1428;color:var(--text);border-color:var(--line)}
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    .status{font-size:13px;color:var(--muted)}
-    .status.ok{color:var(--ok)}.status.err{color:var(--err)}
+    .status{font-size:13px;color:var(--muted)}.status.ok{color:var(--ok)}.status.err{color:var(--err)}
     .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}
     .tile{background:#0e1428;border:1px solid var(--line);border-radius:14px;padding:14px}
     footer{margin-top:16px;color:var(--muted);font-size:13px}
@@ -38,8 +36,7 @@
     #chat-head img{width:28px;height:28px;border-radius:50%;border:1px solid #243155}
     #chat-log{height:280px;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
     .msg{padding:10px 12px;border-radius:12px;max-width:85%;font-size:14px;line-height:1.35}
-    .me{background:#3a71ff;color:#fff;align-self:flex-end}
-    .bot{background:#0e1428;border:1px solid #243155;color:#e6e9ef;align-self:flex-start}
+    .me{background:#3a71ff;color:#fff;align-self:flex-end}.bot{background:#0e1428;border:1px solid #243155;color:#e6e9ef;align-self:flex-start}
     #chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #243155;background:#0e1428}
     #chat-input input{flex:1;background:#0e1428;border:1px solid #33416d;color:#e6e9ef;border-radius:10px;padding:10px}
     #chat-input button{background:#3a71ff;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
@@ -58,10 +55,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div>
-      <h1>Optimis Fiscale</h1>
-      <div class="sub">Analyse de balance & estimation fiscale (FR)</div>
-    </div>
+    <div><h1>Optimis Fiscale</h1><div class="sub">Analyse de balance & estimation fiscale (FR)</div></div>
     <div class="row" id="authbar">
       <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
       <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
@@ -83,8 +77,9 @@
         <div class="field">
           <div><strong>Fichier CSV</strong><br><span class="hint">Colonnes : <code>account,label,debit,credit</code></span></div>
           <div class="row">
-            <label class="btn-secondary" for="csvInput">Choisir un fichier</label>
-            <input id="csvInput" type="file" accept=".csv" />
+            <!-- hide default button -->
+            <input id="csvInput" type="file" accept=".csv" style="display:none" />
+            <label class="btn-secondary" for="csvInput" style="cursor:pointer;">Choisir un fichier</label>
             <span id="fileName" class="badge" style="display:none"></span>
           </div>
         </div>
@@ -111,7 +106,7 @@
     </div>
 
     <div id="csvPreview" class="tile">
-      <h3 style="margin:0 0 8px">Aperçu CSV (10 premières lignes)</h3>
+      <h3>Aperçu CSV (10 premières lignes)</h3>
       <div id="csvTableWrap"></div>
     </div>
 
@@ -146,11 +141,11 @@
     <h2>Connexion</h2>
     <div class="field" style="margin-top:8px;display:block;">
       <label><strong>Identifiant entreprise</strong></label>
-      <input id="companyId" type="text" placeholder="ex: demo" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:var(--text);" />
+      <input id="companyId" type="text" placeholder="ex: demo" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
     </div>
     <div class="field" style="margin-top:8px;display:block;">
       <label><strong>Mot de passe</strong></label>
-      <input id="companyPwd" type="password" placeholder="••••••••" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:var(--text);" />
+      <input id="companyPwd" type="password" placeholder="••••••••" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
     </div>
     <div class="row" style="margin-top:12px;justify-content:flex-end;">
       <button class="btn-secondary" id="cancelLogin">Annuler</button>
@@ -161,192 +156,29 @@
 
 <!-- Chat -->
 <div id="chat-btn"><button id="openChat">Chat</button></div>
-<div id="chat-box">
-  <div id="chat-head">
-    <div class="name">
-      <img src="https://via.placeholder.com/56x56.png?text=A" alt="Albert">
-      <span>Albert — Assistant Fiscal</span>
-    </div>
-    <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px">Fermer</button>
-  </div>
-  <div id="chat-log"></div>
-  <div id="chat-input"><input id="chatText" type="text" placeholder="Posez votre question…" /><button id="sendChat">Envoyer</button></div>
-</div>
+<div id="chat-box"><div id="chat-head"><div class="name"><img src="https://via.placeholder.com/56x56.png?text=A" alt="Albert"><span>Albert — Assistant Fiscal</span></div><button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px">Fermer</button></div><div id="chat-log"></div><div id="chat-input"><input id="chatText" type="text" placeholder="Posez votre question…" /><button id="sendChat">Envoyer</button></div></div>
 
 <script>
-/* ---------- helpers ---------- */
 const $=id=>document.getElementById(id);
 const euro=v=>(typeof v==='number'&&isFinite(v))?v.toLocaleString(undefined,{style:'currency',currency:'EUR'}):'—';
 const pct=v=>(v??v===0)?(Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%'):'—';
 const DEFAULT_API='https://optimis-fiscale-production.up.railway.app';
 const getApiBase=()=>DEFAULT_API;
 const setStatus=(m,k)=>{const e=$('status');if(!e)return;e.textContent=m;e.className='status'+(k?' '+k:'');};
-const spin=(on)=>$('globalSpin').classList.toggle('active',!!on);
+const spin=s=>$('globalSpin').classList.toggle('active',!!s);
 
-/* ---------- privacy / export ---------- */
+/* privacy */
 $('exportBtn').onclick=()=>window.print();
 $('privacyBtn').onclick=()=>$('privacyModal').style.display='grid';
 $('closePrivacy').onclick=()=>$('privacyModal').style.display='none';
 $('privacyModal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.style.display='none';});
 
-/* ---------- CSV filename + preview ---------- */
-$('csvInput').addEventListener('change',()=>{
-  const f=$('csvInput').files?.[0];
-  $('fileName').style.display=f?'inline-block':'none';
-  $('fileName').textContent=f?f.name:'';
-  if(!f){$('csvPreview').style.display='none';return;}
-  const r=new FileReader();
-  r.onload=()=>{
-    const t=String(r.result||'');
-    const rows=t.trim().split(/\r?\n/).slice(0,11).map(x=>x.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/));
-    if(rows.length){
-      $('csvPreview').style.display='block';
-      $('csvTableWrap').innerHTML=`<table><thead>${rows[0].map(h=>`<th>${h}</th>`).join('')}</thead>
-        <tbody>${rows.slice(1).map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-    }
-  };
-  r.readAsText(f);
-});
+/* CSV preview */
+$('csvInput').addEventListener('change',()=>{const f=$('csvInput').files?.[0];if(!f){$('csvPreview').style.display='none';return;}$('fileName').style.display='inline-block';$('fileName').textContent=f.name;const r=new FileReader();r.onload=()=>{const t=String(r.result||'');const rows=t.trim().split(/\r?\n/).slice(0,11).map(x=>x.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/));if(rows.length){$('csvPreview').style.display='block';$('csvTableWrap').innerHTML=`<table><thead>${rows[0].map(h=>`<th>${h}</th>`).join('')}</thead><tbody>${rows.slice(1).map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`}};r.readAsText(f);});
 
-/* ---------- ANALYZE ---------- */
-async function runAnalyze(){
-  const base=getApiBase();
-  const file=$('csvInput').files?.[0];
-  const turnover=$('turnover').value;
-  if(!file){setStatus('Veuillez choisir un CSV','err');return;}
-  const fd=new FormData();
-  fd.append('file',file);
-  if(turnover) fd.append('turnover',turnover);
-  setStatus('Analyse en cours…'); spin(true); $('analyzeBtn').disabled=true;
-  try{
-    const res=await fetch(base+'/analyze/trial-balance',{method:'POST',body:fd,credentials:'include'});
-    const data=await res.json();
-    if(!res.ok) throw new Error(data?.detail||'Erreur API');
-
-    $('results').style.display='block';
-    const k=data.kpi||{}, t=data.tax||{};
-    $('kpi').innerHTML=`
-      <div style="display:flex;justify-content:space-between"><span>Chiffre d'affaires</span><strong>${euro(k.revenue)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Marge brute</span><strong>${euro(k.gross_margin)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>EBITDA approx.</span><strong>${euro(k.ebitda_approx)} (${pct(k.ebitda_margin_pct)})</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>BFR</span><strong>${euro(k.working_capital_need)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Trésorerie</span><strong>${euro(k.cash)}</strong></div>`;
-    $('tax').innerHTML=`
-      <div style="display:flex;justify-content:space-between"><span>IS estimé</span><strong>${euro(t.corporate_income_tax)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Contribution sociale (3,3%)</span><strong>${euro(t.social_contribution_on_cit)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>TVA nette</span><strong>${euro(t.vat_balance)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>PME taux 15%</span><strong>${t.eligible_sme_reduced_rate===null?'—':(t.eligible_sme_reduced_rate?'Oui':'Non')}</strong></div>`;
-
-    setStatus('Analyse terminée','ok');
-  }catch(e){ setStatus(e.message||'Erreur','err'); }
-  finally{ spin(false); $('analyzeBtn').disabled=false; }
-}
-
-/* ---------- AUDIT ---------- */
-async function runAudit(){
-  const base=getApiBase();
-  const file=$('csvInput').files?.[0];
-  const framework=$('framework').value||'IFRS';
-  if(!file){setStatus('Veuillez choisir un CSV','err');return;}
-  const fd=new FormData();
-  fd.append('file',file);
-  fd.append('standard',framework);
-  setStatus('Audit en cours…'); spin(true); $('auditBtn').disabled=true;
-  try{
-    const res=await fetch(base+'/audit/test',{method:'POST',body:fd,credentials:'include'});
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data?.detail||'Erreur API');
-
-    $('results').style.display='block';
-    const s=data.summary||{};
-    $('auditSummary').innerHTML=`
-      <div style="display:flex;justify-content:space-between"><span>OK</span><strong>${s.ok?'Oui':'Non'}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Référentiel</span><strong>${s.framework||framework}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Lignes</span><strong>${s.total_rows??'—'}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Total Débits</span><strong>${euro(s.total_debit)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Total Crédits</span><strong>${euro(s.total_credit)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span>Écart</span><strong>${euro(s.imbalance)}</strong></div>`;
-
-    const ul=$('auditIssues'); ul.innerHTML='';
-    (data.issues||[]).forEach(it=>{
-      const li=document.createElement('li');
-      const badge=it.severity==='error'?'🔴':it.severity==='warning'?'🟠':'🔵';
-      li.innerHTML=`<span class="hint">${badge} [${it.code}]</span> ${it.message}${it.count?' — <span class="hint">('+it.count+')</span>':''}`;
-      ul.appendChild(li);
-    });
-    if((data.issues||[]).length===0){ ul.innerHTML='<li class="hint">Aucun point signalé.</li>'; }
-
-    const topDiv=$('auditTop');
-    topDiv.innerHTML=(data.top_accounts||[]).map(r=>`
-      <div class="field" style="justify-content:space-between;">
-        <div><strong>${r.account}</strong> — <span class="hint">${r.label}</span></div>
-        <div><strong>${euro(r.balance)}</strong> <span class="hint">(abs: ${euro(r.abs_balance)})</span></div>
-      </div>`).join('') || '<div class="hint">Aucun compte.</div>';
-
-    setStatus('Audit terminé','ok');
-  }catch(e){ setStatus(e.message||'Erreur','err'); }
-  finally{ spin(false); $('auditBtn').disabled=false; }
-}
-
-/* ---------- wire buttons ---------- */
+/* Analyze */
+async function runAnalyze(){const base=getApiBase();const file=$('csvInput').files?.[0];const t=$('turnover').value;if(!file){setStatus('Veuillez choisir un CSV','err');return;}const fd=new FormData();fd.append('file',file);if(t)fd.append('turnover',t);spin(true);setStatus('Analyse en cours…');$('analyzeBtn').disabled=true;try{const r=await fetch(base+'/analyze/trial-balance',{method:'POST',body:fd,credentials:'include'});const d=await r.json();if(!r.ok)throw new Error(d?.detail||'Erreur API');$('results').style.display='block';const k=d.kpi||{},tx=d.tax||{};$('kpi').innerHTML=`<div><span>CA</span><strong>${euro(k.revenue)}</strong></div><div><span>Marge brute</span><strong>${euro(k.gross_margin)}</strong></div><div><span>EBITDA</span><strong>${euro(k.ebitda_approx)} (${pct(k.ebitda_margin_pct)})</strong></div><div><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>`;$('tax').innerHTML=`<div><span>IS estimé</span><strong>${euro(tx.corporate_income_tax)}</strong></div><div><span>TVA nette</span><strong>${euro(tx.vat_balance)}</strong></div>`;setStatus('Analyse terminée','ok');}catch(e){setStatus(e.message||'Erreur','err');}finally{spin(false);$('analyzeBtn').disabled=false;}}
 $('analyzeBtn').onclick=runAnalyze;
-$('auditBtn').onclick=runAudit;
 
-/* ---------- Auth (cookie session) ---------- */
-const loginModal=$('loginModal'), loginBtn=$('loginBtn'), logoutBtn=$('logoutBtn'), who=$('who');
-function openLogin(){loginModal.style.display='grid';}
-function closeLogin(){loginModal.style.display='none';}
-loginBtn.onclick=openLogin;
-$('cancelLogin').onclick=closeLogin;
-$('doLogin').onclick=async()=>{
-  const base=getApiBase();
-  const company_id=($('companyId').value||'').trim();
-  const password=$('companyPwd').value||'';
-  if(!company_id||!password){setStatus('Identifiant/mot de passe requis','err');return;}
-  try{
-    setStatus('Connexion…');
-    const r=await fetch(base+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({company_id,password})});
-    const d=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(d?.detail||'Login failed');
-    if(who){who.textContent=`Connecté: ${d.company_id||company_id}`; who.style.display='inline';}
-    loginBtn.style.display='none'; logoutBtn.style.display='inline-flex';
-    closeLogin(); setStatus('Connecté','ok');
-  }catch(e){ setStatus(e.message||'Erreur de connexion','err'); }
-};
-logoutBtn.onclick=async()=>{
-  const base=getApiBase();
-  try{ await fetch(base+'/auth/logout',{method:'POST',credentials:'include'}); }
-  finally{
-    if(who) who.style.display='none';
-    logoutBtn.style.display='none';
-    loginBtn.style.display='inline-flex';
-    setStatus('Déconnecté','ok');
-  }
-};
-loginModal.addEventListener('click',e=>{ if(e.target===loginModal) closeLogin(); });
-
-/* ---------- Chat (Albert) ---------- */
-const appendMsg=(t,w)=>{const d=document.createElement('div');d.className=`msg ${w==='me'?'me':'bot'}`;d.textContent=t;$('chat-log').appendChild(d);$('chat-log').scrollTop=$('chat-log').scrollHeight;};
-$('openChat').onclick=()=>{$('chat-box').style.display='block';$('chatText').focus();};
-$('closeChat').onclick=()=>$('chat-box').style.display='none';
-$('sendChat').onclick=async()=>{
-  const q=$('chatText').value.trim(); if(!q) return;
-  appendMsg(q,'me'); $('chatText').value=''; const base=getApiBase(); spin(true);
-  try{
-    const res=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',
-      body:JSON.stringify({messages:[{role:'system',content:'Tu es Albert, un assistant fiscal clair et concis pour les PME françaises.'},{role:'user',content:q}]})});
-    if(res.status===429){ appendMsg('Limite atteinte. Réessayez dans quelques secondes.','bot'); return; }
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data?.detail||'Erreur API');
-    appendMsg(data.reply,'bot');
-  }catch(e){ appendMsg('Erreur: '+(e.message||e),'bot'); }
-  finally{ spin(false); }
-};
-$('chatText').addEventListener('keydown',e=>{ if(e.key==='Enter') $('sendChat').click(); });
-
-/* ---------- (Optional) settings icon can open docs or future settings ---------- */
-$('openSettings').onclick=()=>{ window.open('https://optimis-fiscale-production.up.railway.app/docs','_blank'); };
-</script>
-</body>
-</html>
+/* Audit */
+async function runAudit(){const base=getApiBase();const f=$('csvInput').files?.[0];const fw=$('framework').value;if(!f){setStatus('Veuillez choisir un CSV','err');return;}const fd=new FormData();fd.append('file',f);fd.append('standard',fw);spin(true);setStatus('Audit en cours…');$('auditBtn').disabled=true;try{const r=await fetch(base+'/audit/test',{method:'POST',body:fd,credentials:'include'});const d=await r.json();if(!
