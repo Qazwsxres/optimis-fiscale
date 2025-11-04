@@ -12,20 +12,21 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .models import AnalysisResult
-from .analyzers import analyze_trial_balance
+# local imports (no leading dot to avoid import errors)
+from models import AnalysisResult
+from analyzers import analyze_trial_balance
 
 # -----------------------------------------------------------------------------
 # App & CORS
 # -----------------------------------------------------------------------------
-app = FastAPI(title="Optimis Fiscale MVP", version="0.2.0")
+app = FastAPI(title="Optimis Fiscale MVP", version="0.2.1")
 
-ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN") or "https://qazwsxres.github.io"  # your Pages origin
+ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN") or "https://qazwsxres.github.io"
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[ALLOWED_ORIGIN],
-    allow_credentials=True,    # allow cookies
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -33,19 +34,25 @@ app.add_middleware(
 # -----------------------------------------------------------------------------
 # Auth & Secrets
 # -----------------------------------------------------------------------------
-SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")   # set in Railway
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")        # set in Railway
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY or SECRET_KEY == "CHANGE_ME":
+    raise RuntimeError("SECRET_KEY must be set in environment")
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ALGO = "HS256"
 COOKIE_NAME = "session"
+
 
 def validate_company_password(company_id: str, password: str) -> bool:
     env_key = f"COMPANY_{company_id}_PASSWORD"
     expected = os.getenv(env_key)
     return bool(expected and password == expected)
 
+
 def make_token(company_id: str, ttl_seconds: int = 60 * 60) -> str:
     now = int(time.time())
     return jwt.encode({"sub": company_id, "iat": now, "exp": now + ttl_seconds}, SECRET_KEY, algorithm=ALGO)
+
 
 def parse_token(token: str) -> str:
     try:
@@ -54,8 +61,8 @@ def parse_token(token: str) -> str:
     except JWTError:
         raise HTTPException(401, "Invalid or expired session")
 
+
 def set_session_cookie(resp: Response, token: str):
-    # Cross-site cookie so GitHub Pages (frontend) can use Railway API
     resp.set_cookie(
         key=COOKIE_NAME,
         value=token,
@@ -66,57 +73,64 @@ def set_session_cookie(resp: Response, token: str):
         max_age=60 * 60,
     )
 
+
 def require_auth(request: Request) -> str:
     token = request.cookies.get(COOKIE_NAME)
     if not token:
         raise HTTPException(401, "Not authenticated")
     return parse_token(token)
 
+
 # -----------------------------------------------------------------------------
-# Health & root
+# Health
 # -----------------------------------------------------------------------------
 @app.get("/")
 def root():
     return {"ok": True, "service": "optimis-fiscale-api"}
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
+
 # -----------------------------------------------------------------------------
-# Analysis endpoints
+# Analysis
 # -----------------------------------------------------------------------------
 @app.post("/analyze/trial-balance", response_model=AnalysisResult)
 async def analyze_trial_balance_endpoint(file: UploadFile = File(...), turnover: float | None = None):
     if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Veuillez fournir un CSV (colonnes: account,label,debit,credit).")
-    content = await file.read()
+        raise HTTPException(400, "Veuillez fournir un CSV (colonnes: account,label,debit,credit).")
     try:
         import io
-        df = pd.read_csv(io.BytesIO(content))
+        df = pd.read_csv(io.BytesIO(await file.read()))
+        df.columns = df.columns.str.strip().str.lower()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"CSV illisible: {e}")
+        raise HTTPException(400, f"CSV illisible")
     try:
         return analyze_trial_balance(df, turnover=turnover)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(400, str(e))
+
 
 @app.post("/analyze/json", response_model=AnalysisResult)
 async def analyze_json_endpoint(payload: dict):
-    # Attendu : {"trial_balance": [{account,label,debit,credit}, ...], "turnover": 123456.78}
     try:
         df = pd.DataFrame(payload["trial_balance"])
+        df.columns = df.columns.str.strip().str.lower()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"JSON invalide : {e}")
+        raise HTTPException(400, "JSON invalide")
     turnover = payload.get("turnover")
     return analyze_trial_balance(df, turnover=turnover)
 
+
 # -----------------------------------------------------------------------------
-# Auth endpoints
+# Auth
 # -----------------------------------------------------------------------------
 class LoginBody(BaseModel):
     company_id: str
     password: str
+
 
 @app.post("/auth/login")
 def login(body: LoginBody, response: Response):
@@ -126,38 +140,41 @@ def login(body: LoginBody, response: Response):
     set_session_cookie(response, token)
     return {"ok": True, "company_id": body.company_id}
 
+
 @app.post("/auth/logout")
 def logout(response: Response):
     response.delete_cookie(COOKIE_NAME, path="/")
     return {"ok": True}
 
+
 # -----------------------------------------------------------------------------
-# Chat endpoint with retry/backoff + throttle
+# Chat (OpenAI)
 # -----------------------------------------------------------------------------
 class ChatMessage(BaseModel):
     role: str
     content: str
 
+
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
+
 
 class ChatResponse(BaseModel):
     reply: str
 
-# Very small in-memory throttle per company (best-effort, single-process)
+
 _last_call = defaultdict(float)
+
+
 def throttle(company_id: str, min_interval: float = 2.0):
     now = time.time()
     if now - _last_call[company_id] < min_interval:
         raise HTTPException(429, "Trop de requêtes. Réessayez dans 2–3 secondes.")
     _last_call[company_id] = now
 
+
 async def call_openai_with_retry(json_payload, api_key, max_retries: int = 4) -> str:
-    """
-    Call OpenAI Chat Completions with exponential backoff.
-    Respects Retry-After when provided. Raises HTTPException on failure.
-    """
-    backoff = 1.5  # seconds
+    backoff = 1.5
     async with httpx.AsyncClient(timeout=40) as client:
         for attempt in range(1, max_retries + 1):
             r = await client.post(
@@ -176,26 +193,15 @@ async def call_openai_with_retry(json_payload, api_key, max_retries: int = 4) ->
                 backoff *= 2
                 continue
 
-            # Other error or no retries left
-            try:
-                r.raise_for_status()
-            except httpx.HTTPStatusError as e:
-                raise HTTPException(
-                    status_code=502,
-                    detail=f"OpenAI error {e.response.status_code}: {e.response.text[:200]}",
-                )
+            raise HTTPException(502, f"OpenAI error {r.status_code}: {r.text[:200]}")
+        raise HTTPException(429, "OpenAI rate limit: réessayez plus tard.")
 
-        raise HTTPException(429, "OpenAI rate limit: merci de réessayer dans quelques secondes.")
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
-    """Ephemeral chat: no content is stored."""
     if not OPENAI_API_KEY:
         raise HTTPException(500, "Server missing OPENAI_API_KEY")
-
-    # avoid accidental spam
-    throttle(company_id, min_interval=2.0)
-
+    throttle(company_id, 2.0)
     payload = {
         "model": "gpt-4o-mini",
         "messages": [
@@ -204,18 +210,19 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
         ],
         "temperature": 0.2,
     }
-
-    reply = await call_openai_with_retry(payload, OPENAI_API_KEY, max_retries=4)
+    reply = await call_openai_with_retry(payload, OPENAI_API_KEY, 4)
     return ChatResponse(reply=reply)
 
+
 # -----------------------------------------------------------------------------
-# Audit endpoint (with IFRS / USGAAP selector)
+# Audit
 # -----------------------------------------------------------------------------
 class AuditIssue(BaseModel):
     code: str
-    severity: str  # "info" | "warning" | "error"
+    severity: str
     message: str
     count: Optional[int] = None
+
 
 class AuditSummary(BaseModel):
     ok: bool
@@ -223,12 +230,14 @@ class AuditSummary(BaseModel):
     total_debit: float
     total_credit: float
     imbalance: float
-    framework: str  # "IFRS" or "USGAAP"
+    framework: str
+
 
 class AuditResult(BaseModel):
     summary: AuditSummary
     issues: List[AuditIssue]
-    top_accounts: List[dict]  # [{account, label, balance, abs_balance}]
+    top_accounts: List[dict]
+
 
 @app.post("/audit/test", response_model=AuditResult)
 async def test_audit(
@@ -236,15 +245,8 @@ async def test_audit(
     standard: str = Form("IFRS"),
     company_id: str = Depends(require_auth),
 ):
-    """
-    Basic audit with framework flag (IFRS or USGAAP).
-    CSV required columns: account,label,debit,credit.
-    """
     standard = (standard or "IFRS").strip().upper()
-    if standard in ("IFRS", "USGAAP", "US GAAP"):
-        framework = "USGAAP" if standard.startswith("US") else "IFRS"
-    else:
-        framework = "IFRS"  # default if unknown
+    framework = "USGAAP" if standard.startswith("US") else "IFRS"
 
     if not file.filename.endswith(".csv"):
         raise HTTPException(400, "Veuillez fournir un CSV (colonnes: account,label,debit,credit).")
@@ -252,17 +254,15 @@ async def test_audit(
     import io
     try:
         df = pd.read_csv(io.BytesIO(await file.read()))
-    except Exception as e:
-        raise HTTPException(400, f"CSV illisible: {e}")
+        df.columns = df.columns.str.strip().str.lower()
+    except Exception:
+        raise HTTPException(400, "CSV illisible")
 
     required = {"account", "label", "debit", "credit"}
-    if not required.issubset(set(df.columns.str.lower())):
-        df.columns = [c.lower() for c in df.columns]
-        if not required.issubset(set(df.columns)):
-            missing = sorted(list(required - set(df.columns)))
-            raise HTTPException(400, f"Colonnes manquantes: {', '.join(missing)}")
+    if not required.issubset(df.columns):
+        missing = sorted(list(required - set(df.columns)))
+        raise HTTPException(400, f"Colonnes manquantes: {', '.join(missing)}")
 
-    # numeric coercion
     for c in ["debit", "credit"]:
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
 
@@ -271,23 +271,12 @@ async def test_audit(
     imbalance = float(abs(total_debit - total_credit))
 
     issues: List[AuditIssue] = []
-
-    # Core checks (same tolerance for both; you can diverge later if needed)
     if imbalance > 0.01:
-        issues.append(AuditIssue(
-            code="IMBALANCE",
-            severity="error",
-            message=f"Écart entre débits et crédits: {imbalance:,.2f} €"
-        ))
+        issues.append(AuditIssue(code="IMBALANCE", severity="error", message=f"Écart entre débits et crédits: {imbalance:,.2f} €"))
 
     missing_labels = int(df["label"].isna().sum() + (df["label"].astype(str).str.strip() == "").sum())
     if missing_labels > 0:
-        issues.append(AuditIssue(
-            code="MISSING_LABELS",
-            severity="warning",
-            message="Libellés manquants",
-            count=missing_labels
-        ))
+        issues.append(AuditIssue(code="MISSING_LABELS", severity="warning", message="Libellés manquants", count=missing_labels))
 
     neg_debit = int((df["debit"] < 0).sum())
     neg_credit = int((df["credit"] < 0).sum())
@@ -296,36 +285,26 @@ async def test_audit(
     if neg_credit > 0:
         issues.append(AuditIssue(code="NEG_CREDIT", severity="warning", message="Crédits négatifs détectés", count=neg_credit))
 
-    # Duplicate account codes (informational)
-    dup_accounts = df["account"].astype(str).str.strip()
-    dups = dup_accounts[dup_accounts.duplicated()].nunique()
+    dups = df["account"].astype(str).str.strip().duplicated().sum()
     if dups > 0:
         issues.append(AuditIssue(code="DUP_ACCOUNTS", severity="info", message="Comptes apparaissant plusieurs fois", count=int(dups)))
 
-    # Framework note (informational)
-    issues.append(AuditIssue(
-        code="FRAMEWORK",
-        severity="info",
-        message=f"Contrôles exécutés avec le référentiel {framework}. (Règles génériques v1)"
-    ))
+    issues.append(AuditIssue(code="FRAMEWORK", severity="info", message=f"Contrôles exécutés avec le référentiel {framework}."))
 
-    # Top accounts by absolute balance
     df["balance"] = df["debit"] - df["credit"]
     grp = df.groupby(["account", "label"], dropna=False)["balance"].sum().reset_index()
     grp["abs_balance"] = grp["balance"].abs()
-    top = (grp.sort_values("abs_balance", ascending=False)
-              .head(10)
-              .assign(
-                  account=lambda d: d["account"].astype(str),
-                  label=lambda d: d["label"].astype(str),
-                  balance=lambda d: d["balance"].round(2),
-                  abs_balance=lambda d: d["abs_balance"].round(2),
-              )[["account", "label", "balance", "abs_balance"]]
-              .to_dict(orient="records"))
+    top = grp.sort_values("abs_balance", ascending=False).head(10)
+    top = top.assign(
+        account=top["account"].astype(str),
+        label=top["label"].astype(str),
+        balance=top["balance"].round(2),
+        abs_balance=top["abs_balance"].round(2),
+    )[["account", "label", "balance", "abs_balance"]].to_dict(orient="records")
 
     summary = AuditSummary(
         ok=(imbalance <= 0.01 and missing_labels == 0 and neg_debit == 0 and neg_credit == 0),
-        total_rows=int(len(df)),
+        total_rows=len(df),
         total_debit=round(total_debit, 2),
         total_credit=round(total_credit, 2),
         imbalance=round(imbalance, 2),
