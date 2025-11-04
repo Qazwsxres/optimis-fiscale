@@ -29,6 +29,20 @@
     .modal{width:min(560px,92vw);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
     .gear{background:#0e1428;border:1px solid var(--line);width:40px;height:40px;display:grid;place-items:center;border-radius:12px;cursor:pointer}
     #authbar{display:flex;gap:8px;align-items:center}#authbar .me{font-size:13px;color:#a3adbf}
+
+    /* chat widget */
+    #chat-btn{position:fixed;right:20px;bottom:20px;z-index:30}
+    #chat-btn button{background:#3a71ff;color:#fff;border:0;padding:14px 16px;border-radius:999px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+    #chat-box{position:fixed;right:20px;bottom:80px;width:min(380px,92vw);background:#11172c;border:1px solid #243155;border-radius:16px;overflow:hidden;display:none;z-index:30}
+    #chat-head{padding:12px 14px;font-weight:700;border-bottom:1px solid #243155;display:flex;justify-content:space-between;align-items:center}
+    #chat-head img{width:28px;height:28px;border-radius:50%;border:1px solid #243155}
+    #chat-log{height:280px;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+    .msg{padding:10px 12px;border-radius:12px;max-width:85%;font-size:14px;line-height:1.35}
+    .me{background:#3a71ff;color:#fff;align-self:flex-end}.bot{background:#0e1428;border:1px solid #243155;color:#e6e9ef;align-self:flex-start}
+    #chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #243155;background:#0e1428}
+    #chat-input input{flex:1;background:#0e1428;border:1px solid #33416d;color:#e6e9ef;border-radius:10px;padding:10px}
+    #chat-input button{background:#3a71ff;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+
     .spinner{display:none;gap:8px;align-items:center}.spinner.active{display:inline-flex}
     .spinner .dot{width:8px;height:8px;border-radius:50%;background:#3a71ff;animation:b 1s infinite}
     .spinner .dot:nth-child(2){animation-delay:.15s}.spinner .dot:nth-child(3){animation-delay:.3s}
@@ -37,15 +51,19 @@
     #csvPreview table{width:100%;border-collapse:collapse;border:1px solid var(--line)}
     #csvPreview th,#csvPreview td{border:1px solid var(--line);padding:6px;font-size:13px}
     #csvPreview th{color:#c6d0f5;background:#0f1530}
-    @media print{header,.controls,.modal-backdrop{display:none!important}body{background:#fff;color:#000}.card{border:0;box-shadow:none}}
+    @media print{#chat-btn,#chat-box,header,.controls,.modal-backdrop{display:none!important}body{background:#fff;color:#000}.card{border:0;box-shadow:none}}
     @media (max-width:960px){.grid2{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div><h1>Optimis Fiscale</h1><div class="sub">Analyse de balance & estimation fiscale (FR)</div></div>
+    <div>
+      <h1>Optimis Fiscale</h1>
+      <div class="sub">Analyse de balance & estimation fiscale (FR)</div>
+    </div>
     <div class="row" id="authbar">
+      <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
       <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
       <button id="loginBtn" class="btn-secondary">Se connecter</button>
       <span id="who" class="me" style="display:none"></span>
@@ -117,8 +135,44 @@
 <div class="modal-backdrop" id="privacyModal" style="display:none">
   <div class="modal">
     <h2>Confidentialité</h2>
-    <p>Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse. Aucune donnée n’est stockée ni réutilisée.</p>
+    <p>Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse. Aucune donnée n’est stockée ni réutilisée. Le chatbot ne garde aucun historique.</p>
     <div class="row" style="justify-content:flex-end"><button class="btn" id="closePrivacy">Fermer</button></div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal-backdrop" id="loginModal" style="display:none">
+  <div class="modal">
+    <h2>Connexion</h2>
+    <div class="field" style="margin-top:8px;display:block;">
+      <label><strong>Identifiant entreprise</strong></label>
+      <input id="companyId" type="text" placeholder="ex: demo" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
+    </div>
+    <div class="field" style="margin-top:8px;display:block;">
+      <label><strong>Mot de passe</strong></label>
+      <input id="companyPwd" type="password" placeholder="••••••••" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
+    </div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end;">
+      <button class="btn-secondary" id="cancelLogin">Annuler</button>
+      <button class="btn" id="doLogin">Connexion</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat -->
+<div id="chat-btn"><button id="openChat">Chat</button></div>
+<div id="chat-box">
+  <div id="chat-head">
+    <div class="name" style="display:flex;gap:8px;align-items:center">
+      <img src="https://via.placeholder.com/56x56.png?text=A" alt="Albert">
+      <span>Albert — Assistant Fiscal</span>
+    </div>
+    <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px">Fermer</button>
+  </div>
+  <div id="chat-log"></div>
+  <div id="chat-input">
+    <input id="chatText" type="text" placeholder="Posez votre question…" />
+    <button id="sendChat">Envoyer</button>
   </div>
 </div>
 
@@ -127,20 +181,20 @@ const $ = id => document.getElementById(id);
 const euro = v => (typeof v === 'number' && isFinite(v)) ? v.toLocaleString(undefined,{style:'currency',currency:'EUR'}) : '—';
 const pct = v => (v ?? v === 0) ? (Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%') : '—';
 
-// auto-detect API base
+// API base detection
 const DEFAULT_API = window.location.hostname.includes("localhost")
   ? "http://127.0.0.1:8000"
   : "https://optimis-fiscale-production.up.railway.app";
 
 const getApiBase = () => DEFAULT_API;
 const setStatus = (m,k) => { const e=$('status'); if(e){ e.textContent=m; e.className='status'+(k?' '+k:''); } };
-const spin = s => $('globalSpin').classList.toggle('active',!!s);
+const spin = s => $('globalSpin')?.classList.toggle('active',!!s);
 
-// Privacy modal
+// Privacy
 $('exportBtn').onclick = () => window.print();
 $('privacyBtn').onclick = () => $('privacyModal').style.display = 'grid';
 $('closePrivacy').onclick = () => $('privacyModal').style.display = 'none';
-$('privacyModal').addEventListener('click', e => { if(e.target===e.currentTarget)e.currentTarget.style.display='none'; });
+$('privacyModal').addEventListener('click',e=>{ if(e.target===e.currentTarget)e.currentTarget.style.display='none'; });
 
 // CSV preview
 $('csvInput').addEventListener('change', () => {
@@ -208,6 +262,114 @@ async function runAudit(){
   finally{ spin(false); $('auditBtn').disabled=false; }
 }
 $('auditBtn').onclick=runAudit;
+
+// Login modal helpers
+function openLogin(){ $('loginModal').style.display='grid'; }
+function closeLogin(){ $('loginModal').style.display='none'; }
+
+// Auth: login/logout
+$('loginBtn').onclick = openLogin;
+$('cancelLogin').onclick = closeLogin;
+
+$('doLogin').onclick = async () => {
+  const base = getApiBase();
+  const company_id = $('companyId').value.trim();
+  const password = $('companyPwd').value;
+  if(!company_id || !password){ setStatus('Identifiant et mot de passe requis','err'); return; }
+  try{
+    spin(true); setStatus('Connexion…');
+    const r = await fetch(base+'/auth/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({ company_id, password })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d?.detail || 'Échec connexion');
+    closeLogin();
+    $('who').style.display='inline-block';
+    $('who').textContent = `Connecté: ${d.company_id}`;
+    $('loginBtn').style.display='none';
+    $('logoutBtn').style.display='inline-flex';
+    setStatus('Connecté','ok');
+  }catch(e){
+    setStatus(e.message || 'Erreur','err');
+  }finally{
+    spin(false);
+  }
+};
+
+$('logoutBtn').onclick = async () => {
+  const base = getApiBase();
+  try{
+    spin(true);
+    await fetch(base+'/auth/logout', { method:'POST', credentials:'include' });
+  }finally{
+    $('who').style.display='none';
+    $('who').textContent='';
+    $('loginBtn').style.display='inline-flex';
+    $('logoutBtn').style.display='none';
+    setStatus('Déconnecté');
+    spin(false);
+  }
+};
+
+// Chat widget
+const chatBox = $('chat-box');
+const chatLog = $('chat-log');
+const chatText = $('chatText');
+
+const appendMsg = (role, text) => {
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'me' : 'bot');
+  div.textContent = text;
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+};
+
+const isLoggedIn = () => $('logoutBtn').style.display !== 'none';
+
+$('openChat').onclick = () => {
+  if (!isLoggedIn()) {
+    setStatus('Veuillez vous connecter pour utiliser le chat','err');
+    openLogin();
+    return;
+  }
+  chatBox.style.display = 'block';
+  chatText.focus();
+};
+$('closeChat').onclick = () => chatBox.style.display = 'none';
+$('sendChat').onclick = sendChat;
+chatText.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
+
+async function sendChat(){
+  const base = getApiBase();
+  const text = chatText.value.trim();
+  if (!text) return;
+  appendMsg('user', text);
+  chatText.value = '';
+  setStatus('Albert réfléchit…');
+  try{
+    const r = await fetch(base + '/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({ messages: [{ role: 'user', content: text }] })
+    });
+    if (r.status === 401) {
+      setStatus('Session expirée. Veuillez vous reconnecter.','err');
+      openLogin();
+      return;
+    }
+    const d = await r.json();
+    if (!r.ok) throw new Error(d?.detail || 'Erreur API');
+    appendMsg('assistant', d.reply || '(réponse vide)');
+    setStatus('Prêt');
+  }catch(e){
+    appendMsg('assistant', 'Erreur: ' + (e.message || e));
+    setStatus('Erreur chat','err');
+  }
+}
 </script>
 </body>
 </html>
