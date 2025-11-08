@@ -105,6 +105,8 @@
         <div class="row">
           <button id="analyzeBtn" class="btn">Analyser</button>
           <button id="auditBtn" class="btn-secondary">Test Audit</button>
+          <!-- NEW: Optimisation fiscale -->
+          <button id="optimizeBtn" class="btn-secondary">Optimisation fiscale</button>
         </div>
         <div class="status" id="status">Prêt</div>
       </div>
@@ -125,6 +127,48 @@
         <div class="tile"><h3>Audit — Points relevés</h3><ul id="auditIssues" style="margin:0;padding-left:18px"></ul></div>
       </div>
       <div class="tile" style="margin-top:12px"><h3>Top comptes (par solde absolu)</h3><div id="auditTop"></div></div>
+
+      <!-- NEW: Optimisation output -->
+      <div class="tile" style="margin-top:12px">
+        <h3>Optimisation fiscale — Recommandations</h3>
+        <div id="optimizeOut" style="white-space:pre-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!--  SUIVI TRÉSORERIE & FACTURATION (below Analyse/Audit) -->
+  <!-- ===================== -->
+  <div class="card" style="margin-top:20px">
+    <h2 style="font-size:20px;margin-bottom:12px">Suivi Trésorerie &amp; Facturation</h2>
+    <div id="bankSummary" class="tiles">
+      <div class="tile"><h3>Solde bancaire</h3><div id="bankBalance">—</div></div>
+      <div class="tile"><h3>Entrées</h3><div id="bankInflows">—</div></div>
+      <div class="tile"><h3>Sorties</h3><div id="bankOutflows">—</div></div>
+    </div>
+    <div style="margin-top:16px">
+      <h3>Évolution du solde</h3>
+      <canvas id="cashChart" height="100"></canvas>
+    </div>
+    <div class="tiles" style="margin-top:20px">
+      <div class="tile">
+        <h3>Factures ventes</h3>
+        <table id="salesTable" style="width:100%;font-size:13px">
+          <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="tile">
+        <h3>Factures achats</h3>
+        <table id="purchasesTable" style="width:100%;font-size:13px">
+          <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tile" style="margin-top:20px">
+      <h3>Alertes fiscales &amp; paiements</h3>
+      <ul id="alertsList" style="margin:0;padding-left:18px"></ul>
     </div>
   </div>
 
@@ -176,6 +220,9 @@
   </div>
 </div>
 
+<!-- Chart.js for the dashboard -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 const $ = id => document.getElementById(id);
 const euro = v => (typeof v === 'number' && isFinite(v)) ? v.toLocaleString(undefined,{style:'currency',currency:'EUR'}) : '—';
@@ -190,13 +237,13 @@ const getApiBase = () => DEFAULT_API;
 const setStatus = (m,k) => { const e=$('status'); if(e){ e.textContent=m; e.className='status'+(k?' '+k:''); } };
 const spin = s => $('globalSpin')?.classList.toggle('active',!!s);
 
-// Privacy
+/* privacy */
 $('exportBtn').onclick = () => window.print();
 $('privacyBtn').onclick = () => $('privacyModal').style.display = 'grid';
 $('closePrivacy').onclick = () => $('privacyModal').style.display = 'none';
 $('privacyModal').addEventListener('click',e=>{ if(e.target===e.currentTarget)e.currentTarget.style.display='none'; });
 
-// CSV preview
+/* CSV preview */
 $('csvInput').addEventListener('change', () => {
   const f = $('csvInput').files?.[0];
   if (!f){ $('csvPreview').style.display='none'; return; }
@@ -215,7 +262,7 @@ $('csvInput').addEventListener('change', () => {
   r.readAsText(f);
 });
 
-// Analyze
+/* Analyze */
 async function runAnalyze(){
   const base=getApiBase(); const file=$('csvInput').files?.[0]; const t=$('turnover').value;
   if(!file){ setStatus('Veuillez choisir un CSV','err'); return; }
@@ -238,7 +285,7 @@ async function runAnalyze(){
 }
 $('analyzeBtn').onclick=runAnalyze;
 
-// Audit
+/* Audit */
 async function runAudit(){
   const base=getApiBase(); const f=$('csvInput').files?.[0]; const fw=$('framework').value;
   if(!f){ setStatus('Veuillez choisir un CSV','err'); return; }
@@ -263,11 +310,83 @@ async function runAudit(){
 }
 $('auditBtn').onclick=runAudit;
 
-// Login modal helpers
+/* ---------- Optimisation fiscale (local rules, no /chat) ---------- */
+function localOptimizeFromKPIs(kpi, tax){
+  const out = [];
+  const rev = +kpi.revenue || 0;
+  const gm  = +kpi.gross_margin || 0;
+  const ebitda = +kpi.ebitda_approx || 0;
+  const ebitdaPct = +kpi.ebitda_margin_pct || 0;
+  const net = +kpi.net_result || 0;
+  const vat = +(tax?.vat_balance ?? 0);
+
+  if ((rev>0) && (gm/(rev||1) < 0.30)) out.push("Marge brute faible: renégocier achats, optimiser transport refacturable, revoir stocks et démarques.");
+  if (ebitdaPct < 10) out.push("Déductibilité des charges: abonnements, télécoms, assurances. Vérifier CAPEX vs OPEX pour amortir.");
+  if (ebitda > 0) out.push("Optimiser les plans d’amortissement (composants, durées). Étudier le dégressif si applicable.");
+  if (net < 0) out.push("Examiner report en avant des déficits et, si pertinent, report en arrière (carry-back).");
+  out.push("Qualifier des travaux R&D/innovation pour CIR/CII (documentation, temps passés, sous-traitance éligible).");
+  out.push("Vérifier l’éligibilité JEI/JEU, exonérations locales et aides régionales selon votre profil.");
+  if (vat > 0) out.push("TVA collectée > déductible: adapter régime et sécuriser récupération sur immobilisations et frais.");
+  if (vat < 0) out.push("Crédit de TVA récurrent: demandes de remboursement périodiques, vérifier déduction des factures.");
+  if (net > 0 && ebitdaPct > 8) out.push("Arbitrer rémunération vs dividendes vs intéressement pour optimiser charges (IS/IR/cotisations).");
+  out.push("Revoir provisions (clients douteux, stocks) et CCA/PCA pour lisser le résultat sans risque.");
+  out.push("Si intragroupe: documenter refacturations et prix de transfert pour réduire le risque de redressement.");
+  out.push("Vérifier l’éligibilité au taux réduit PME sur la fraction du bénéfice concernée, si conditions réunies.");
+
+  return out;
+}
+
+async function runOptimize(){
+  const base = getApiBase();
+  const file = document.getElementById('csvInput').files?.[0];
+  const t = document.getElementById('turnover')?.value;
+  if(!file){ setStatus('Veuillez choisir un CSV','err'); return; }
+
+  const fd = new FormData();
+  fd.append('file', file);
+  if (t) fd.append('turnover', t);
+
+  spin(true);
+  setStatus('Analyse pour optimisation…');
+  document.getElementById('optimizeBtn').disabled = true;
+
+  try{
+    const r = await fetch(base + '/analyze/trial-balance', {
+      method: 'POST',
+      body: fd,
+      credentials: 'include'
+    });
+    const analysis = await r.json();
+    if (!r.ok) throw new Error(analysis?.detail || 'Erreur analyse');
+
+    document.getElementById('results').style.display='block';
+
+    const k = analysis.kpi || {};
+    const tax = analysis.tax || {};
+
+    const items = localOptimizeFromKPIs(k, tax);
+    const html = `<ul>${items.map(x=>`<li>${x}</li>`).join('')}</ul>
+      <div style="margin-top:8px;font-size:12px;color:#a3adbf">
+        Note: recommandations indicatives à confirmer selon votre situation et la réglementation en vigueur.
+      </div>`;
+    document.getElementById('optimizeOut').innerHTML = html;
+
+    setStatus('Optimisation (locale) prête','ok');
+  }catch(e){
+    setStatus(e.message || 'Erreur','err');
+    document.getElementById('optimizeOut').textContent = 'Erreur: ' + (e.message || e);
+  }finally{
+    document.getElementById('optimizeBtn').disabled = false;
+    spin(false);
+  }
+}
+document.getElementById('optimizeBtn').onclick = runOptimize;
+
+/* ---------- Login modal helpers ---------- */
 function openLogin(){ $('loginModal').style.display='grid'; }
 function closeLogin(){ $('loginModal').style.display='none'; }
 
-// Auth: login/logout
+/* ---------- Auth ---------- */
 $('loginBtn').onclick = openLogin;
 $('cancelLogin').onclick = closeLogin;
 
@@ -314,7 +433,7 @@ $('logoutBtn').onclick = async () => {
   }
 };
 
-// Chat widget
+/* ---------- Chat widget ---------- */
 const chatBox = $('chat-box');
 const chatLog = $('chat-log');
 const chatText = $('chatText');
@@ -370,6 +489,59 @@ async function sendChat(){
     setStatus('Erreur chat','err');
   }
 }
+
+/* ---------- Dashboard loader (bank/invoices/alerts + chart) ---------- */
+async function loadDashboard(){
+  const apiBase = getApiBase();
+  try{
+    const [bank,sales,purchases,alerts]=await Promise.all([
+      fetch(apiBase+'/bank/summary').then(r=>r.json()),
+      fetch(apiBase+'/invoices/sales').then(r=>r.json()),
+      fetch(apiBase+'/invoices/purchases').then(r=>r.json()),
+      fetch(apiBase+'/alerts').then(r=>r.json())
+    ]);
+
+    // Bank summary
+    $('bankBalance').textContent=(bank.balance??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
+    $('bankInflows').textContent=(bank.inflows??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
+    $('bankOutflows').textContent=(bank.outflows??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
+
+    // Chart
+    const ctx=document.getElementById('cashChart');
+    new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:['Entrées','Sorties','Solde'],
+        datasets:[{
+          label:'Flux bancaires',
+          data:[bank.inflows||0,Math.abs(bank.outflows||0),bank.balance||0],
+          borderColor:'#3a71ff',
+          backgroundColor:'rgba(58,113,255,0.2)',
+          tension:0.3
+        }]
+      },
+      options:{
+        plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#a3adbf'}},y:{ticks:{color:'#a3adbf'}}}
+      }
+    });
+
+    // Invoices
+    const makeRow=x=>`<tr><td>${x.number||'-'}</td><td>${x.issue_date||'-'}</td><td>${x.due_date||'-'}</td><td>${(x.amount||0).toLocaleString()} €</td><td>${x.status||'-'}</td></tr>`;
+    $('salesTable').querySelector('tbody').innerHTML=sales.map(makeRow).join('')||'<tr><td colspan="5">Aucune facture</td></tr>';
+    $('purchasesTable').querySelector('tbody').innerHTML=purchases.map(makeRow).join('')||'<tr><td colspan="5">Aucune facture</td></tr>';
+
+    // Alerts
+    $('alertsList').innerHTML=alerts.length
+      ? alerts.map(a=>`<li>${a.message||'Alerte'} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join('')
+      : '<li>Aucune alerte active</li>';
+  }catch(e){
+    console.error(e);
+    $('alertsList').innerHTML='<li>Erreur de chargement des données</li>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadDashboard);
 </script>
 </body>
 </html>
