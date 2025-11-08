@@ -197,6 +197,10 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     reply = await call_openai_with_retry(payload, OPENAI_API_KEY, 4)
     return ChatResponse(reply=reply)
 
+app.include_router(bank.router)
+app.include_router(invoices.router)
+app.include_router(alerts.router)
+
 # ---------------------------------------------------------------------
 # Audit
 # ---------------------------------------------------------------------
