@@ -105,7 +105,6 @@
         <div class="row">
           <button id="analyzeBtn" class="btn">Analyser</button>
           <button id="auditBtn" class="btn-secondary">Test Audit</button>
-          <!-- NEW: Optimisation fiscale -->
           <button id="optimizeBtn" class="btn-secondary">Optimisation fiscale</button>
         </div>
         <div class="status" id="status">Prêt</div>
@@ -128,7 +127,6 @@
       </div>
       <div class="tile" style="margin-top:12px"><h3>Top comptes (par solde absolu)</h3><div id="auditTop"></div></div>
 
-      <!-- NEW: Optimisation output -->
       <div class="tile" style="margin-top:12px">
         <h3>Optimisation fiscale — Recommandations</h3>
         <div id="optimizeOut" style="white-space:pre-wrap"></div>
@@ -136,39 +134,50 @@
     </div>
   </div>
 
-  <!-- ===================== -->
-  <!--  SUIVI TRÉSORERIE & FACTURATION (below Analyse/Audit) -->
-  <!-- ===================== -->
-  <div class="card" style="margin-top:20px">
-    <h2 style="font-size:20px;margin-bottom:12px">Suivi Trésorerie &amp; Facturation</h2>
-    <div id="bankSummary" class="tiles">
-      <div class="tile"><h3>Solde bancaire</h3><div id="bankBalance">—</div></div>
-      <div class="tile"><h3>Entrées</h3><div id="bankInflows">—</div></div>
-      <div class="tile"><h3>Sorties</h3><div id="bankOutflows">—</div></div>
-    </div>
-    <div style="margin-top:16px">
-      <h3>Évolution du solde</h3>
-      <canvas id="cashChart" height="100"></canvas>
-    </div>
-    <div class="tiles" style="margin-top:20px">
-      <div class="tile">
-        <h3>Factures ventes</h3>
-        <table id="salesTable" style="width:100%;font-size:13px">
-          <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
-          <tbody></tbody>
-        </table>
+  <!-- ====== IMPORTATION + SUIVI en grille responsive ====== -->
+  <div class="grid2" style="margin-top:20px;align-items:flex-start;">
+    <!-- Importation des fichiers -->
+    <div class="card">
+      <h2>Importation des fichiers</h2>
+      <div class="field" style="display:block;">
+        <strong>Relevé bancaire (.csv)</strong>
+        <input type="file" id="bankFile" accept=".csv" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <button class="btn" id="uploadBankBtn" style="margin-top:8px;">Importer relevé</button>
+        <div id="bankUploadStatus" class="status"></div>
       </div>
-      <div class="tile">
-        <h3>Factures achats</h3>
-        <table id="purchasesTable" style="width:100%;font-size:13px">
-          <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
-          <tbody></tbody>
-        </table>
+
+      <div class="field" style="display:block;margin-top:12px;">
+        <strong>Factures de ventes (.csv / .xlsx)</strong>
+        <input type="file" id="salesFile" accept=".csv,.xlsx" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <button class="btn-secondary" id="uploadSalesBtn" style="margin-top:8px;">Importer ventes</button>
+        <div id="salesUploadStatus" class="status"></div>
+      </div>
+
+      <div class="field" style="display:block;margin-top:12px;">
+        <strong>Factures d’achats (.csv / .xlsx)</strong>
+        <input type="file" id="purchasesFile" accept=".csv,.xlsx" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <button class="btn-secondary" id="uploadPurchasesBtn" style="margin-top:8px;">Importer achats</button>
+        <div id="purchasesUploadStatus" class="status"></div>
       </div>
     </div>
-    <div class="tile" style="margin-top:20px">
-      <h3>Alertes fiscales &amp; paiements</h3>
-      <ul id="alertsList" style="margin:0;padding-left:18px"></ul>
+
+    <!-- Suivi Trésorerie & Facturation -->
+    <div class="card">
+      <h2>Suivi Trésorerie &amp; Facturation</h2>
+      <div id="bankSummary" class="tiles">
+        <div class="tile"><h3>Solde bancaire</h3><div id="bankBalance">—</div></div>
+        <div class="tile"><h3>Entrées</h3><div id="bankInflows">—</div></div>
+        <div class="tile"><h3>Sorties</h3><div id="bankOutflows">—</div></div>
+      </div>
+      <div style="margin-top:16px">
+        <h3>Évolution du solde</h3>
+        <canvas id="cashChart" height="100"></canvas>
+      </div>
+      <div class="tiles" style="margin-top:20px">
+        <div class="tile"><h3>Factures ventes</h3><table id="salesTable" style="width:100%;font-size:13px"><thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead><tbody></tbody></table></div>
+        <div class="tile"><h3>Factures achats</h3><table id="purchasesTable" style="width:100%;font-size:13px"><thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="tile" style="margin-top:20px"><h3>Alertes fiscales &amp; paiements</h3><ul id="alertsList" style="margin:0;padding-left:18px"></ul></div>
     </div>
   </div>
 
@@ -220,7 +229,7 @@
   </div>
 </div>
 
-<!-- Chart.js for the dashboard -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
@@ -228,7 +237,7 @@ const $ = id => document.getElementById(id);
 const euro = v => (typeof v === 'number' && isFinite(v)) ? v.toLocaleString(undefined,{style:'currency',currency:'EUR'}) : '—';
 const pct = v => (v ?? v === 0) ? (Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%') : '—';
 
-// API base detection
+// API base: garder Railway
 const DEFAULT_API = window.location.hostname.includes("localhost")
   ? "http://127.0.0.1:8000"
   : "https://optimis-fiscale-production.up.railway.app";
@@ -310,7 +319,7 @@ async function runAudit(){
 }
 $('auditBtn').onclick=runAudit;
 
-/* ---------- Optimisation fiscale (local rules, no /chat) ---------- */
+/* Optimisation fiscale locale (sans /chat) */
 function localOptimizeFromKPIs(kpi, tax){
   const out = [];
   const rev = +kpi.revenue || 0;
@@ -332,64 +341,41 @@ function localOptimizeFromKPIs(kpi, tax){
   out.push("Revoir provisions (clients douteux, stocks) et CCA/PCA pour lisser le résultat sans risque.");
   out.push("Si intragroupe: documenter refacturations et prix de transfert pour réduire le risque de redressement.");
   out.push("Vérifier l’éligibilité au taux réduit PME sur la fraction du bénéfice concernée, si conditions réunies.");
-
   return out;
 }
-
 async function runOptimize(){
   const base = getApiBase();
-  const file = document.getElementById('csvInput').files?.[0];
-  const t = document.getElementById('turnover')?.value;
+  const file = $('csvInput').files?.[0];
+  const t = $('turnover')?.value;
   if(!file){ setStatus('Veuillez choisir un CSV','err'); return; }
-
-  const fd = new FormData();
-  fd.append('file', file);
-  if (t) fd.append('turnover', t);
-
-  spin(true);
-  setStatus('Analyse pour optimisation…');
-  document.getElementById('optimizeBtn').disabled = true;
-
+  const fd = new FormData(); fd.append('file', file); if (t) fd.append('turnover', t);
+  spin(true); setStatus('Analyse pour optimisation…'); $('optimizeBtn').disabled = true;
   try{
-    const r = await fetch(base + '/analyze/trial-balance', {
-      method: 'POST',
-      body: fd,
-      credentials: 'include'
-    });
+    const r = await fetch(base + '/analyze/trial-balance', { method: 'POST', body: fd, credentials: 'include' });
     const analysis = await r.json();
     if (!r.ok) throw new Error(analysis?.detail || 'Erreur analyse');
-
-    document.getElementById('results').style.display='block';
-
-    const k = analysis.kpi || {};
-    const tax = analysis.tax || {};
-
+    $('results').style.display='block';
+    const k = analysis.kpi || {}; const tax = analysis.tax || {};
     const items = localOptimizeFromKPIs(k, tax);
-    const html = `<ul>${items.map(x=>`<li>${x}</li>`).join('')}</ul>
-      <div style="margin-top:8px;font-size:12px;color:#a3adbf">
-        Note: recommandations indicatives à confirmer selon votre situation et la réglementation en vigueur.
-      </div>`;
-    document.getElementById('optimizeOut').innerHTML = html;
-
+    $('optimizeOut').innerHTML = `<ul>${items.map(x=>`<li>${x}</li>`).join('')}</ul>
+      <div style="margin-top:8px;font-size:12px;color:#a3adbf">Note: recommandations indicatives à confirmer selon votre situation et la réglementation.</div>`;
     setStatus('Optimisation (locale) prête','ok');
   }catch(e){
     setStatus(e.message || 'Erreur','err');
-    document.getElementById('optimizeOut').textContent = 'Erreur: ' + (e.message || e);
+    $('optimizeOut').textContent = 'Erreur: ' + (e.message || e);
   }finally{
-    document.getElementById('optimizeBtn').disabled = false;
-    spin(false);
+    $('optimizeBtn').disabled = false; spin(false);
   }
 }
-document.getElementById('optimizeBtn').onclick = runOptimize;
+$('optimizeBtn').onclick = runOptimize;
 
-/* ---------- Login modal helpers ---------- */
+/* Login modal */
 function openLogin(){ $('loginModal').style.display='grid'; }
 function closeLogin(){ $('loginModal').style.display='none'; }
 
-/* ---------- Auth ---------- */
+/* Auth */
 $('loginBtn').onclick = openLogin;
 $('cancelLogin').onclick = closeLogin;
-
 $('doLogin').onclick = async () => {
   const base = getApiBase();
   const company_id = $('companyId').value.trim();
@@ -398,99 +384,81 @@ $('doLogin').onclick = async () => {
   try{
     spin(true); setStatus('Connexion…');
     const r = await fetch(base+'/auth/login', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
       body: JSON.stringify({ company_id, password })
     });
     const d = await r.json();
     if(!r.ok) throw new Error(d?.detail || 'Échec connexion');
     closeLogin();
-    $('who').style.display='inline-block';
-    $('who').textContent = `Connecté: ${d.company_id}`;
-    $('loginBtn').style.display='none';
-    $('logoutBtn').style.display='inline-flex';
+    $('who').style.display='inline-block'; $('who').textContent = `Connecté: ${d.company_id}`;
+    $('loginBtn').style.display='none'; $('logoutBtn').style.display='inline-flex';
     setStatus('Connecté','ok');
-  }catch(e){
-    setStatus(e.message || 'Erreur','err');
-  }finally{
-    spin(false);
-  }
+  }catch(e){ setStatus(e.message || 'Erreur','err'); }
+  finally{ spin(false); }
 };
-
 $('logoutBtn').onclick = async () => {
   const base = getApiBase();
-  try{
-    spin(true);
-    await fetch(base+'/auth/logout', { method:'POST', credentials:'include' });
-  }finally{
-    $('who').style.display='none';
-    $('who').textContent='';
-    $('loginBtn').style.display='inline-flex';
-    $('logoutBtn').style.display='none';
-    setStatus('Déconnecté');
-    spin(false);
+  try{ spin(true); await fetch(base+'/auth/logout', { method:'POST', credentials:'include' }); }
+  finally{
+    $('who').style.display='none'; $('who').textContent='';
+    $('loginBtn').style.display='inline-flex'; $('logoutBtn').style.display='none';
+    setStatus('Déconnecté'); spin(false);
   }
 };
 
-/* ---------- Chat widget ---------- */
+/* Chat */
 const chatBox = $('chat-box');
 const chatLog = $('chat-log');
 const chatText = $('chatText');
-
 const appendMsg = (role, text) => {
   const div = document.createElement('div');
   div.className = 'msg ' + (role === 'user' ? 'me' : 'bot');
-  div.textContent = text;
-  chatLog.appendChild(div);
-  chatLog.scrollTop = chatLog.scrollHeight;
+  div.textContent = text; chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
 };
-
 const isLoggedIn = () => $('logoutBtn').style.display !== 'none';
-
 $('openChat').onclick = () => {
-  if (!isLoggedIn()) {
-    setStatus('Veuillez vous connecter pour utiliser le chat','err');
-    openLogin();
-    return;
-  }
-  chatBox.style.display = 'block';
-  chatText.focus();
+  if (!isLoggedIn()) { setStatus('Veuillez vous connecter pour utiliser le chat','err'); openLogin(); return; }
+  chatBox.style.display = 'block'; chatText.focus();
 };
 $('closeChat').onclick = () => chatBox.style.display = 'none';
 $('sendChat').onclick = sendChat;
 chatText.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
-
 async function sendChat(){
-  const base = getApiBase();
-  const text = chatText.value.trim();
-  if (!text) return;
-  appendMsg('user', text);
-  chatText.value = '';
-  setStatus('Albert réfléchit…');
+  const base = getApiBase(); const text = chatText.value.trim();
+  if (!text) return; appendMsg('user', text); chatText.value = ''; setStatus('Albert réfléchit…');
   try{
     const r = await fetch(base + '/chat', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
       body: JSON.stringify({ messages: [{ role: 'user', content: text }] })
     });
-    if (r.status === 401) {
-      setStatus('Session expirée. Veuillez vous reconnecter.','err');
-      openLogin();
-      return;
-    }
-    const d = await r.json();
-    if (!r.ok) throw new Error(d?.detail || 'Erreur API');
-    appendMsg('assistant', d.reply || '(réponse vide)');
-    setStatus('Prêt');
-  }catch(e){
-    appendMsg('assistant', 'Erreur: ' + (e.message || e));
-    setStatus('Erreur chat','err');
-  }
+    if (r.status === 401) { setStatus('Session expirée. Veuillez vous reconnecter.','err'); openLogin(); return; }
+    const d = await r.json(); if (!r.ok) throw new Error(d?.detail || 'Erreur API');
+    appendMsg('assistant', d.reply || '(réponse vide)'); setStatus('Prêt');
+  }catch(e){ appendMsg('assistant', 'Erreur: ' + (e.message || e)); setStatus('Erreur chat','err'); }
 }
 
-/* ---------- Dashboard loader (bank/invoices/alerts + chart) ---------- */
+/* Importation des fichiers */
+async function uploadFile(inputId, endpoint, statusId){
+  const file=$(inputId).files?.[0]; const status=$(statusId);
+  if(!file){status.textContent="Veuillez choisir un fichier";status.className="status err";return;}
+  const fd=new FormData();fd.append("file",file);
+  try{
+    spin(true); status.textContent="Importation en cours…"; status.className="status";
+    const r=await fetch(getApiBase()+endpoint,{method:'POST',body:fd,credentials:'include'});
+    if(r.ok){status.textContent="✅ Importation réussie";status.className="status ok";await loadDashboard();}
+    else{const err=await r.text();status.textContent="❌ Erreur : "+err.slice(0,150);status.className="status err";}
+  }catch(e){status.textContent="❌ "+(e.message||'Erreur réseau');status.className="status err";}
+  finally{spin(false);}
+}
+$('uploadBankBtn').onclick=()=>uploadGeneric('bankFile','/bank/upload','bankUploadStatus');
+$('uploadSalesBtn').onclick=()=>uploadGeneric('salesFile','/invoices/sales','salesUploadStatus');
+$('uploadPurchasesBtn').onclick=()=>uploadGeneric('purchasesFile','/invoices/purchases','purchasesUploadStatus');
+function uploadGeneric(fileId, endpoint, statusId){
+  // helper to pass element ids as strings for $(...)
+  uploadFile(fileId, endpoint, statusId);
+}
+
+/* Dashboard loader */
 async function loadDashboard(){
   const apiBase = getApiBase();
   try{
@@ -500,48 +468,29 @@ async function loadDashboard(){
       fetch(apiBase+'/invoices/purchases').then(r=>r.json()),
       fetch(apiBase+'/alerts').then(r=>r.json())
     ]);
-
-    // Bank summary
     $('bankBalance').textContent=(bank.balance??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
     $('bankInflows').textContent=(bank.inflows??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
     $('bankOutflows').textContent=(bank.outflows??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
 
-    // Chart
-    const ctx=document.getElementById('cashChart');
-    new Chart(ctx,{
-      type:'line',
-      data:{
-        labels:['Entrées','Sorties','Solde'],
-        datasets:[{
-          label:'Flux bancaires',
-          data:[bank.inflows||0,Math.abs(bank.outflows||0),bank.balance||0],
-          borderColor:'#3a71ff',
-          backgroundColor:'rgba(58,113,255,0.2)',
-          tension:0.3
-        }]
-      },
-      options:{
-        plugins:{legend:{display:false}},
-        scales:{x:{ticks:{color:'#a3adbf'}},y:{ticks:{color:'#a3adbf'}}}
-      }
-    });
+    const ctx=$('cashChart');
+    new Chart(ctx,{type:'line',data:{labels:['Entrées','Sorties','Solde'],
+      datasets:[{label:'Flux bancaires',data:[bank.inflows||0,Math.abs(bank.outflows||0),bank.balance||0],
+      borderColor:'#3a71ff',backgroundColor:'rgba(58,113,255,0.2)',tension:0.3}]},
+      options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a3adbf'}},y:{ticks:{color:'#a3adbf'}}}}});
 
-    // Invoices
-    const makeRow=x=>`<tr><td>${x.number||'-'}</td><td>${x.issue_date||'-'}</td><td>${x.due_date||'-'}</td><td>${(x.amount||0).toLocaleString()} €</td><td>${x.status||'-'}</td></tr>`;
-    $('salesTable').querySelector('tbody').innerHTML=sales.map(makeRow).join('')||'<tr><td colspan="5">Aucune facture</td></tr>';
-    $('purchasesTable').querySelector('tbody').innerHTML=purchases.map(makeRow).join('')||'<tr><td colspan="5">Aucune facture</td></tr>';
-
-    // Alerts
-    $('alertsList').innerHTML=alerts.length
-      ? alerts.map(a=>`<li>${a.message||'Alerte'} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join('')
-      : '<li>Aucune alerte active</li>';
+    const row=x=>`<tr><td>${x.number||'-'}</td><td>${x.issue_date||'-'}</td><td>${x.due_date||'-'}</td><td>${(x.amount||0).toLocaleString()} €</td><td>${x.status||'-'}</td></tr>`;
+    $('salesTable').querySelector('tbody').innerHTML=(Array.isArray(sales)&&sales.length?sales.map(row).join(''):'<tr><td colspan="5">Aucune facture</td></tr>');
+    $('purchasesTable').querySelector('tbody').innerHTML=(Array.isArray(purchases)&&purchases.length?purchases.map(row).join(''):'<tr><td colspan="5">Aucune facture</td></tr>');
+    $('alertsList').innerHTML=(Array.isArray(alerts)&&alerts.length?alerts.map(a=>`<li>${a.message||'Alerte'} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join(''):'<li>Aucune alerte active</li>');
   }catch(e){
     console.error(e);
     $('alertsList').innerHTML='<li>Erreur de chargement des données</li>';
   }
 }
-
 document.addEventListener('DOMContentLoaded', loadDashboard);
+
+/* Id helpers for uploadFile */
+function $(id){ return document.getElementById(id); }
 </script>
 </body>
 </html>
