@@ -17,6 +17,7 @@ from pydantic import BaseModel
 # ---------------------------------------------------------------------
 from app.models import AnalysisResult
 from app.analyzers import analyze_trial_balance
+from .routers import bank, invoices, alerts
 
 # ---------------------------------------------------------------------
 # App & CORS
