@@ -454,7 +454,6 @@ $('uploadBankBtn').onclick=()=>uploadGeneric('bankFile','/bank/upload','bankUplo
 $('uploadSalesBtn').onclick=()=>uploadGeneric('salesFile','/invoices/sales','salesUploadStatus');
 $('uploadPurchasesBtn').onclick=()=>uploadGeneric('purchasesFile','/invoices/purchases','purchasesUploadStatus');
 function uploadGeneric(fileId, endpoint, statusId){
-  // helper to pass element ids as strings for $(...)
   uploadFile(fileId, endpoint, statusId);
 }
 
@@ -488,9 +487,6 @@ async function loadDashboard(){
   }
 }
 document.addEventListener('DOMContentLoaded', loadDashboard);
-
-/* Id helpers for uploadFile */
-function $(id){ return document.getElementById(id); }
 </script>
 </body>
 </html>
