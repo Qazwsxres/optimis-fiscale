@@ -1,55 +1,54 @@
-# routes_finance.py
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
-from typing import List
 import csv
 from io import TextIOWrapper
 
-router = APIRouter()
+router = APIRouter(prefix="/bank", tags=["Bank"])
 
-# In-memory storage just for demo.
-# Replace with your DB / ORM if you have one.
+CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "https://qazwsxres.github.io",
+    "Access-Control-Allow-Credentials": "true",
+}
+
 _bank_summary = {
     "balance": 0.0,
     "inflows": 0.0,
     "outflows": 0.0,
 }
 
-_sales_invoices: List[dict] = []
-_purchase_invoices: List[dict] = []
 
+# ---------------- BANK UPLOAD ----------------
 
-# ---------- BANK ----------
-
-@router.post("/bank/upload")
+@router.post("/upload")
 async def upload_bank_statement(file: UploadFile = File(...)):
-    """
-    Accepts a CSV: one row per transaction
-    expected columns at least: date, label, amount
-    This matches your front-end: uploadGeneric('bankFile','/bank/upload',...)
-    """
     if file.content_type not in ("text/csv", "application/vnd.ms-excel"):
-        raise HTTPException(status_code=400, detail="File must be CSV")
+        return JSONResponse(
+            content={"detail": "Veuillez fournir un fichier CSV"},
+            status_code=400,
+            headers=CORS_HEADERS
+        )
 
     try:
-        # Parse CSV
         wrapper = TextIOWrapper(file.file, encoding="utf-8")
         reader = csv.DictReader(wrapper)
+
         inflows = 0.0
         outflows = 0.0
+
         for row in reader:
-            # flexible column name for amount
             raw_amount = (
                 row.get("amount")
                 or row.get("montant")
                 or row.get("Amount")
                 or row.get("Montant")
             )
+
             if raw_amount is None:
                 continue
+
             try:
                 amount = float(str(raw_amount).replace(",", "."))
-            except ValueError:
+            except:
                 continue
 
             if amount >= 0:
@@ -58,18 +57,34 @@ async def upload_bank_statement(file: UploadFile = File(...)):
                 outflows += amount
 
         balance = inflows + outflows
+
         _bank_summary["balance"] = balance
         _bank_summary["inflows"] = inflows
         _bank_summary["outflows"] = outflows
 
-        return {"ok": True}
+        return JSONResponse(
+            content={
+                "ok": True,
+                "balance": balance,
+                "inflows": inflows,
+                "outflows": outflows,
+            },
+            headers=CORS_HEADERS
+        )
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error parsing bank file: {e}")
+        return JSONResponse(
+            content={"detail": f"Erreur fichier: {e}"},
+            status_code=500,
+            headers=CORS_HEADERS
+        )
 
 
-@router.get("/bank/summary")
-async def bank_summary():
-    """
-    Used by your front-end: fetch(apiBase+'/bank/summary')
-    """
-    return _bank_summary
+# ---------------- BANK SUMMARY ----------------
+
+@router.get("/summary")
+def bank_summary():
+    return JSONResponse(
+        content=_bank_summary,
+        headers=CORS_HEADERS
+    )
