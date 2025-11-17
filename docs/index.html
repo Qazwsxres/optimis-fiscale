@@ -81,7 +81,10 @@
     <div class="controls">
       <div class="grid2">
         <div class="field">
-          <div><strong>Fichier CSV</strong><br><span class="hint">Colonnes : <code>account,label,debit,credit</code></span></div>
+          <div>
+            <strong>Fichier CSV</strong><br>
+            <span class="hint">Colonnes : <code>account,label,debit,credit</code></span>
+          </div>
           <div class="row">
             <input id="csvInput" type="file" accept=".csv" style="display:none" />
             <label class="btn-secondary" for="csvInput" style="cursor:pointer;">Choisir un fichier</label>
@@ -89,11 +92,17 @@
           </div>
         </div>
         <div class="field">
-          <div><strong>Chiffre d'affaires (optionnel)</strong><br><span class="hint">Pour affiner les ratios</span></div>
+          <div>
+            <strong>Chiffre d'affaires (optionnel)</strong><br>
+            <span class="hint">Pour affiner les ratios</span>
+          </div>
           <input id="turnover" type="number" step="0.01" placeholder="Ex : 100000" />
         </div>
         <div class="field">
-          <div><strong>Référentiel d’audit</strong><br><span class="hint">Choisir IFRS ou US GAAP</span></div>
+          <div>
+            <strong>Référentiel d’audit</strong><br>
+            <span class="hint">Choisir IFRS ou US GAAP</span>
+          </div>
           <select id="framework" style="background:#0e1428;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 10px;">
             <option value="IFRS" selected>IFRS</option>
             <option value="USGAAP">US GAAP</option>
@@ -139,8 +148,12 @@
     <!-- Importation des fichiers -->
     <div class="card">
       <h2>Importation des fichiers</h2>
+
       <div class="field" style="display:block;">
         <strong>Relevé bancaire (.csv)</strong>
+        <div class="hint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
+          Fichier CSV simple, une ligne par mouvement, avec au moins : date, libellé, montant.
+        </div>
         <input type="file" id="bankFile" accept=".csv" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn" id="uploadBankBtn" style="margin-top:8px;">Importer relevé</button>
         <div id="bankUploadStatus" class="status"></div>
@@ -148,6 +161,9 @@
 
       <div class="field" style="display:block;margin-top:12px;">
         <strong>Factures de ventes (.csv / .xlsx)</strong>
+        <div class="hint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
+          Une ligne par facture : numéro, date, échéance, client, montant TTC.
+        </div>
         <input type="file" id="salesFile" accept=".csv,.xlsx" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn-secondary" id="uploadSalesBtn" style="margin-top:8px;">Importer ventes</button>
         <div id="salesUploadStatus" class="status"></div>
@@ -155,6 +171,9 @@
 
       <div class="field" style="display:block;margin-top:12px;">
         <strong>Factures d’achats (.csv / .xlsx)</strong>
+        <div class="hint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
+          Une ligne par facture : numéro, date, échéance, fournisseur, montant TTC.
+        </div>
         <input type="file" id="purchasesFile" accept=".csv,.xlsx" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn-secondary" id="uploadPurchasesBtn" style="margin-top:8px;">Importer achats</button>
         <div id="purchasesUploadStatus" class="status"></div>
