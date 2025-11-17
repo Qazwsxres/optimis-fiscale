@@ -5,95 +5,156 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Optimis Fiscale</title>
   <style>
-    :root{--bg:#0b1020;--card:#11172c;--muted:#a3adbf;--line:#243155;
-    --accent:#3a71ff;--text:#e6e9ef;--ok:#2ecc71;--err:#e74c3c;}
+    :root{
+      --bg:#0b1020;--card:#11172c;--muted:#a3adbf;--line:#243155;
+      --accent:#3a71ff;--text:#e6e9ef;--ok:#2ecc71;--err:#e74c3c;
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);
-      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
+    }
     .wrap{max-width:980px;margin:0 auto;padding:20px}
     header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-    h1{font-size:22px;margin:0}.sub{color:var(--muted);font-size:14px;margin-top:4px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 12px 28px rgba(0,0,0,.25)}
+    h1{font-size:22px;margin:0}
+    .sub{color:var(--muted);font-size:14px;margin-top:4px}
+    .card{
+      background:var(--card);border:1px solid var(--line);
+      border-radius:16px;padding:16px;box-shadow:0 12px 28px rgba(0,0,0,.25)
+    }
     .controls{display:grid;gap:12px}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .field{background:#0e1428;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .btn,.btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer;border:1px solid transparent}
-    .btn{background:var(--accent);color:#fff}.btn:disabled{opacity:.6;cursor:not-allowed}
+    .field{
+      background:#0e1428;border:1px solid var(--line);
+      border-radius:12px;padding:12px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px
+    }
+    .btn,.btn-secondary{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:12px 16px;border-radius:12px;
+      font-weight:600;cursor:pointer;border:1px solid transparent
+    }
+    .btn{background:var(--accent);color:#fff}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
     .btn-secondary{background:#0e1428;color:var(--text);border-color:var(--line)}
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    .status{font-size:13px;color:var(--muted)}.status.ok{color:var(--ok)}.status.err{color:var(--err)}
+    .status{font-size:13px;color:var(--muted)}
+    .status.ok{color:var(--ok)}
+    .status.err{color:var(--err)}
     .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}
     .tile{background:#0e1428;border:1px solid var(--line);border-radius:14px;padding:14px}
     footer{margin-top:16px;color:var(--muted);font-size:13px}
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;place-items:center;z-index:100}
     .modal{width:min(560px,92vw);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
-    .gear{background:#0e1428;border:1px solid var(--line);width:40px;height:40px;display:grid;place-items:center;border-radius:12px;cursor:pointer}
-    #authbar{display:flex;gap:8px;align-items:center}#authbar .me{font-size:13px;color:#a3adbf}
-
-    /* language selector */
-    .lang-select{
-      background:#0e1428;
-      border:1px solid var(--line);
-      color:var(--text);
-      border-radius:999px;
-      padding:8px 10px;
-      font-size:13px;
+    .gear{
+      background:#0e1428;border:1px solid var(--line);
+      width:40px;height:40px;display:grid;place-items:center;
+      border-radius:12px;cursor:pointer
     }
+    #authbar{display:flex;gap:8px;align-items:center}
+    #authbar .me{font-size:13px;color:#a3adbf}
 
     /* chat widget */
     #chat-btn{position:fixed;right:20px;bottom:20px;z-index:30}
-    #chat-btn button{background:#3a71ff;color:#fff;border:0;padding:14px 16px;border-radius:999px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.35)}
-    #chat-box{position:fixed;right:20px;bottom:80px;width:min(380px,92vw);background:#11172c;border:1px solid #243155;border-radius:16px;overflow:hidden;display:none;z-index:30}
-    #chat-head{padding:12px 14px;font-weight:700;border-bottom:1px solid #243155;display:flex;justify-content:space-between;align-items:center}
-    #chat-head img{width:28px;height:28px;border-radius:50%;border:1px solid #243155}
-    #chat-log{height:280px;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-    .msg{padding:10px 12px;border-radius:12px;max-width:85%;font-size:14px;line-height:1.35}
-    .me{background:#3a71ff;color:#fff;align-self:flex-end}.bot{background:#0e1428;border:1px solid #243155;color:#e6e9ef;align-self:flex-start}
-    #chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #243155;background:#0e1428}
-    #chat-input input{flex:1;background:#0e1428;border:1px solid #33416d;color:#e6e9ef;border-radius:10px;padding:10px}
-    #chat-input button{background:#3a71ff;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    #chat-btn button{
+      background:#3a71ff;color:#fff;border:0;
+      padding:14px 16px;border-radius:999px;
+      font-weight:700;cursor:pointer;
+      box-shadow:0 8px 20px rgba(0,0,0,.35)
+    }
+    #chat-box{
+      position:fixed;right:20px;bottom:80px;
+      width:min(380px,92vw);background:#11172c;
+      border:1px solid #243155;border-radius:16px;
+      overflow:hidden;display:none;z-index:30
+    }
+    #chat-head{
+      padding:12px 14px;font-weight:700;
+      border-bottom:1px solid #243155;
+      display:flex;justify-content:space-between;align-items:center
+    }
+    #chat-head img{
+      width:28px;height:28px;border-radius:50%;
+      border:1px solid #243155
+    }
+    #chat-log{
+      height:280px;overflow:auto;padding:12px;
+      display:flex;flex-direction:column;gap:10px
+    }
+    .msg{
+      padding:10px 12px;border-radius:12px;
+      max-width:85%;font-size:14px;line-height:1.35
+    }
+    .me{background:#3a71ff;color:#fff;align-self:flex-end}
+    .bot{background:#0e1428;border:1px solid #243155;color:#e6e9ef;align-self:flex-start}
+    #chat-input{
+      display:flex;gap:8px;padding:10px;
+      border-top:1px solid #243155;background:#0e1428
+    }
+    #chat-input input{
+      flex:1;background:#0e1428;border:1px solid #33416d;
+      color:#e6e9ef;border-radius:10px;padding:10px
+    }
+    #chat-input button{
+      background:#3a71ff;color:#fff;border:0;
+      padding:10px 14px;border-radius:10px;
+      font-weight:700;cursor:pointer
+    }
 
-    .spinner{display:none;gap:8px;align-items:center}.spinner.active{display:inline-flex}
-    .spinner .dot{width:8px;height:8px;border-radius:50%;background:#3a71ff;animation:b 1s infinite}
-    .spinner .dot:nth-child(2){animation-delay:.15s}.spinner .dot:nth-child(3){animation-delay:.3s}
-    @keyframes b{0%,80%,100%{opacity:.2;transform:scale(.9)}40%{opacity:1;transform:scale(1)}}
+    .spinner{display:none;gap:8px;align-items:center}
+    .spinner.active{display:inline-flex}
+    .spinner .dot{
+      width:8px;height:8px;border-radius:50%;
+      background:#3a71ff;animation:b 1s infinite
+    }
+    .spinner .dot:nth-child(2){animation-delay:.15s}
+    .spinner .dot:nth-child(3){animation-delay:.3s}
+    @keyframes b{
+      0%,80%,100%{opacity:.2;transform:scale(.9)}
+      40%{opacity:1;transform:scale(1)}
+    }
     #csvPreview{display:none;margin-top:8px}
     #csvPreview table{width:100%;border-collapse:collapse;border:1px solid var(--line)}
     #csvPreview th,#csvPreview td{border:1px solid var(--line);padding:6px;font-size:13px}
     #csvPreview th{color:#c6d0f5;background:#0f1530}
-    @media print{#chat-btn,#chat-box,header,.controls,.modal-backdrop{display:none!important}body{background:#fff;color:#000}.card{border:0;box-shadow:none}}
-    @media (max-width:960px){.grid2{grid-template-columns:1fr}}
+
+    .hint-import{
+      margin-top:6px;font-size:11px;
+      color:var(--muted);line-height:1.4
+    }
+
+    @media print{
+      #chat-btn,#chat-box,header,.controls,.modal-backdrop{display:none!important}
+      body{background:#fff;color:#000}
+      .card{border:0;box-shadow:none}
+    }
+    @media (max-width:960px){
+      .grid2{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
-      <h1 id="appTitle">Optimis Fiscale</h1>
-      <div class="sub" id="subtitle">Analyse de balance &amp; estimation fiscale (FR)</div>
+      <h1>Optimis Fiscale</h1>
+      <div class="sub">Analyse de balance & estimation fiscale (FR)</div>
     </div>
-    <div class="row" style="gap:8px;align-items:center">
-      <!-- language selector -->
-      <select id="langSelect" class="lang-select" aria-label="Language">
-        <option value="fr" selected>FR</option>
-        <option value="en">EN</option>
-        <option value="es">ES</option>
-      </select>
-
-      <div class="row" id="authbar">
-        <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
-        <a class="btn-secondary" id="apiDocsLink" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
-        <button id="loginBtn" class="btn-secondary">Se connecter</button>
-        <span id="who" class="me" style="display:none"></span>
-        <button id="logoutBtn" class="btn-secondary" style="display:none">Se déconnecter</button>
-      </div>
+    <div class="row" id="authbar">
+      <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
+      <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
+      <button id="loginBtn" class="btn-secondary">Se connecter</button>
+      <span id="who" class="me" style="display:none"></span>
+      <button id="logoutBtn" class="btn-secondary" style="display:none">Se déconnecter</button>
     </div>
   </header>
 
   <div class="row" style="margin:8px 0;gap:8px">
     <button class="btn-secondary" id="exportBtn">Exporter (PDF)</button>
     <button class="btn-secondary" id="privacyBtn">Confidentialité</button>
-    <span class="spinner" id="globalSpin"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+    <span class="spinner" id="globalSpin">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </span>
   </div>
 
   <div class="card">
@@ -101,28 +162,29 @@
       <div class="grid2">
         <div class="field">
           <div>
-            <strong id="csvLabel">Fichier CSV</strong><br>
-            <span class="hint" id="csvHint">Colonnes : <code>account,label,debit,credit</code></span>
+            <strong>Fichier CSV</strong><br>
+            <span class="hint">Colonnes : <code>account,label,debit,credit</code></span>
           </div>
           <div class="row">
             <input id="csvInput" type="file" accept=".csv" style="display:none" />
-            <label class="btn-secondary" id="chooseFileLabel" for="csvInput" style="cursor:pointer;">Choisir un fichier</label>
+            <label class="btn-secondary" for="csvInput" style="cursor:pointer;">Choisir un fichier</label>
             <span id="fileName" class="badge" style="display:none"></span>
           </div>
         </div>
         <div class="field">
           <div>
-            <strong id="turnoverLabel">Chiffre d'affaires (optionnel)</strong><br>
-            <span class="hint" id="turnoverHint">Pour affiner les ratios</span>
+            <strong>Chiffre d'affaires (optionnel)</strong><br>
+            <span class="hint">Pour affiner les ratios</span>
           </div>
           <input id="turnover" type="number" step="0.01" placeholder="Ex : 100000" />
         </div>
         <div class="field">
           <div>
-            <strong id="frameworkLabel">Référentiel d’audit</strong><br>
-            <span class="hint" id="frameworkHint">Choisir IFRS ou US GAAP</span>
+            <strong>Référentiel d’audit</strong><br>
+            <span class="hint">Choisir IFRS ou US GAAP</span>
           </div>
-          <select id="framework" style="background:#0e1428;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 10px;">
+          <select id="framework"
+            style="background:#0e1428;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 10px;">
             <option value="IFRS" selected>IFRS</option>
             <option value="USGAAP">US GAAP</option>
           </select>
@@ -140,23 +202,26 @@
     </div>
 
     <div id="csvPreview" class="tile">
-      <h3 id="csvPreviewTitle">Aperçu CSV (10 premières lignes)</h3>
+      <h3>Aperçu CSV (10 premières lignes)</h3>
       <div id="csvTableWrap"></div>
     </div>
 
     <div id="results" style="display:none;margin-top:10px">
       <div class="tiles">
-        <div class="tile"><h3 id="kpiTitle">KPIs</h3><div class="kv" id="kpi"></div></div>
-        <div class="tile"><h3 id="taxTitle">Fiscalité</h3><div class="kv" id="tax"></div></div>
+        <div class="tile"><h3>KPIs</h3><div class="kv" id="kpi"></div></div>
+        <div class="tile"><h3>Fiscalité</h3><div class="kv" id="tax"></div></div>
       </div>
       <div class="tiles" style="margin-top:12px">
-        <div class="tile"><h3 id="auditSummaryTitle">Audit — Résumé</h3><div class="kv" id="auditSummary"></div></div>
-        <div class="tile"><h3 id="auditIssuesTitle">Audit — Points relevés</h3><ul id="auditIssues" style="margin:0;padding-left:18px"></ul></div>
+        <div class="tile"><h3>Audit — Résumé</h3><div class="kv" id="auditSummary"></div></div>
+        <div class="tile"><h3>Audit — Points relevés</h3><ul id="auditIssues" style="margin:0;padding-left:18px"></ul></div>
       </div>
-      <div class="tile" style="margin-top:12px"><h3 id="topAccountsTitle">Top comptes (par solde absolu)</h3><div id="auditTop"></div></div>
+      <div class="tile" style="margin-top:12px">
+        <h3>Top comptes (par solde absolu)</h3>
+        <div id="auditTop"></div>
+      </div>
 
       <div class="tile" style="margin-top:12px">
-        <h3 id="optimizeRecTitle">Optimisation fiscale — Recommandations</h3>
+        <h3>Optimisation fiscale — Recommandations</h3>
         <div id="optimizeOut" style="white-space:pre-wrap"></div>
       </div>
     </div>
@@ -166,111 +231,116 @@
   <div class="grid2" style="margin-top:20px;align-items:flex-start;">
     <!-- Importation des fichiers -->
     <div class="card">
-      <h2 id="importSectionTitle">Importation des fichiers</h2>
+      <h2>Importation des fichiers</h2>
 
       <div class="field" style="display:block;">
-        <strong id="bankFileLabel">Relevé bancaire (.csv)</strong>
-        <div class="hint" id="bankFileHint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
-          Fichier CSV simple, une ligne par mouvement, avec au moins : date, libellé, montant.
-        </div>
-        <input type="file" id="bankFile" accept=".csv" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <strong>Relevé bancaire (.csv)</strong>
+        <input type="file" id="bankFile" accept=".csv"
+          style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn" id="uploadBankBtn" style="margin-top:8px;">Importer relevé</button>
         <div id="bankUploadStatus" class="status"></div>
+        <div class="hint-import">
+          Format attendu : CSV avec au moins les colonnes
+          <code>date</code>, <code>label</code>, <code>amount</code> (ou <code>montant</code>).<br>
+          Séparateur <code>;</code> ou <code>,</code>.
+        </div>
       </div>
 
       <div class="field" style="display:block;margin-top:12px;">
-        <strong id="salesFileLabel">Factures de ventes (.csv / .xlsx)</strong>
-        <div class="hint" id="salesFileHint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
-          Une ligne par facture : numéro, date, échéance, client, montant TTC.
-        </div>
-        <input type="file" id="salesFile" accept=".csv,.xlsx" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <strong>Factures de ventes (.csv / .xlsx)</strong>
+        <input type="file" id="salesFile" accept=".csv,.xlsx"
+          style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn-secondary" id="uploadSalesBtn" style="margin-top:8px;">Importer ventes</button>
         <div id="salesUploadStatus" class="status"></div>
+        <div class="hint-import">
+          CSV recommandé avec colonnes :
+          <code>number</code> (ou <code>invoice_number</code>),
+          <code>date</code> (ou <code>issue_date</code>),
+          <code>due_date</code>,
+          <code>amount</code> (ou <code>total</code>),
+          <code>status</code> (optionnel).
+        </div>
       </div>
 
       <div class="field" style="display:block;margin-top:12px;">
-        <strong id="purchasesFileLabel">Factures d’achats (.csv / .xlsx)</strong>
-        <div class="hint" id="purchasesFileHint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
-          Une ligne par facture : numéro, date, échéance, fournisseur, montant TTC.
-        </div>
-        <input type="file" id="purchasesFile" accept=".csv,.xlsx" style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <strong>Factures d’achats (.csv / .xlsx)</strong>
+        <input type="file" id="purchasesFile" accept=".csv,.xlsx"
+          style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn-secondary" id="uploadPurchasesBtn" style="margin-top:8px;">Importer achats</button>
         <div id="purchasesUploadStatus" class="status"></div>
+        <div class="hint-import">
+          CSV recommandé avec colonnes :
+          <code>number</code> (ou <code>invoice_number</code>),
+          <code>date</code> (ou <code>issue_date</code>),
+          <code>due_date</code>,
+          <code>amount</code> (ou <code>total</code>),
+          <code>status</code> (optionnel).
+        </div>
       </div>
     </div>
 
     <!-- Suivi Trésorerie & Facturation -->
     <div class="card">
-      <h2 id="treasuryTitle">Suivi Trésorerie &amp; Facturation</h2>
+      <h2>Suivi Trésorerie &amp; Facturation</h2>
       <div id="bankSummary" class="tiles">
-        <div class="tile"><h3 id="bankBalanceTitle">Solde bancaire</h3><div id="bankBalance">—</div></div>
-        <div class="tile"><h3 id="bankInflowsTitle">Entrées</h3><div id="bankInflows">—</div></div>
-        <div class="tile"><h3 id="bankOutflowsTitle">Sorties</h3><div id="bankOutflows">—</div></div>
+        <div class="tile"><h3>Solde bancaire</h3><div id="bankBalance">—</div></div>
+        <div class="tile"><h3>Entrées</h3><div id="bankInflows">—</div></div>
+        <div class="tile"><h3>Sorties</h3><div id="bankOutflows">—</div></div>
       </div>
       <div style="margin-top:16px">
-        <h3 id="cashEvolutionTitle">Évolution du solde</h3>
+        <h3>Évolution du solde</h3>
         <canvas id="cashChart" height="100"></canvas>
       </div>
       <div class="tiles" style="margin-top:20px">
         <div class="tile">
-          <h3 id="salesTableTitle">Factures ventes</h3>
+          <h3>Factures ventes</h3>
           <table id="salesTable" style="width:100%;font-size:13px">
-            <thead>
-              <tr>
-                <th id="thNumber">#</th>
-                <th id="thDate">Date</th>
-                <th id="thDueDate">Échéance</th>
-                <th id="thAmount">Montant</th>
-                <th id="thStatus">Statut</th>
-              </tr>
-            </thead><tbody></tbody>
+            <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
+            <tbody></tbody>
           </table>
         </div>
         <div class="tile">
-          <h3 id="purchasesTableTitle">Factures achats</h3>
+          <h3>Factures achats</h3>
           <table id="purchasesTable" style="width:100%;font-size:13px">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th id="thDate2">Date</th>
-                <th id="thDueDate2">Échéance</th>
-                <th id="thAmount2">Montant</th>
-                <th id="thStatus2">Statut</th>
-              </tr>
-            </thead><tbody></tbody>
+            <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
+            <tbody></tbody>
           </table>
         </div>
       </div>
       <div class="tile" style="margin-top:20px">
-        <h3 id="alertsTitle">Alertes fiscales &amp; paiements</h3>
+        <h3>Alertes fiscales &amp; paiements</h3>
         <ul id="alertsList" style="margin:0;padding-left:18px"></ul>
       </div>
     </div>
   </div>
 
-  <footer id="footerText">© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.</footer>
+  <footer>© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.</footer>
 </div>
 
 <!-- Privacy Modal -->
 <div class="modal-backdrop" id="privacyModal" style="display:none">
   <div class="modal">
-    <h2 id="privacyTitle">Confidentialité</h2>
-    <p id="privacyText">Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse. Aucune donnée n’est stockée ni réutilisée. Le chatbot ne garde aucun historique.</p>
-    <div class="row" style="justify-content:flex-end"><button class="btn" id="closePrivacy">Fermer</button></div>
+    <h2>Confidentialité</h2>
+    <p>Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse. Aucune donnée n’est stockée ni réutilisée. Le chatbot ne garde aucun historique.</p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn" id="closePrivacy">Fermer</button>
+    </div>
   </div>
 </div>
 
 <!-- Login Modal -->
 <div class="modal-backdrop" id="loginModal" style="display:none">
   <div class="modal">
-    <h2 id="loginTitle">Connexion</h2>
+    <h2>Connexion</h2>
     <div class="field" style="margin-top:8px;display:block;">
-      <label id="companyIdLabel"><strong>Identifiant entreprise</strong></label>
-      <input id="companyId" type="text" placeholder="ex: demo" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
+      <label><strong>Identifiant entreprise</strong></label>
+      <input id="companyId" type="text" placeholder="ex: demo"
+        style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
     </div>
     <div class="field" style="margin-top:8px;display:block;">
-      <label id="companyPwdLabel"><strong>Mot de passe</strong></label>
-      <input id="companyPwd" type="password" placeholder="••••••••" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
+      <label><strong>Mot de passe</strong></label>
+      <input id="companyPwd" type="password" placeholder="••••••••"
+        style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
     </div>
     <div class="row" style="margin-top:12px;justify-content:flex-end;">
       <button class="btn-secondary" id="cancelLogin">Annuler</button>
@@ -285,7 +355,7 @@
   <div id="chat-head">
     <div class="name" style="display:flex;gap:8px;align-items:center">
       <img src="https://via.placeholder.com/56x56.png?text=A" alt="Albert">
-      <span id="chatHeaderName">Albert — Assistant Fiscal</span>
+      <span>Albert — Assistant Fiscal</span>
     </div>
     <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px">Fermer</button>
   </div>
@@ -301,479 +371,45 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const euro = v => (typeof v === 'number' && isFinite(v)) ? v.toLocaleString(undefined,{style:'currency',currency:'EUR'}) : '—';
-const pct = v => (v ?? v === 0) ? (Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%') : '—';
+const euro = v => (typeof v === 'number' && isFinite(v))
+  ? v.toLocaleString(undefined,{style:'currency',currency:'EUR'})
+  : '—';
+const pct = v => (v ?? v === 0)
+  ? (Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%')
+  : '—';
 
+// Always HTTPS API
 const DEFAULT_API = "https://optimis-fiscale-production.up.railway.app";
 
-/* ================== I18N ================== */
-let currentLang = 'fr';
-
-const langTexts = {
-  fr: {
-    appTitle: "Optimis Fiscale",
-    subtitle: "Analyse de balance & estimation fiscale (FR)",
-    apiDocsLink: "API Docs",
-    exportBtn: "Exporter (PDF)",
-    privacyBtn: "Confidentialité",
-    loginBtn: "Se connecter",
-    logoutBtn: "Se déconnecter",
-    csvLabel: "Fichier CSV",
-    csvHint: "Colonnes : account,label,debit,credit",
-    chooseFileLabel: "Choisir un fichier",
-    turnoverLabel: "Chiffre d'affaires (optionnel)",
-    turnoverHint: "Pour affiner les ratios",
-    frameworkLabel: "Référentiel d’audit",
-    frameworkHint: "Choisir IFRS ou US GAAP",
-    analyzeBtn: "Analyser",
-    auditBtn: "Test Audit",
-    optimizeBtn: "Optimisation fiscale",
-    status: {
-      ready: "Prêt",
-      needCsv: "Veuillez choisir un CSV",
-      analyzing: "Analyse en cours…",
-      analysisDone: "Analyse terminée",
-      auditing: "Audit en cours…",
-      auditDone: "Audit terminé",
-      optimizing: "Analyse pour optimisation…",
-      optimizeDone: "Optimisation (locale) prête",
-      loginRequiredFields: "Identifiant et mot de passe requis",
-      loggingIn: "Connexion…",
-      loginFailed: "Échec connexion",
-      connected: "Connecté",
-      disconnected: "Déconnecté",
-      chatNeedLogin: "Veuillez vous connecter pour utiliser le chat",
-      chatThinking: "Albert réfléchit…",
-      chatSessionExpired: "Session expirée. Veuillez vous reconnecter.",
-      chatError: "Erreur chat",
-      fileChoose: "Veuillez choisir un fichier",
-      fileUploading: "Importation en cours…",
-      fileUploadOk: "Importation réussie",
-      loadError: "Erreur de chargement des données"
-    },
-    csvPreviewTitle: "Aperçu CSV (10 premières lignes)",
-    kpiTitle: "KPIs",
-    taxTitle: "Fiscalité",
-    auditSummaryTitle: "Audit — Résumé",
-    auditIssuesTitle: "Audit — Points relevés",
-    topAccountsTitle: "Top comptes (par solde absolu)",
-    optimizeRecTitle: "Optimisation fiscale — Recommandations",
-    importSectionTitle: "Importation des fichiers",
-    bankFileLabel: "Relevé bancaire (.csv)",
-    bankFileHint: "Fichier CSV simple, une ligne par mouvement, avec au moins : date, libellé, montant.",
-    salesFileLabel: "Factures de ventes (.csv / .xlsx)",
-    salesFileHint: "Une ligne par facture : numéro, date, échéance, client, montant TTC.",
-    purchasesFileLabel: "Factures d’achats (.csv / .xlsx)",
-    purchasesFileHint: "Une ligne par facture : numéro, date, échéance, fournisseur, montant TTC.",
-    uploadBankBtn: "Importer relevé",
-    uploadSalesBtn: "Importer ventes",
-    uploadPurchasesBtn: "Importer achats",
-    treasuryTitle: "Suivi Trésorerie & Facturation",
-    bankBalanceTitle: "Solde bancaire",
-    bankInflowsTitle: "Entrées",
-    bankOutflowsTitle: "Sorties",
-    cashEvolutionTitle: "Évolution du solde",
-    salesTableTitle: "Factures ventes",
-    purchasesTableTitle: "Factures achats",
-    thNumber: "#",
-    thDate: "Date",
-    thDueDate: "Échéance",
-    thAmount: "Montant",
-    thStatus: "Statut",
-    alertsTitle: "Alertes fiscales & paiements",
-    footerText: "© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.",
-    privacyTitle: "Confidentialité",
-    privacyText: "Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse. Aucune donnée n’est stockée ni réutilisée. Le chatbot ne garde aucun historique.",
-    closePrivacy: "Fermer",
-    loginTitle: "Connexion",
-    companyIdLabel: "Identifiant entreprise",
-    companyPwdLabel: "Mot de passe",
-    cancelLogin: "Annuler",
-    doLogin: "Connexion",
-    chatButton: "Chat",
-    closeChat: "Fermer",
-    chatHeaderName: "Albert — Assistant Fiscal",
-    chatPlaceholder: "Posez votre question…",
-    sendChat: "Envoyer",
-    noInvoice: "Aucune facture",
-    noAlerts: "Aucune alerte active",
-    alertsLoadError: "Erreur de chargement des données",
-    optimizeNote: "Note: recommandations indicatives à confirmer selon votre situation et la réglementation.",
-    optimizeTips: {
-      margeFaible: "Marge brute faible: renégocier achats, optimiser transport refacturable, revoir stocks et démarques.",
-      deductCharges: "Déductibilité des charges: abonnements, télécoms, assurances. Vérifier CAPEX vs OPEX pour amortir.",
-      amort: "Optimiser les plans d’amortissement (composants, durées). Étudier le dégressif si applicable.",
-      deficits: "Examiner report en avant des déficits et, si pertinent, report en arrière (carry-back).",
-      cir: "Qualifier des travaux R&D/innovation pour CIR/CII (documentation, temps passés, sous-traitance éligible).",
-      jei: "Vérifier l’éligibilité JEI/JEU, exonérations locales et aides régionales selon votre profil.",
-      vatPositive: "TVA collectée > déductible: adapter régime et sécuriser récupération sur immobilisations et frais.",
-      vatNegative: "Crédit de TVA récurrent: demandes de remboursement périodiques, vérifier déduction des factures.",
-      remuneration: "Arbitrer rémunération vs dividendes vs intéressement pour optimiser charges (IS/IR/cotisations).",
-      provisions: "Revoir provisions (clients douteux, stocks) et CCA/PCA pour lisser le résultat sans risque.",
-      transferPricing: "Si intragroupe: documenter refacturations et prix de transfert pour réduire le risque de redressement.",
-      tauxReduit: "Vérifier l’éligibilité au taux réduit PME sur la fraction du bénéfice concernée, si conditions réunies."
-    },
-    connectedPrefix: "Connecté: "
-  },
-  en: {
-    appTitle: "Optimis Fiscale",
-    subtitle: "Trial balance analysis & tax estimate",
-    apiDocsLink: "API Docs",
-    exportBtn: "Export (PDF)",
-    privacyBtn: "Privacy",
-    loginBtn: "Log in",
-    logoutBtn: "Log out",
-    csvLabel: "CSV file",
-    csvHint: "Columns: account,label,debit,credit",
-    chooseFileLabel: "Choose a file",
-    turnoverLabel: "Turnover (optional)",
-    turnoverHint: "To refine ratios",
-    frameworkLabel: "Audit framework",
-    frameworkHint: "Choose IFRS or US GAAP",
-    analyzeBtn: "Analyze",
-    auditBtn: "Audit test",
-    optimizeBtn: "Tax optimization",
-    status: {
-      ready: "Ready",
-      needCsv: "Please choose a CSV file",
-      analyzing: "Analyzing…",
-      analysisDone: "Analysis complete",
-      auditing: "Audit in progress…",
-      auditDone: "Audit complete",
-      optimizing: "Analysis for optimization…",
-      optimizeDone: "Local optimization ready",
-      loginRequiredFields: "Company ID and password required",
-      loggingIn: "Signing in…",
-      loginFailed: "Login failed",
-      connected: "Connected",
-      disconnected: "Disconnected",
-      chatNeedLogin: "Please log in to use the chat",
-      chatThinking: "Albert is thinking…",
-      chatSessionExpired: "Session expired. Please log in again.",
-      chatError: "Chat error",
-      fileChoose: "Please choose a file",
-      fileUploading: "Uploading…",
-      fileUploadOk: "Upload successful",
-      loadError: "Loading error"
-    },
-    csvPreviewTitle: "CSV preview (first 10 rows)",
-    kpiTitle: "KPIs",
-    taxTitle: "Tax",
-    auditSummaryTitle: "Audit — Summary",
-    auditIssuesTitle: "Audit — Issues",
-    topAccountsTitle: "Top accounts (by absolute balance)",
-    optimizeRecTitle: "Tax optimization — Recommendations",
-    importSectionTitle: "File import",
-    bankFileLabel: "Bank statement (.csv)",
-    bankFileHint: "Simple CSV file, one row per transaction, at least: date, label, amount.",
-    salesFileLabel: "Sales invoices (.csv / .xlsx)",
-    salesFileHint: "One row per invoice: number, date, due date, customer, gross amount.",
-    purchasesFileLabel: "Purchase invoices (.csv / .xlsx)",
-    purchasesFileHint: "One row per invoice: number, date, due date, supplier, gross amount.",
-    uploadBankBtn: "Import statement",
-    uploadSalesBtn: "Import sales",
-    uploadPurchasesBtn: "Import purchases",
-    treasuryTitle: "Cash & Invoicing tracking",
-    bankBalanceTitle: "Bank balance",
-    bankInflowsTitle: "Inflows",
-    bankOutflowsTitle: "Outflows",
-    cashEvolutionTitle: "Balance evolution",
-    salesTableTitle: "Sales invoices",
-    purchasesTableTitle: "Purchase invoices",
-    thNumber: "#",
-    thDate: "Date",
-    thDueDate: "Due date",
-    thAmount: "Amount",
-    thStatus: "Status",
-    alertsTitle: "Tax alerts & payments",
-    footerText: "© 2025 Optimis Fiscale — Files are never stored.",
-    privacyTitle: "Privacy",
-    privacyText: "Files are processed in server memory only during analysis. No data is stored or reused. The chatbot keeps no history.",
-    closePrivacy: "Close",
-    loginTitle: "Login",
-    companyIdLabel: "Company ID",
-    companyPwdLabel: "Password",
-    cancelLogin: "Cancel",
-    doLogin: "Login",
-    chatButton: "Chat",
-    closeChat: "Close",
-    chatHeaderName: "Albert — Tax Assistant",
-    chatPlaceholder: "Ask your question…",
-    sendChat: "Send",
-    noInvoice: "No invoice",
-    noAlerts: "No active alerts",
-    alertsLoadError: "Error loading data",
-    optimizeNote: "Note: indicative recommendations to be confirmed based on your situation and regulations.",
-    optimizeTips: {
-      margeFaible: "Low gross margin: renegotiate purchases, optimise re-billable transport, review inventory and markdowns.",
-      deductCharges: "Check deductibility of expenses: subscriptions, telecoms, insurance. Review CAPEX vs OPEX for depreciation.",
-      amort: "Optimise depreciation plans (components, useful lives). Consider declining-balance where applicable.",
-      deficits: "Review loss carryforwards and, where relevant, carryback options.",
-      cir: "Identify R&D/innovation work eligible for tax credits (documentation, timesheets, subcontracting).",
-      jei: "Check eligibility for young innovative company status and local exemptions/aid.",
-      vatPositive: "VAT collected > deductible: adjust regime and secure deduction on assets and expenses.",
-      vatNegative: "Recurring VAT credit: ask for refunds regularly and secure invoice deduction.",
-      remuneration: "Arbitrate salary vs dividends vs profit-sharing to optimise corporate and personal taxes.",
-      provisions: "Review provisions (bad debts, inventory) and accruals to smooth results without undue risk.",
-      transferPricing: "If intra-group: document recharges and transfer pricing to reduce reassessment risk.",
-      tauxReduit: "Check eligibility for reduced corporate tax rate on the relevant profit portion."
-    },
-    connectedPrefix: "Connected: "
-  },
-  es: {
-    appTitle: "Optimis Fiscale",
-    subtitle: "Análisis de balance y estimación fiscal",
-    apiDocsLink: "API Docs",
-    exportBtn: "Exportar (PDF)",
-    privacyBtn: "Privacidad",
-    loginBtn: "Iniciar sesión",
-    logoutBtn: "Cerrar sesión",
-    csvLabel: "Archivo CSV",
-    csvHint: "Columnas: account,label,debit,credit",
-    chooseFileLabel: "Elegir archivo",
-    turnoverLabel: "Cifra de negocio (opcional)",
-    turnoverHint: "Para afinar los ratios",
-    frameworkLabel: "Marco de auditoría",
-    frameworkHint: "Elegir IFRS o US GAAP",
-    analyzeBtn: "Analizar",
-    auditBtn: "Prueba de auditoría",
-    optimizeBtn: "Optimización fiscal",
-    status: {
-      ready: "Listo",
-      needCsv: "Por favor elija un archivo CSV",
-      analyzing: "Analizando…",
-      analysisDone: "Análisis terminado",
-      auditing: "Auditoría en curso…",
-      auditDone: "Auditoría terminada",
-      optimizing: "Análisis para optimización…",
-      optimizeDone: "Optimización local lista",
-      loginRequiredFields: "Se requieren ID de empresa y contraseña",
-      loggingIn: "Conectando…",
-      loginFailed: "Error de inicio de sesión",
-      connected: "Conectado",
-      disconnected: "Desconectado",
-      chatNeedLogin: "Inicie sesión para usar el chat",
-      chatThinking: "Albert está pensando…",
-      chatSessionExpired: "Sesión expirada. Inicie sesión de nuevo.",
-      chatError: "Error de chat",
-      fileChoose: "Por favor elija un archivo",
-      fileUploading: "Importando…",
-      fileUploadOk: "Importación correcta",
-      loadError: "Error al cargar los datos"
-    },
-    csvPreviewTitle: "Vista previa CSV (primeras 10 filas)",
-    kpiTitle: "KPIs",
-    taxTitle: "Fiscalidad",
-    auditSummaryTitle: "Auditoría — Resumen",
-    auditIssuesTitle: "Auditoría — Puntos detectados",
-    topAccountsTitle: "Cuentas principales (por saldo absoluto)",
-    optimizeRecTitle: "Optimización fiscal — Recomendaciones",
-    importSectionTitle: "Importación de archivos",
-    bankFileLabel: "Extracto bancario (.csv)",
-    bankFileHint: "Archivo CSV sencillo, una línea por movimiento, al menos: fecha, concepto, importe.",
-    salesFileLabel: "Facturas de ventas (.csv / .xlsx)",
-    salesFileHint: "Una línea por factura: número, fecha, vencimiento, cliente, importe total.",
-    purchasesFileLabel: "Facturas de compras (.csv / .xlsx)",
-    purchasesFileHint: "Una línea por factura: número, fecha, vencimiento, proveedor, importe total.",
-    uploadBankBtn: "Importar extracto",
-    uploadSalesBtn: "Importar ventas",
-    uploadPurchasesBtn: "Importar compras",
-    treasuryTitle: "Seguimiento de tesorería y facturación",
-    bankBalanceTitle: "Saldo bancario",
-    bankInflowsTitle: "Entradas",
-    bankOutflowsTitle: "Salidas",
-    cashEvolutionTitle: "Evolución del saldo",
-    salesTableTitle: "Facturas de ventas",
-    purchasesTableTitle: "Facturas de compras",
-    thNumber: "#",
-    thDate: "Fecha",
-    thDueDate: "Vencimiento",
-    thAmount: "Importe",
-    thStatus: "Estado",
-    alertsTitle: "Alertas fiscales y pagos",
-    footerText: "© 2025 Optimis Fiscale — Los archivos nunca se almacenan.",
-    privacyTitle: "Privacidad",
-    privacyText: "Los archivos se procesan en memoria del servidor solo durante el análisis. No se almacena ni reutiliza ningún dato. El chatbot no guarda historial.",
-    closePrivacy: "Cerrar",
-    loginTitle: "Inicio de sesión",
-    companyIdLabel: "ID de empresa",
-    companyPwdLabel: "Contraseña",
-    cancelLogin: "Cancelar",
-    doLogin: "Iniciar sesión",
-    chatButton: "Chat",
-    closeChat: "Cerrar",
-    chatHeaderName: "Albert — Asistente fiscal",
-    chatPlaceholder: "Haz tu pregunta…",
-    sendChat: "Enviar",
-    noInvoice: "Ninguna factura",
-    noAlerts: "Ninguna alerta activa",
-    alertsLoadError: "Error al cargar los datos",
-    optimizeNote: "Nota: recomendaciones indicativas que deben confirmarse según su situación y la normativa.",
-    optimizeTips: {
-      margeFaible: "Margen bruto bajo: renegociar compras, optimizar transporte refacturable, revisar inventarios y descuentos.",
-      deductCharges: "Revisar deducibilidad de gastos: suscripciones, telecomunicaciones, seguros. Revisar CAPEX vs OPEX para amortizar.",
-      amort: "Optimizar planes de amortización (componentes, vidas útiles). Considerar amortización acelerada donde proceda.",
-      deficits: "Revisar compensación de pérdidas y, en su caso, mecanismos de carry-back.",
-      cir: "Identificar trabajos de I+D/innovación elegibles para incentivos fiscales (documentación, tiempos, subcontratación).",
-      jei: "Verificar elegibilidad a regímenes especiales para empresas innovadoras y exenciones locales.",
-      vatPositive: "IVA repercutido > soportado: ajustar régimen y asegurar deducción en activos y gastos.",
-      vatNegative: "Crédito de IVA recurrente: solicitar devoluciones periódicas y asegurar deducción de facturas.",
-      remuneration: "Arbitrar salario vs dividendos vs incentivos para optimizar impuestos y cotizaciones.",
-      provisions: "Revisar provisiones (clientes dudosos, existencias) y periodificaciones para suavizar el resultado sin riesgo excesivo.",
-      transferPricing: "Si hay operaciones intragrupo: documentar refacturaciones y precios de transferencia.",
-      tauxReduit: "Verificar elegibilidad a tipos reducidos del impuesto de sociedades sobre la parte correspondiente del beneficio."
-    },
-    connectedPrefix: "Conectado: "
-  }
-};
-
-function t(key) {
-  const lang = currentLang in langTexts ? currentLang : 'fr';
-  const parts = key.split('.');
-  let cur = langTexts[lang];
-  for (const p of parts) {
-    if (cur && p in cur) cur = cur[p];
-    else { cur = null; break; }
-  }
-  if (typeof cur === 'string') return cur;
-  // fallback to fr
-  if (lang !== 'fr') {
-    let cur2 = langTexts.fr;
-    for (const p of parts) {
-      if (cur2 && p in cur2) cur2 = cur2[p];
-      else { cur2 = null; break; }
-    }
-    if (typeof cur2 === 'string') return cur2;
-  }
-  return key;
-}
-
-function applyLanguage(lang) {
-  currentLang = lang in langTexts ? lang : 'fr';
-  document.documentElement.lang = currentLang;
-
-  const cfg = langTexts[currentLang];
-
-  if ($('appTitle')) $('appTitle').textContent = cfg.appTitle;
-  if ($('subtitle')) $('subtitle').textContent = cfg.subtitle;
-  if ($('apiDocsLink')) $('apiDocsLink').textContent = cfg.apiDocsLink;
-  if ($('exportBtn')) $('exportBtn').textContent = cfg.exportBtn;
-  if ($('privacyBtn')) $('privacyBtn').textContent = cfg.privacyBtn;
-  if ($('loginBtn')) $('loginBtn').textContent = cfg.loginBtn;
-  if ($('logoutBtn')) $('logoutBtn').textContent = cfg.logoutBtn;
-  if ($('csvLabel')) $('csvLabel').textContent = cfg.csvLabel;
-  if ($('csvHint')) $('csvHint').innerHTML = cfg.csvHint;
-  if ($('chooseFileLabel')) $('chooseFileLabel').textContent = cfg.chooseFileLabel;
-  if ($('turnoverLabel')) $('turnoverLabel').textContent = cfg.turnoverLabel;
-  if ($('turnoverHint')) $('turnoverHint').textContent = cfg.turnoverHint;
-  if ($('frameworkLabel')) $('frameworkLabel').textContent = cfg.frameworkLabel;
-  if ($('frameworkHint')) $('frameworkHint').textContent = cfg.frameworkHint;
-  if ($('analyzeBtn')) $('analyzeBtn').textContent = cfg.analyzeBtn;
-  if ($('auditBtn')) $('auditBtn').textContent = cfg.auditBtn;
-  if ($('optimizeBtn')) $('optimizeBtn').textContent = cfg.optimizeBtn;
-
-  if ($('csvPreviewTitle')) $('csvPreviewTitle').textContent = cfg.csvPreviewTitle;
-  if ($('kpiTitle')) $('kpiTitle').textContent = cfg.kpiTitle;
-  if ($('taxTitle')) $('taxTitle').textContent = cfg.taxTitle;
-  if ($('auditSummaryTitle')) $('auditSummaryTitle').textContent = cfg.auditSummaryTitle;
-  if ($('auditIssuesTitle')) $('auditIssuesTitle').textContent = cfg.auditIssuesTitle;
-  if ($('topAccountsTitle')) $('topAccountsTitle').textContent = cfg.topAccountsTitle;
-  if ($('optimizeRecTitle')) $('optimizeRecTitle').textContent = cfg.optimizeRecTitle;
-
-  if ($('importSectionTitle')) $('importSectionTitle').textContent = cfg.importSectionTitle;
-  if ($('bankFileLabel')) $('bankFileLabel').textContent = cfg.bankFileLabel;
-  if ($('bankFileHint')) $('bankFileHint').textContent = cfg.bankFileHint;
-  if ($('salesFileLabel')) $('salesFileLabel').textContent = cfg.salesFileLabel;
-  if ($('salesFileHint')) $('salesFileHint').textContent = cfg.salesFileHint;
-  if ($('purchasesFileLabel')) $('purchasesFileLabel').textContent = cfg.purchasesFileLabel;
-  if ($('purchasesFileHint')) $('purchasesFileHint').textContent = cfg.purchasesFileHint;
-  if ($('uploadBankBtn')) $('uploadBankBtn').textContent = cfg.uploadBankBtn;
-  if ($('uploadSalesBtn')) $('uploadSalesBtn').textContent = cfg.uploadSalesBtn;
-  if ($('uploadPurchasesBtn')) $('uploadPurchasesBtn').textContent = cfg.uploadPurchasesBtn;
-
-  if ($('treasuryTitle')) $('treasuryTitle').textContent = cfg.treasuryTitle;
-  if ($('bankBalanceTitle')) $('bankBalanceTitle').textContent = cfg.bankBalanceTitle;
-  if ($('bankInflowsTitle')) $('bankInflowsTitle').textContent = cfg.bankInflowsTitle;
-  if ($('bankOutflowsTitle')) $('bankOutflowsTitle').textContent = cfg.bankOutflowsTitle;
-  if ($('cashEvolutionTitle')) $('cashEvolutionTitle').textContent = cfg.cashEvolutionTitle;
-  if ($('salesTableTitle')) $('salesTableTitle').textContent = cfg.salesTableTitle;
-  if ($('purchasesTableTitle')) $('purchasesTableTitle').textContent = cfg.purchasesTableTitle;
-  if ($('thNumber')) $('thNumber').textContent = cfg.thNumber;
-  if ($('thDate')) $('thDate').textContent = cfg.thDate;
-  if ($('thDueDate')) $('thDueDate').textContent = cfg.thDueDate;
-  if ($('thAmount')) $('thAmount').textContent = cfg.thAmount;
-  if ($('thStatus')) $('thStatus').textContent = cfg.thStatus;
-  if ($('thDate2')) $('thDate2').textContent = cfg.thDate;
-  if ($('thDueDate2')) $('thDueDate2').textContent = cfg.thDueDate;
-  if ($('thAmount2')) $('thAmount2').textContent = cfg.thAmount;
-  if ($('thStatus2')) $('thStatus2').textContent = cfg.thStatus;
-  if ($('alertsTitle')) $('alertsTitle').textContent = cfg.alertsTitle;
-
-  if ($('footerText')) $('footerText').textContent = cfg.footerText;
-
-  if ($('privacyTitle')) $('privacyTitle').textContent = cfg.privacyTitle;
-  if ($('privacyText')) $('privacyText').textContent = cfg.privacyText;
-  if ($('closePrivacy')) $('closePrivacy').textContent = cfg.closePrivacy;
-
-  if ($('loginTitle')) $('loginTitle').textContent = cfg.loginTitle;
-  if ($('companyIdLabel')) $('companyIdLabel').innerHTML = "<strong>" + cfg.companyIdLabel + "</strong>";
-  if ($('companyPwdLabel')) $('companyPwdLabel').innerHTML = "<strong>" + cfg.companyPwdLabel + "</strong>";
-  if ($('cancelLogin')) $('cancelLogin').textContent = cfg.cancelLogin;
-  if ($('doLogin')) $('doLogin').textContent = cfg.doLogin;
-
-  if ($('openChat')) $('openChat').textContent = cfg.chatButton;
-  if ($('closeChat')) $('closeChat').textContent = cfg.closeChat;
-  if ($('chatHeaderName')) $('chatHeaderName').textContent = cfg.chatHeaderName;
-  if ($('chatText')) $('chatText').placeholder = cfg.chatPlaceholder;
-  if ($('sendChat')) $('sendChat').textContent = cfg.sendChat;
-
-  if ($('status')) $('status').textContent = cfg.status.ready;
-
-  // set buttons / small labels that might need layout updates
-}
-
-/* small helper to get localized status messages */
-function sStatus(key) {
-  const lang = currentLang in langTexts ? currentLang : 'fr';
-  const s = (langTexts[lang].status || {})[key] || (langTexts.fr.status || {})[key];
-  return s || key;
-}
-
 const getApiBase = () => DEFAULT_API;
-const setStatus = (m,k) => { const e=$('status'); if(e){ e.textContent=m; e.className='status'+(k?' '+k:''); } };
-const spin = s => $('globalSpin')?.classList.toggle('active',!!s);
-
-/* handle language selector */
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('optimis_lang') || 'fr';
-  const sel = $('langSelect');
-  if (sel) {
-    if (['fr','en','es'].includes(saved)) sel.value = saved;
-    sel.addEventListener('change', () => {
-      const val = sel.value;
-      localStorage.setItem('optimis_lang', val);
-      applyLanguage(val);
-    });
-  }
-  applyLanguage(saved);
-  loadDashboard();
-});
+const setStatus = (m,k) => {
+  const e = $('status');
+  if(e){ e.textContent = m; e.className = 'status' + (k ? ' '+k : ''); }
+};
+const spin = s => $('globalSpin')?.classList.toggle('active', !!s);
 
 /* privacy */
 $('exportBtn').onclick = () => window.print();
 $('privacyBtn').onclick = () => $('privacyModal').style.display = 'grid';
 $('closePrivacy').onclick = () => $('privacyModal').style.display = 'none';
-$('privacyModal').addEventListener('click',e=>{ if(e.target===e.currentTarget)e.currentTarget.style.display='none'; });
+$('privacyModal').addEventListener('click',e=>{
+  if(e.target===e.currentTarget)e.currentTarget.style.display='none';
+});
 
 /* CSV preview */
 $('csvInput').addEventListener('change', () => {
   const f = $('csvInput').files?.[0];
-  if (!f){ $('csvPreview').style.display='none'; return; }
-  $('fileName').style.display='inline-block'; $('fileName').textContent=f.name;
+  if (!f){
+    $('csvPreview').style.display='none';
+    return;
+  }
+  $('fileName').style.display='inline-block';
+  $('fileName').textContent=f.name;
   const r = new FileReader();
   r.onload = () => {
     const t = String(r.result||'');
-    const rows = t.trim().split(/\r?\n/).slice(0,11).map(x=>x.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/));
+    const rows = t.trim().split(/\r?\n/).slice(0,11)
+      .map(x=>x.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/));
     if(rows.length){
       $('csvPreview').style.display='block';
       $('csvTableWrap').innerHTML =
@@ -786,10 +422,10 @@ $('csvInput').addEventListener('change', () => {
 
 /* Analyze */
 async function runAnalyze(){
-  const base=getApiBase(); const file=$('csvInput').files?.[0]; const tVal=$('turnover').value;
-  if(!file){ setStatus(sStatus('needCsv'),'err'); return; }
-  const fd=new FormData(); fd.append('file',file); if(tVal) fd.append('turnover',tVal);
-  spin(true); setStatus(sStatus('analyzing')); $('analyzeBtn').disabled=true;
+  const base=getApiBase(); const file=$('csvInput').files?.[0]; const t=$('turnover').value;
+  if(!file){ setStatus('Veuillez choisir un CSV','err'); return; }
+  const fd=new FormData(); fd.append('file',file); if(t) fd.append('turnover',t);
+  spin(true); setStatus('Analyse en cours…'); $('analyzeBtn').disabled=true;
   try{
     const r=await fetch(base+'/analyze/trial-balance',{method:'POST',body:fd,credentials:'include'});
     const d=await r.json(); if(!r.ok) throw new Error(d?.detail||'Erreur API');
@@ -801,8 +437,8 @@ async function runAnalyze(){
       <div><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>`;
     $('tax').innerHTML=`<div><span>IS estimé</span><strong>${euro(tx.corporate_income_tax)}</strong></div>
       <div><span>TVA nette</span><strong>${euro(tx.vat_balance)}</strong></div>`;
-    setStatus(sStatus('analysisDone'),'ok');
-  }catch(e){ setStatus(e.message||sStatus('loadError'),'err'); }
+    setStatus('Analyse terminée','ok');
+  }catch(e){ setStatus(e.message||'Erreur','err'); }
   finally{ spin(false); $('analyzeBtn').disabled=false; }
 }
 $('analyzeBtn').onclick=runAnalyze;
@@ -810,9 +446,9 @@ $('analyzeBtn').onclick=runAnalyze;
 /* Audit */
 async function runAudit(){
   const base=getApiBase(); const f=$('csvInput').files?.[0]; const fw=$('framework').value;
-  if(!f){ setStatus(sStatus('needCsv'),'err'); return; }
+  if(!f){ setStatus('Veuillez choisir un CSV','err'); return; }
   const fd=new FormData(); fd.append('file',f); fd.append('standard',fw);
-  spin(true); setStatus(sStatus('auditing')); $('auditBtn').disabled=true;
+  spin(true); setStatus('Audit en cours…'); $('auditBtn').disabled=true;
   try{
     const r=await fetch(base+'/audit/test',{method:'POST',body:fd,credentials:'include'});
     const d=await r.json(); if(!r.ok) throw new Error(d?.detail||'Erreur API');
@@ -823,11 +459,13 @@ async function runAudit(){
       <div>Crédits: <strong>${euro(s.total_credit)}</strong></div>
       <div>Écart: <strong>${euro(s.imbalance)}</strong></div>
       <div>Référentiel: <strong>${s.framework}</strong></div>`;
-    $('auditIssues').innerHTML = issues.map(i=>`<li><strong>[${i.severity.toUpperCase()}]</strong> ${i.message}${i.count?' ('+i.count+')':''}</li>`).join('');
+    $('auditIssues').innerHTML = issues.map(i=>
+      `<li><strong>[${i.severity.toUpperCase()}]</strong> ${i.message}${i.count?' ('+i.count+')':''}</li>`
+    ).join('');
     $('auditTop').innerHTML=`<table><thead><tr><th>Compte</th><th>Libellé</th><th>Solde</th><th>Absolu</th></tr></thead>
       <tbody>${top.map(t=>`<tr><td>${t.account}</td><td>${t.label}</td><td>${euro(t.balance)}</td><td>${euro(t.abs_balance)}</td></tr>`).join('')}</tbody></table>`;
-    setStatus(sStatus('auditDone'),'ok');
-  }catch(e){ setStatus(e.message||sStatus('loadError'),'err'); }
+    setStatus('Audit terminé','ok');
+  }catch(e){ setStatus(e.message||'Erreur','err'); }
   finally{ spin(false); $('auditBtn').disabled=false; }
 }
 $('auditBtn').onclick=runAudit;
@@ -841,42 +479,49 @@ function localOptimizeFromKPIs(kpi, tax){
   const ebitdaPct = +kpi.ebitda_margin_pct || 0;
   const net = +kpi.net_result || 0;
   const vat = +(tax?.vat_balance ?? 0);
-  const tips = langTexts[currentLang]?.optimizeTips || langTexts.fr.optimizeTips;
 
-  if ((rev>0) && (gm/(rev||1) < 0.30)) out.push(tips.margeFaible);
-  if (ebitdaPct < 10) out.push(tips.deductCharges);
-  if (ebitda > 0) out.push(tips.amort);
-  if (net < 0) out.push(tips.deficits);
-  out.push(tips.cir);
-  out.push(tips.jei);
-  if (vat > 0) out.push(tips.vatPositive);
-  if (vat < 0) out.push(tips.vatNegative);
-  if (net > 0 && ebitdaPct > 8) out.push(tips.remuneration);
-  out.push(tips.provisions);
-  out.push(tips.transferPricing);
-  out.push(tips.tauxReduit);
+  if ((rev>0) && (gm/(rev||1) < 0.30))
+    out.push("Marge brute faible: renégocier achats, optimiser transport refacturable, revoir stocks et démarques.");
+  if (ebitdaPct < 10)
+    out.push("Déductibilité des charges: abonnements, télécoms, assurances. Vérifier CAPEX vs OPEX pour amortir.");
+  if (ebitda > 0)
+    out.push("Optimiser les plans d’amortissement (composants, durées). Étudier le dégressif si applicable.");
+  if (net < 0)
+    out.push("Examiner report en avant des déficits et, si pertinent, report en arrière (carry-back).");
+  out.push("Qualifier des travaux R&D/innovation pour CIR/CII (documentation, temps passés, sous-traitance éligible).");
+  out.push("Vérifier l’éligibilité JEI/JEU, exonérations locales et aides régionales selon votre profil.");
+  if (vat > 0)
+    out.push("TVA collectée > déductible: adapter régime et sécuriser récupération sur immobilisations et frais.");
+  if (vat < 0)
+    out.push("Crédit de TVA récurrent: demandes de remboursement périodiques, vérifier déduction des factures.");
+  if (net > 0 && ebitdaPct > 8)
+    out.push("Arbitrer rémunération vs dividendes vs intéressement pour optimiser charges (IS/IR/cotisations).");
+  out.push("Revoir provisions (clients douteux, stocks) et CCA/PCA pour lisser le résultat sans risque.");
+  out.push("Si intragroupe: documenter refacturations et prix de transfert pour réduire le risque de redressement.");
+  out.push("Vérifier l’éligibilité au taux réduit PME sur la fraction du bénéfice concernée, si conditions réunies.");
   return out;
 }
 async function runOptimize(){
   const base = getApiBase();
   const file = $('csvInput').files?.[0];
-  const tVal = $('turnover')?.value;
-  if(!file){ setStatus(sStatus('needCsv'),'err'); return; }
-  const fd = new FormData(); fd.append('file', file); if (tVal) fd.append('turnover', tVal);
-  spin(true); setStatus(sStatus('optimizing')); $('optimizeBtn').disabled = true;
+  const t = $('turnover')?.value;
+  if(!file){ setStatus('Veuillez choisir un CSV','err'); return; }
+  const fd = new FormData(); fd.append('file', file); if (t) fd.append('turnover', t);
+  spin(true); setStatus('Analyse pour optimisation…'); $('optimizeBtn').disabled = true;
   try{
-    const r = await fetch(base + '/analyze/trial-balance', { method: 'POST', body: fd, credentials: 'include' });
+    const r = await fetch(base + '/analyze/trial-balance', { method: 'POST', body: fd, credentials:'include' });
     const analysis = await r.json();
     if (!r.ok) throw new Error(analysis?.detail || 'Erreur analyse');
     $('results').style.display='block';
     const k = analysis.kpi || {}; const tax = analysis.tax || {};
     const items = localOptimizeFromKPIs(k, tax);
-    const note = langTexts[currentLang]?.optimizeNote || langTexts.fr.optimizeNote;
     $('optimizeOut').innerHTML = `<ul>${items.map(x=>`<li>${x}</li>`).join('')}</ul>
-      <div style="margin-top:8px;font-size:12px;color:#a3adbf">${note}</div>`;
-    setStatus(sStatus('optimizeDone'),'ok');
+      <div style="margin-top:8px;font-size:12px;color:#a3adbf">
+        Note: recommandations indicatives à confirmer selon votre situation et la réglementation.
+      </div>`;
+    setStatus('Optimisation (locale) prête','ok');
   }catch(e){
-    setStatus(e.message || sStatus('loadError'),'err');
+    setStatus(e.message || 'Erreur','err');
     $('optimizeOut').textContent = 'Erreur: ' + (e.message || e);
   }finally{
     $('optimizeBtn').disabled = false; spin(false);
@@ -895,29 +540,43 @@ $('doLogin').onclick = async () => {
   const base = getApiBase();
   const company_id = $('companyId').value.trim();
   const password = $('companyPwd').value;
-  if(!company_id || !password){ setStatus(sStatus('loginRequiredFields'),'err'); return; }
+  if(!company_id || !password){
+    setStatus('Identifiant et mot de passe requis','err');
+    return;
+  }
   try{
-    spin(true); setStatus(sStatus('loggingIn'));
+    spin(true); setStatus('Connexion…');
     const r = await fetch(base+'/auth/login', {
-      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
       body: JSON.stringify({ company_id, password })
     });
     const d = await r.json();
-    if(!r.ok) throw new Error(d?.detail || sStatus('loginFailed'));
+    if(!r.ok) throw new Error(d?.detail || 'Échec connexion');
     closeLogin();
-    $('who').style.display='inline-block'; $('who').textContent = (langTexts[currentLang]?.connectedPrefix || langTexts.fr.connectedPrefix) + d.company_id;
-    $('loginBtn').style.display='none'; $('logoutBtn').style.display='inline-flex';
-    setStatus(sStatus('connected'),'ok');
-  }catch(e){ setStatus(e.message || sStatus('loginFailed'),'err'); }
-  finally{ spin(false); }
+    $('who').style.display='inline-block';
+    $('who').textContent = `Connecté: ${d.company_id}`;
+    $('loginBtn').style.display='none';
+    $('logoutBtn').style.display='inline-flex';
+    setStatus('Connecté','ok');
+  }catch(e){
+    setStatus(e.message || 'Erreur','err');
+  }finally{
+    spin(false);
+  }
 };
 $('logoutBtn').onclick = async () => {
   const base = getApiBase();
-  try{ spin(true); await fetch(base+'/auth/logout', { method:'POST', credentials:'include' }); }
-  finally{
+  try{
+    spin(true);
+    await fetch(base+'/auth/logout', { method:'POST', credentials:'include' });
+  }finally{
     $('who').style.display='none'; $('who').textContent='';
-    $('loginBtn').style.display='inline-flex'; $('logoutBtn').style.display='none';
-    setStatus(sStatus('disconnected')); spin(false);
+    $('loginBtn').style.display='inline-flex';
+    $('logoutBtn').style.display='none';
+    setStatus('Déconnecté');
+    spin(false);
   }
 };
 
@@ -928,42 +587,81 @@ const chatText = $('chatText');
 const appendMsg = (role, text) => {
   const div = document.createElement('div');
   div.className = 'msg ' + (role === 'user' ? 'me' : 'bot');
-  div.textContent = text; chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
+  div.textContent = text;
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
 };
 const isLoggedIn = () => $('logoutBtn').style.display !== 'none';
 $('openChat').onclick = () => {
-  if (!isLoggedIn()) { setStatus(sStatus('chatNeedLogin'),'err'); openLogin(); return; }
-  chatBox.style.display = 'block'; chatText.focus();
+  if (!isLoggedIn()) {
+    setStatus('Veuillez vous connecter pour utiliser le chat','err');
+    openLogin();
+    return;
+  }
+  chatBox.style.display = 'block';
+  chatText.focus();
 };
 $('closeChat').onclick = () => chatBox.style.display = 'none';
 $('sendChat').onclick = sendChat;
 chatText.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
 async function sendChat(){
   const base = getApiBase(); const text = chatText.value.trim();
-  if (!text) return; appendMsg('user', text); chatText.value = ''; setStatus(sStatus('chatThinking'));
+  if (!text) return;
+  appendMsg('user', text);
+  chatText.value = '';
+  setStatus('Albert réfléchit…');
   try{
     const r = await fetch(base + '/chat', {
-      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
       body: JSON.stringify({ messages: [{ role: 'user', content: text }] })
     });
-    if (r.status === 401) { setStatus(sStatus('chatSessionExpired'),'err'); openLogin(); return; }
-    const d = await r.json(); if (!r.ok) throw new Error(d?.detail || 'Erreur API');
-    appendMsg('assistant', d.reply || '(réponse vide)'); setStatus(sStatus('ready'));
-  }catch(e){ appendMsg('assistant', 'Erreur: ' + (e.message || e)); setStatus(sStatus('chatError'),'err'); }
+    if (r.status === 401) {
+      setStatus('Session expirée. Veuillez vous reconnecter.','err');
+      openLogin();
+      return;
+    }
+    const d = await r.json();
+    if (!r.ok) throw new Error(d?.detail || 'Erreur API');
+    appendMsg('assistant', d.reply || '(réponse vide)');
+    setStatus('Prêt');
+  }catch(e){
+    appendMsg('assistant', 'Erreur: ' + (e.message || e));
+    setStatus('Erreur chat','err');
+  }
 }
 
 /* Importation des fichiers */
 async function uploadFile(inputId, endpoint, statusId){
-  const file=$(inputId).files?.[0]; const status=$(statusId);
-  if(!file){status.textContent=sStatus('fileChoose');status.className="status err";return;}
+  const file = $(inputId).files?.[0];
+  const status = $(statusId);
+  if(!file){
+    status.textContent="Veuillez choisir un fichier";
+    status.className="status err";
+    return;
+  }
   const fd=new FormData();fd.append("file",file);
   try{
-    spin(true); status.textContent=sStatus('fileUploading'); status.className="status";
+    spin(true);
+    status.textContent="Importation en cours…";
+    status.className="status";
     const r=await fetch(getApiBase()+endpoint,{method:'POST',body:fd,credentials:'include'});
-    if(r.ok){status.textContent="✅ "+sStatus('fileUploadOk');status.className="status ok";await loadDashboard();}
-    else{const err=await r.text();status.textContent="❌ "+(err.slice(0,150));status.className="status err";}
-  }catch(e){status.textContent="❌ "+(e.message||sStatus('loadError'));status.className="status err";}
-  finally{spin(false);}
+    if(r.ok){
+      status.textContent="✅ Importation réussie";
+      status.className="status ok";
+      await loadDashboard();
+    }else{
+      const err=await r.text();
+      status.textContent="❌ Erreur : "+err.slice(0,150);
+      status.className="status err";
+    }
+  }catch(e){
+    status.textContent="❌ "+(e.message||'Erreur réseau');
+    status.className="status err";
+  }finally{
+    spin(false);
+  }
 }
 $('uploadBankBtn').onclick=()=>uploadGeneric('bankFile','/bank/upload','bankUploadStatus');
 $('uploadSalesBtn').onclick=()=>uploadGeneric('salesFile','/invoices/sales','salesUploadStatus');
@@ -977,34 +675,65 @@ async function loadDashboard(){
   const apiBase = getApiBase();
   try{
     const [bank,sales,purchases,alerts]=await Promise.all([
-      fetch(apiBase+'/bank/summary').then(r=>r.json()),
-      fetch(apiBase+'/invoices/sales').then(r=>r.json()),
-      fetch(apiBase+'/invoices/purchases').then(r=>r.json()),
-      fetch(apiBase+'/alerts').then(r=>r.json())
+      fetch(apiBase+'/bank/summary',{credentials:'include'}).then(r=>r.json()),
+      fetch(apiBase+'/invoices/sales',{credentials:'include'}).then(r=>r.json()),
+      fetch(apiBase+'/invoices/purchases',{credentials:'include'}).then(r=>r.json()),
+      fetch(apiBase+'/alerts',{credentials:'include'}).then(r=>r.json())
     ]);
     $('bankBalance').textContent=(bank.balance??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
     $('bankInflows').textContent=(bank.inflows??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
     $('bankOutflows').textContent=(bank.outflows??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
 
     const ctx=$('cashChart');
-    new Chart(ctx,{type:'line',data:{labels:['Entrées','Sorties','Solde'],
-      datasets:[{label:'Flux bancaires',data:[bank.inflows||0,Math.abs(bank.outflows||0),bank.balance||0],
-      borderColor:'#3a71ff',backgroundColor:'rgba(58,113,255,0.2)',tension:0.3}]},
-      options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a3adbf'}},y:{ticks:{color:'#a3adbf'}}}}});
+    new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:['Entrées','Sorties','Solde'],
+        datasets:[{
+          label:'Flux bancaires',
+          data:[bank.inflows||0,Math.abs(bank.outflows||0),bank.balance||0],
+          borderColor:'#3a71ff',
+          backgroundColor:'rgba(58,113,255,0.2)',
+          tension:0.3
+        }]
+      },
+      options:{
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:'#a3adbf'}},
+          y:{ticks:{color:'#a3adbf'}}
+        }
+      }
+    });
 
-    const row=x=>`<tr><td>${x.number||'-'}</td><td>${x.issue_date||'-'}</td><td>${x.due_date||'-'}</td><td>${(x.amount||0).toLocaleString()} €</td><td>${x.status||'-'}</td></tr>`;
-    const noInvoice = langTexts[currentLang]?.noInvoice || langTexts.fr.noInvoice;
-    $('salesTable').querySelector('tbody').innerHTML=(Array.isArray(sales)&&sales.length?sales.map(row).join(''):`<tr><td colspan="5">${noInvoice}</td></tr>`);
-    $('purchasesTable').querySelector('tbody').innerHTML=(Array.isArray(purchases)&&purchases.length?purchases.map(row).join(''):`<tr><td colspan="5">${noInvoice}</td></tr>`);
+    const row=x=>`<tr>
+      <td>${x.number||'-'}</td>
+      <td>${x.issue_date||'-'}</td>
+      <td>${x.due_date||'-'}</td>
+      <td>${(x.amount||0).toLocaleString()} €</td>
+      <td>${x.status||'-'}</td>
+    </tr>`;
 
-    const noAlerts = langTexts[currentLang]?.noAlerts || langTexts.fr.noAlerts;
-    $('alertsList').innerHTML=(Array.isArray(alerts)&&alerts.length?alerts.map(a=>`<li>${a.message||'Alerte'} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join(''):`<li>${noAlerts}</li>`);
+    $('salesTable').querySelector('tbody').innerHTML =
+      (Array.isArray(sales)&&sales.length)
+        ? sales.map(row).join('')
+        : '<tr><td colspan="5">Aucune facture</td></tr>';
+
+    $('purchasesTable').querySelector('tbody').innerHTML =
+      (Array.isArray(purchases)&&purchases.length)
+        ? purchases.map(row).join('')
+        : '<tr><td colspan="5">Aucune facture</td></tr>';
+
+    $('alertsList').innerHTML =
+      (Array.isArray(alerts)&&alerts.length)
+        ? alerts.map(a=>`<li>${a.message||'Alerte'} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join('')
+        : '<li>Aucune alerte active</li>';
   }catch(e){
     console.error(e);
-    const txt = langTexts[currentLang]?.alertsLoadError || langTexts.fr.alertsLoadError;
-    $('alertsList').innerHTML=`<li>${txt}</li>`;
+    $('alertsList').innerHTML='<li>Erreur de chargement des données</li>';
   }
 }
+document.addEventListener('DOMContentLoaded', loadDashboard);
 </script>
 </body>
 </html>
