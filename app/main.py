@@ -1,4 +1,7 @@
-import os, time, logging, asyncio
+import os
+import time
+import logging
+import asyncio
 from typing import List, Optional
 from collections import defaultdict
 
@@ -13,25 +16,32 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # ---------------------------------------------------------------------
-# Correct imports for this folder layout
+# App imports (your existing analyzers & routers)
 # ---------------------------------------------------------------------
 from app.models import AnalysisResult
 from app.analyzers import analyze_trial_balance
 from .routers import bank, invoices, alerts
-
-# 🔥 NEW — import your finance router
-from app.routers.routes_finance import router as finance_router
 
 # ---------------------------------------------------------------------
 # App & CORS
 # ---------------------------------------------------------------------
 app = FastAPI(title="Optimis Fiscale MVP", version="0.2.1")
 
-ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN") or "https://qazwsxres.github.io"
+# Allow GitHub Pages + local dev by default
+_env_origins = os.getenv("ALLOWED_ORIGIN")
+if _env_origins:
+    ALLOWED_ORIGINS = [o.strip() for o in _env_origins.split(",") if o.strip()]
+else:
+    ALLOWED_ORIGINS = [
+        "https://qazwsxres.github.io",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:5500",
+    ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[ALLOWED_ORIGIN],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,14 +58,21 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ALGO = "HS256"
 COOKIE_NAME = "session"
 
+
 def validate_company_password(company_id: str, password: str) -> bool:
     env_key = f"COMPANY_{company_id}_PASSWORD"
     expected = os.getenv(env_key)
     return bool(expected and password == expected)
 
+
 def make_token(company_id: str, ttl_seconds: int = 60 * 60) -> str:
     now = int(time.time())
-    return jwt.encode({"sub": company_id, "iat": now, "exp": now + ttl_seconds}, SECRET_KEY, algorithm=ALGO)
+    return jwt.encode(
+        {"sub": company_id, "iat": now, "exp": now + ttl_seconds},
+        SECRET_KEY,
+        algorithm=ALGO,
+    )
+
 
 def parse_token(token: str) -> str:
     try:
@@ -64,16 +81,18 @@ def parse_token(token: str) -> str:
     except JWTError:
         raise HTTPException(401, "Invalid or expired session")
 
+
 def set_session_cookie(resp: Response, token: str):
     resp.set_cookie(
         key=COOKIE_NAME,
         value=token,
         httponly=True,
-        secure=True,
-        samesite="none",
+        secure=True,      # required for cross-site cookies over HTTPS
+        samesite="none",  # so GitHub Pages can send the cookie
         path="/",
         max_age=60 * 60,
     )
+
 
 def require_auth(request: Request) -> str:
     token = request.cookies.get(COOKIE_NAME)
@@ -84,9 +103,12 @@ def require_auth(request: Request) -> str:
 # ---------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------
+
+
 @app.get("/")
 def root():
     return {"ok": True, "service": "optimis-fiscale-api"}
+
 
 @app.get("/health")
 def health():
@@ -95,10 +117,18 @@ def health():
 # ---------------------------------------------------------------------
 # Analysis
 # ---------------------------------------------------------------------
+
+
 @app.post("/analyze/trial-balance", response_model=AnalysisResult)
-async def analyze_trial_balance_endpoint(file: UploadFile = File(...), turnover: float | None = None):
+async def analyze_trial_balance_endpoint(
+    file: UploadFile = File(...),
+    turnover: float | None = None,
+):
     if not file.filename.endswith(".csv"):
-        raise HTTPException(400, "Veuillez fournir un CSV (colonnes: account,label,debit,credit).")
+        raise HTTPException(
+            400,
+            "Veuillez fournir un CSV (colonnes: account,label,debit,credit).",
+        )
     try:
         import io
         df = pd.read_csv(io.BytesIO(await file.read()))
@@ -109,6 +139,7 @@ async def analyze_trial_balance_endpoint(file: UploadFile = File(...), turnover:
         return analyze_trial_balance(df, turnover=turnover)
     except Exception as e:
         raise HTTPException(400, str(e))
+
 
 @app.post("/analyze/json", response_model=AnalysisResult)
 async def analyze_json_endpoint(payload: dict):
@@ -123,9 +154,12 @@ async def analyze_json_endpoint(payload: dict):
 # ---------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------
+
+
 class LoginBody(BaseModel):
     company_id: str
     password: str
+
 
 @app.post("/auth/login")
 def login(body: LoginBody, response: Response):
@@ -135,6 +169,7 @@ def login(body: LoginBody, response: Response):
     set_session_cookie(response, token)
     return {"ok": True, "company_id": body.company_id}
 
+
 @app.post("/auth/logout")
 def logout(response: Response):
     response.delete_cookie(COOKIE_NAME, path="/")
@@ -143,31 +178,48 @@ def logout(response: Response):
 # ---------------------------------------------------------------------
 # Chat (OpenAI)
 # ---------------------------------------------------------------------
+
+
 class ChatMessage(BaseModel):
     role: str
     content: str
 
+
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
+
 
 class ChatResponse(BaseModel):
     reply: str
 
+
 _last_call = defaultdict(float)
+
 
 def throttle(company_id: str, min_interval: float = 2.0):
     now = time.time()
     if now - _last_call[company_id] < min_interval:
-        raise HTTPException(429, "Trop de requêtes. Réessayez dans 2–3 secondes.")
+        raise HTTPException(
+            429,
+            "Trop de requêtes. Réessayez dans 2–3 secondes.",
+        )
     _last_call[company_id] = now
 
-async def call_openai_with_retry(json_payload, api_key, max_retries: int = 4) -> str:
+
+async def call_openai_with_retry(
+    json_payload,
+    api_key: str,
+    max_retries: int = 4,
+) -> str:
     backoff = 1.5
     async with httpx.AsyncClient(timeout=40) as client:
         for attempt in range(1, max_retries + 1):
             r = await client.post(
                 "https://api.openai.com/v1/chat/completions",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
                 json=json_payload,
             )
             if r.status_code == 200:
@@ -181,8 +233,15 @@ async def call_openai_with_retry(json_payload, api_key, max_retries: int = 4) ->
                 backoff *= 2
                 continue
 
-            raise HTTPException(502, f"OpenAI error {r.status_code}: {r.text[:200]}")
-        raise HTTPException(429, "OpenAI rate limit: réessayez plus tard.")
+            raise HTTPException(
+                502,
+                f"OpenAI error {r.status_code}: {r.text[:200]}",
+            )
+        raise HTTPException(
+            429,
+            "OpenAI rate limit: réessayez plus tard.",
+        )
+
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
@@ -192,7 +251,13 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     payload = {
         "model": "gpt-4o-mini",
         "messages": [
-            {"role": "system", "content": "Tu es Albert, un assistant fiscal pour les PME françaises. Sois professionnel, clair et concis."},
+            {
+                "role": "system",
+                "content": (
+                    "Tu es Albert, un assistant fiscal pour les PME françaises. "
+                    "Sois professionnel, clair et concis."
+                ),
+            },
             *[m.model_dump() for m in req.messages],
         ],
         "temperature": 0.2,
@@ -201,25 +266,23 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     return ChatResponse(reply=reply)
 
 # ---------------------------------------------------------------------
-# Include Your Routers
+# Include your existing DB routers (bank / invoices / alerts)
 # ---------------------------------------------------------------------
-
-# Existing routers
 app.include_router(bank.router)
 app.include_router(invoices.router)
 app.include_router(alerts.router)
 
-# 🔥 NEW finance router (bank/upload, invoices/sales, invoices/purchases)
-app.include_router(finance_router)
-
 # ---------------------------------------------------------------------
 # Audit
 # ---------------------------------------------------------------------
+
+
 class AuditIssue(BaseModel):
     code: str
     severity: str
     message: str
     count: Optional[int] = None
+
 
 class AuditSummary(BaseModel):
     ok: bool
@@ -229,10 +292,12 @@ class AuditSummary(BaseModel):
     imbalance: float
     framework: str
 
+
 class AuditResult(BaseModel):
     summary: AuditSummary
     issues: List[AuditIssue]
     top_accounts: List[dict]
+
 
 @app.post("/audit/test", response_model=AuditResult)
 async def test_audit(
@@ -244,9 +309,13 @@ async def test_audit(
     framework = "USGAAP" if standard.startswith("US") else "IFRS"
 
     if not file.filename.endswith(".csv"):
-        raise HTTPException(400, "Veuillez fournir un CSV (colonnes: account,label,debit,credit).")
+        raise HTTPException(
+            400,
+            "Veuillez fournir un CSV (colonnes: account,label,debit,credit).",
+        )
 
     import io
+
     try:
         df = pd.read_csv(io.BytesIO(await file.read()))
         df.columns = df.columns.str.strip().str.lower()
@@ -256,7 +325,10 @@ async def test_audit(
     required = {"account", "label", "debit", "credit"}
     if not required.issubset(df.columns):
         missing = sorted(list(required - set(df.columns)))
-        raise HTTPException(400, f"Colonnes manquantes: {', '.join(missing)}")
+        raise HTTPException(
+            400,
+            f"Colonnes manquantes: {', '.join(missing)}",
+        )
 
     for c in ["debit", "credit"]:
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
@@ -267,38 +339,93 @@ async def test_audit(
 
     issues: List[AuditIssue] = []
     if imbalance > 0.01:
-        issues.append(AuditIssue(code="IMBALANCE", severity="error", message=f"Écart entre débits et crédits: {imbalance:,.2f} €"))
+        issues.append(
+            AuditIssue(
+                code="IMBALANCE",
+                severity="error",
+                message=f"Écart entre débits et crédits: {imbalance:,.2f} €",
+            )
+        )
 
-    missing_labels = int(df["label"].isna().sum() + (df["label"].astype(str).str.strip() == "").sum())
+    missing_labels = int(
+        df["label"].isna().sum()
+        + (df["label"].astype(str).str.strip() == "").sum()
+    )
     if missing_labels > 0:
-        issues.append(AuditIssue(code="MISSING_LABELS", severity="warning", message="Libellés manquants", count=missing_labels))
+        issues.append(
+            AuditIssue(
+                code="MISSING_LABELS",
+                severity="warning",
+                message="Libellés manquants",
+                count=missing_labels,
+            )
+        )
 
     neg_debit = int((df["debit"] < 0).sum())
     neg_credit = int((df["credit"] < 0).sum())
     if neg_debit > 0:
-        issues.append(AuditIssue(code="NEG_DEBIT", severity="warning", message="Débits négatifs détectés", count=neg_debit))
+        issues.append(
+            AuditIssue(
+                code="NEG_DEBIT",
+                severity="warning",
+                message="Débits négatifs détectés",
+                count=neg_debit,
+            )
+        )
     if neg_credit > 0:
-        issues.append(AuditIssue(code="NEG_CREDIT", severity="warning", message="Crédits négatifs détectés", count=neg_credit))
+        issues.append(
+            AuditIssue(
+                code="NEG_CREDIT",
+                severity="warning",
+                message="Crédits négatifs détectés",
+                count=neg_credit,
+            )
+        )
 
     dups = df["account"].astype(str).str.strip().duplicated().sum()
     if dups > 0:
-        issues.append(AuditIssue(code="DUP_ACCOUNTS", severity="info", message="Comptes apparaissant plusieurs fois", count=int(dups)))
+        issues.append(
+            AuditIssue(
+                code="DUP_ACCOUNTS",
+                severity="info",
+                message="Comptes apparaissant plusieurs fois",
+                count=int(dups),
+            )
+        )
 
-    issues.append(AuditIssue(code="FRAMEWORK", severity="info", message=f"Contrôles exécutés avec le référentiel {framework}."))
+    issues.append(
+        AuditIssue(
+            code="FRAMEWORK",
+            severity="info",
+            message=f"Contrôles exécutés avec le référentiel {framework}.",
+        )
+    )
 
     df["balance"] = df["debit"] - df["credit"]
-    grp = df.groupby(["account", "label"], dropna=False)["balance"].sum().reset_index()
+    grp = (
+        df.groupby(["account", "label"], dropna=False)["balance"]
+        .sum()
+        .reset_index()
+    )
     grp["abs_balance"] = grp["balance"].abs()
     top = grp.sort_values("abs_balance", ascending=False).head(10)
-    top = top.assign(
-        account=top["account"].astype(str),
-        label=top["label"].astype(str),
-        balance=top["balance"].round(2),
-        abs_balance=top["abs_balance"].round(2),
-    )[["account", "label", "balance", "abs_balance"]].to_dict(orient="records")
+    top = (
+        top.assign(
+            account=top["account"].astype(str),
+            label=top["label"].astype(str),
+            balance=top["balance"].round(2),
+            abs_balance=top["abs_balance"].round(2),
+        )[["account", "label", "balance", "abs_balance"]]
+        .to_dict(orient="records")
+    )
 
     summary = AuditSummary(
-        ok=(imbalance <= 0.01 and missing_labels == 0 and neg_debit == 0 and neg_credit == 0),
+        ok=(
+            imbalance <= 0.01
+            and missing_labels == 0
+            and neg_debit == 0
+            and neg_credit == 0
+        ),
         total_rows=len(df),
         total_debit=round(total_debit, 2),
         total_credit=round(total_credit, 2),
