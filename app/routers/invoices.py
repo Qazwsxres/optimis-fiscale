@@ -40,3 +40,43 @@ async def get_sales_invoices():
     Should return an array of objects with: number, issue_date, due_date, amount, status
     """
     return _sales_invoices
+# ---------- PURCHASE INVOICES ----------
+
+@router.post("/invoices/purchases")
+async def upload_purchase_invoices(file: UploadFile = File(...)):
+    """
+    Upload purchase invoices (CSV/XLSX).
+    Front-end: uploadGeneric('purchasesFile','/invoices/purchases',...)
+    """
+    global _purchase_invoices
+    _purchase_invoices = []
+
+    if file.content_type not in ("text/csv", "application/vnd.ms-excel"):
+        raise HTTPException(status_code=400, detail="File must be CSV for now")
+
+    try:
+        wrapper = TextIOWrapper(file.file, encoding="utf-8")
+        reader = csv.DictReader(wrapper)
+
+        for row in reader:
+            inv = {
+                "number": row.get("number") or row.get("invoice_number") or "",
+                "issue_date": row.get("date") or row.get("issue_date") or "",
+                "due_date": row.get("due_date") or "",
+                "amount": float(str(row.get("amount") or row.get("total") or "0").replace(",", ".")),
+                "status": row.get("status") or "open",
+            }
+            _purchase_invoices.append(inv)
+
+        return {"ok": True, "count": len(_purchase_invoices)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error parsing purchase file: {e}")
+
+
+@router.get("/invoices/purchases")
+async def get_purchase_invoices():
+    """
+    Used by your front-end dashboard:
+    fetch(apiBase+'/invoices/purchases')
+    """
+    return _purchase_invoices
