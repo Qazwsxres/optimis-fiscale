@@ -237,10 +237,7 @@ const $ = id => document.getElementById(id);
 const euro = v => (typeof v === 'number' && isFinite(v)) ? v.toLocaleString(undefined,{style:'currency',currency:'EUR'}) : '—';
 const pct = v => (v ?? v === 0) ? (Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%') : '—';
 
-// API base: garder Railway
-const DEFAULT_API = window.location.hostname.includes("localhost")
-  ? "http://127.0.0.1:8000"
-  : "https://optimis-fiscale-production.up.railway.app";
+const DEFAULT_API = "https://optimis-fiscale-production.up.railway.app";
 
 const getApiBase = () => DEFAULT_API;
 const setStatus = (m,k) => { const e=$('status'); if(e){ e.textContent=m; e.className='status'+(k?' '+k:''); } };
