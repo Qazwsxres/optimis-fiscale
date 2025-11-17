@@ -19,6 +19,9 @@ from app.models import AnalysisResult
 from app.analyzers import analyze_trial_balance
 from .routers import bank, invoices, alerts
 
+# 🔥 NEW — import your finance router
+from app.routers.routes_finance import router as finance_router
+
 # ---------------------------------------------------------------------
 # App & CORS
 # ---------------------------------------------------------------------
@@ -197,9 +200,17 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     reply = await call_openai_with_retry(payload, OPENAI_API_KEY, 4)
     return ChatResponse(reply=reply)
 
+# ---------------------------------------------------------------------
+# Include Your Routers
+# ---------------------------------------------------------------------
+
+# Existing routers
 app.include_router(bank.router)
 app.include_router(invoices.router)
 app.include_router(alerts.router)
+
+# 🔥 NEW finance router (bank/upload, invoices/sales, invoices/purchases)
+app.include_router(finance_router)
 
 # ---------------------------------------------------------------------
 # Audit
