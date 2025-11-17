@@ -1,40 +1,75 @@
+# routes_finance.py
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-import pandas as pd, io
-from ..database import SessionLocal
-from ..models_extended import BankTransaction
+from fastapi.responses import JSONResponse
+from typing import List
+import csv
+from io import TextIOWrapper
 
-router = APIRouter(prefix="/bank", tags=["Bank"])
+router = APIRouter()
 
-@router.post("/upload")
-async def upload_bank_csv(file: UploadFile = File(...)):
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(400, "Veuillez fournir un fichier CSV.")
-    content = await file.read()
-    df = pd.read_csv(io.BytesIO(content))
-    required = {"Date", "Label", "Amount"}
-    if not required.issubset(df.columns):
-        raise HTTPException(400, f"Colonnes manquantes : {', '.join(required - set(df.columns))}")
-    with SessionLocal() as db:
-        for _, row in df.iterrows():
-            db.add(BankTransaction(
-                date=row["Date"],
-                label=row["Label"],
-                amount=row["Amount"],
-                balance=row.get("Balance")
-            ))
-        db.commit()
-    return {"ok": True, "rows": len(df)}
+# In-memory storage just for demo.
+# Replace with your DB / ORM if you have one.
+_bank_summary = {
+    "balance": 0.0,
+    "inflows": 0.0,
+    "outflows": 0.0,
+}
 
-@router.get("/summary")
-def get_summary():
-    with SessionLocal() as db:
-        latest = db.query(BankTransaction).order_by(BankTransaction.date.desc()).first()
-        inflows = db.query(func.sum(BankTransaction.amount)).filter(BankTransaction.amount > 0).scalar() or 0
-        outflows = db.query(func.sum(BankTransaction.amount)).filter(BankTransaction.amount < 0).scalar() or 0
-    return {
-        "balance": float(latest.balance) if latest and latest.balance else float(inflows + outflows),
-        "inflows": float(inflows),
-        "outflows": float(outflows)
-    }
+_sales_invoices: List[dict] = []
+_purchase_invoices: List[dict] = []
+
+
+# ---------- BANK ----------
+
+@router.post("/bank/upload")
+async def upload_bank_statement(file: UploadFile = File(...)):
+    """
+    Accepts a CSV: one row per transaction
+    expected columns at least: date, label, amount
+    This matches your front-end: uploadGeneric('bankFile','/bank/upload',...)
+    """
+    if file.content_type not in ("text/csv", "application/vnd.ms-excel"):
+        raise HTTPException(status_code=400, detail="File must be CSV")
+
+    try:
+        # Parse CSV
+        wrapper = TextIOWrapper(file.file, encoding="utf-8")
+        reader = csv.DictReader(wrapper)
+        inflows = 0.0
+        outflows = 0.0
+        for row in reader:
+            # flexible column name for amount
+            raw_amount = (
+                row.get("amount")
+                or row.get("montant")
+                or row.get("Amount")
+                or row.get("Montant")
+            )
+            if raw_amount is None:
+                continue
+            try:
+                amount = float(str(raw_amount).replace(",", "."))
+            except ValueError:
+                continue
+
+            if amount >= 0:
+                inflows += amount
+            else:
+                outflows += amount
+
+        balance = inflows + outflows
+        _bank_summary["balance"] = balance
+        _bank_summary["inflows"] = inflows
+        _bank_summary["outflows"] = outflows
+
+        return {"ok": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error parsing bank file: {e}")
+
+
+@router.get("/bank/summary")
+async def bank_summary():
+    """
+    Used by your front-end: fetch(apiBase+'/bank/summary')
+    """
+    return _bank_summary
