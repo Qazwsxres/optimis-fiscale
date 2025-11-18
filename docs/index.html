@@ -670,28 +670,54 @@ function uploadGeneric(fileId, endpoint, statusId){
   uploadFile(fileId, endpoint, statusId);
 }
 
-/* Dashboard loader */
+/* Dashboard loader with daily cashflow */
 async function loadDashboard(){
   const apiBase = getApiBase();
   try{
-    const [bank,sales,purchases,alerts]=await Promise.all([
+    const [bank,sales,purchases,alerts,cashflow] = await Promise.all([
       fetch(apiBase+'/bank/summary',{credentials:'include'}).then(r=>r.json()),
       fetch(apiBase+'/invoices/sales',{credentials:'include'}).then(r=>r.json()),
       fetch(apiBase+'/invoices/purchases',{credentials:'include'}).then(r=>r.json()),
-      fetch(apiBase+'/alerts',{credentials:'include'}).then(r=>r.json())
+      fetch(apiBase+'/alerts',{credentials:'include'}).then(r=>r.json()),
+      fetch(apiBase+'/bank/cashflow',{credentials:'include'}).then(r=>r.json())
     ]);
-    $('bankBalance').textContent=(bank.balance??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
-    $('bankInflows').textContent=(bank.inflows??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
-    $('bankOutflows').textContent=(bank.outflows??0).toLocaleString(undefined,{style:'currency',currency:'EUR'});
 
+    // Bank summary tiles
+    $('bankBalance').textContent=(bank.balance??0).toLocaleString(
+      undefined,{style:'currency',currency:'EUR'}
+    );
+    $('bankInflows').textContent=(bank.inflows??0).toLocaleString(
+      undefined,{style:'currency',currency:'EUR'}
+    );
+    $('bankOutflows').textContent=(bank.outflows??0).toLocaleString(
+      undefined,{style:'currency',currency:'EUR'}
+    );
+
+    // Daily cashflow chart
     const ctx=$('cashChart');
+
+    let labels, dataPoints, datasetLabel;
+    if (Array.isArray(cashflow) && cashflow.length){
+      labels = cashflow.map(p => p.date);
+      dataPoints = cashflow.map(p => p.balance);
+      datasetLabel = 'Solde bancaire quotidien';
+    } else {
+      labels = ['Entrées','Sorties','Solde'];
+      dataPoints = [
+        bank.inflows || 0,
+        Math.abs(bank.outflows || 0),
+        bank.balance || 0
+      ];
+      datasetLabel = 'Flux bancaires';
+    }
+
     new Chart(ctx,{
       type:'line',
       data:{
-        labels:['Entrées','Sorties','Solde'],
+        labels,
         datasets:[{
-          label:'Flux bancaires',
-          data:[bank.inflows||0,Math.abs(bank.outflows||0),bank.balance||0],
+          label:datasetLabel,
+          data:dataPoints,
           borderColor:'#3a71ff',
           backgroundColor:'rgba(58,113,255,0.2)',
           tension:0.3
