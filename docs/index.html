@@ -52,13 +52,7 @@
       border-radius:12px;cursor:pointer
     }
     #authbar{display:flex;gap:8px;align-items:center}
-    #authbar .me{font-size:13px;color:#a3adbf}
-
-    /* language buttons */
-    .lang-btn.active{
-      border-color:var(--accent);
-      color:var(--accent);
-    }
+    #authbar .user-tag{font-size:13px;color:#a3adbf}
 
     /* chat widget */
     #chat-btn{position:fixed;right:20px;bottom:20px;z-index:30}
@@ -147,15 +141,10 @@
       <div class="sub" id="headerSub">Analyse de balance & estimation fiscale (FR)</div>
     </div>
     <div class="row" id="authbar">
-      <!-- language switch -->
-      <div class="row" id="langBar">
-        <button class="btn-secondary lang-btn active" data-lang="fr">FR</button>
-        <button class="btn-secondary lang-btn" data-lang="en">EN</button>
-      </div>
       <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
       <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
       <button id="loginBtn" class="btn-secondary">Se connecter</button>
-      <span id="who" class="me" style="display:none"></span>
+      <span id="who" class="user-tag" style="display:none"></span>
       <button id="logoutBtn" class="btn-secondary" style="display:none">Se déconnecter</button>
     </div>
   </header>
@@ -325,14 +314,17 @@
     </div>
   </div>
 
-  <footer>© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.</footer>
+  <footer id="footerText">© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.</footer>
 </div>
 
 <!-- Privacy Modal -->
 <div class="modal-backdrop" id="privacyModal" style="display:none">
   <div class="modal">
-    <h2>Confidentialité</h2>
-    <p>Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse. Aucune donnée n’est stockée ni réutilisée. Le chatbot ne garde aucun historique.</p>
+    <h2 id="privacyTitle">Confidentialité</h2>
+    <p id="privacyBody">
+      Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse.
+      Aucune donnée n’est stockée ni réutilisée. Le chatbot ne garde aucun historique.
+    </p>
     <div class="row" style="justify-content:flex-end">
       <button class="btn" id="closePrivacy">Fermer</button>
     </div>
@@ -361,14 +353,14 @@
 </div>
 
 <!-- Chat -->
-<div id="chat-btn"><button id="openChat">Chat</button></div>
+<div id="chat-btn"><button id="openChatBtn">Chat</button></div>
 <div id="chat-box">
   <div id="chat-head">
     <div class="name" style="display:flex;gap:8px;align-items:center">
       <img src="https://via.placeholder.com/56x56.png?text=A" alt="Albert">
-      <span>Albert — Assistant Fiscal</span>
+      <span id="chatHeaderTitle">Albert — Assistant Fiscal</span>
     </div>
-    <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px">Fermer</button>
+    <button id="closeChatBtn" class="btn-secondary" style="padding:6px 10px;border-radius:10px">Fermer</button>
   </div>
   <div id="chat-log"></div>
   <div id="chat-input">
@@ -389,104 +381,38 @@ const pct = v => (v ?? v === 0)
   ? (Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%')
   : '—';
 
-// language state
-let currentLang = 'fr';
-
-const i18n = {
-  fr: {
-    headerSub: "Analyse de balance & estimation fiscale (FR)",
-    exportBtn: "Exporter (PDF)",
-    privacyBtn: "Confidentialité",
-    analyzeBtn: "Analyser",
-    auditBtn: "Test Audit",
-    optimizeBtn: "Optimisation fiscale",
-    importSectionTitle: "Importation des fichiers",
-    bankSectionTitle: "Suivi Trésorerie & Facturation",
-    cashChartTitle: "Évolution du solde",
-    salesTableTitle: "Factures ventes",
-    purchasesTableTitle: "Factures achats",
-    alertsTitle: "Alertes fiscales & paiements",
-    loginBtn: "Se connecter",
-    logoutBtn: "Se déconnecter",
-    loginTitle: "Connexion",
-    loginCompanyLabel: "Identifiant entreprise",
-    loginPwdLabel: "Mot de passe",
-    loginCancel: "Annuler",
-    loginSubmit: "Connexion",
-    chatPlaceholder: "Posez votre question…",
-    chatSend: "Envoyer",
-    statusReady: "Prêt",
-    chartDailyLabel: "Solde bancaire quotidien",
-    chartFallbackLabel: "Flux bancaires",
-    noInvoices: "Aucune facture",
-    alertsEmpty: "Aucune alerte active"
-  },
-  en: {
-    headerSub: "Trial balance analysis & tax estimation (EN)",
-    exportBtn: "Export (PDF)",
-    privacyBtn: "Privacy",
-    analyzeBtn: "Analyze",
-    auditBtn: "Audit test",
-    optimizeBtn: "Tax optimization",
-    importSectionTitle: "File import",
-    bankSectionTitle: "Cashflow & invoicing overview",
-    cashChartTitle: "Balance over time",
-    salesTableTitle: "Sales invoices",
-    purchasesTableTitle: "Purchase invoices",
-    alertsTitle: "Tax & payment alerts",
-    loginBtn: "Log in",
-    logoutBtn: "Log out",
-    loginTitle: "Login",
-    loginCompanyLabel: "Company ID",
-    loginPwdLabel: "Password",
-    loginCancel: "Cancel",
-    loginSubmit: "Login",
-    chatPlaceholder: "Ask your question…",
-    chatSend: "Send",
-    statusReady: "Ready",
-    chartDailyLabel: "Daily bank balance",
-    chartFallbackLabel: "Bank flows",
-    noInvoices: "No invoices",
-    alertsEmpty: "No active alerts"
-  }
+/* Textes FR */
+const STRINGS = {
+  statusReady: "Prêt",
+  genericError: "Erreur",
+  chooseCsv: "Veuillez choisir un CSV",
+  analyzeRunning: "Analyse en cours…",
+  analyzeDone: "Analyse terminée",
+  auditRunning: "Audit en cours…",
+  auditDone: "Audit terminé",
+  optimizeRunning: "Analyse pour optimisation…",
+  optimizeDone: "Optimisation (locale) prête",
+  optimizeErrorPrefix: "Erreur : ",
+  loginMissing: "Identifiant et mot de passe requis",
+  loginRunning: "Connexion…",
+  loginOk: "Connecté",
+  logoutStatus: "Déconnecté",
+  chatNeedLogin: "Veuillez vous connecter pour utiliser le chat",
+  chatThinking: "Albert réfléchit…",
+  chatSessionExpired: "Session expirée. Veuillez vous reconnecter.",
+  chatErrorStatus: "Erreur chat",
+  uploadErrPrefix: "❌ Erreur : ",
+  uploadChooseFile: "Veuillez choisir un fichier",
+  uploadRunning: "Importation en cours…",
+  uploadOk: "✅ Importation réussie",
+  uploadNetworkErrPrefix: "❌ ",
+  uploadNetworkErrorFallback: "Erreur réseau",
+  chartDailyLabel: "Solde bancaire quotidien",
+  chartFallbackLabel: "Flux bancaires",
+  noInvoices: "Aucune facture",
+  alertsEmpty: "Aucune alerte active",
+  alertsLoadError: "Erreur de chargement des données"
 };
-
-function applyLang(){
-  const t = i18n[currentLang];
-  if ($('headerSub')) $('headerSub').textContent = t.headerSub;
-  $('exportBtn').textContent = t.exportBtn;
-  $('privacyBtn').textContent = t.privacyBtn;
-  $('analyzeBtn').textContent = t.analyzeBtn;
-  $('auditBtn').textContent = t.auditBtn;
-  $('optimizeBtn').textContent = t.optimizeBtn;
-  $('loginBtn').textContent = t.loginBtn;
-  $('logoutBtn').textContent = t.logoutBtn;
-  if ($('status')) $('status').textContent = t.statusReady;
-
-  if ($('importSectionTitle')) $('importSectionTitle').textContent = t.importSectionTitle;
-  if ($('bankMainTitle')) $('bankMainTitle').textContent = t.bankSectionTitle;
-
-  if ($('cashChartTitle')) $('cashChartTitle').textContent = t.cashChartTitle;
-  if ($('salesTableTitle')) $('salesTableTitle').textContent = t.salesTableTitle;
-  if ($('purchasesTableTitle')) $('purchasesTableTitle').textContent = t.purchasesTableTitle;
-  if ($('alertsTitle')) $('alertsTitle').textContent = t.alertsTitle;
-
-  if ($('loginTitle')) $('loginTitle').textContent = t.loginTitle;
-  if ($('loginCompanyLabel')) $('loginCompanyLabel').innerHTML = `<strong>${t.loginCompanyLabel}</strong>`;
-  if ($('loginPwdLabel')) $('loginPwdLabel').innerHTML = `<strong>${t.loginPwdLabel}</strong>`;
-  if ($('cancelLogin')) $('cancelLogin').textContent = t.loginCancel;
-  if ($('doLogin')) $('doLogin').textContent = t.loginSubmit;
-
-  const chatText = $('chatText');
-  if (chatText) chatText.placeholder = t.chatPlaceholder;
-  if ($('sendChat')) $('sendChat').textContent = t.chatSend;
-}
-
-function updateLangButtons(){
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === currentLang);
-  });
-}
 
 // Always HTTPS API
 const DEFAULT_API = "https://optimis-fiscale-production.up.railway.app";
@@ -532,13 +458,14 @@ $('csvInput').addEventListener('change', () => {
 
 /* Analyze */
 async function runAnalyze(){
-  const base=getApiBase(); const file=$('csvInput').files?.[0]; const t=$('turnover').value;
-  if(!file){ setStatus('Veuillez choisir un CSV','err'); return; }
-  const fd=new FormData(); fd.append('file',file); if(t) fd.append('turnover',t);
-  spin(true); setStatus('Analyse en cours…'); $('analyzeBtn').disabled=true;
+  const t = STRINGS;
+  const base=getApiBase(); const file=$('csvInput').files?.[0]; const tv=$('turnover').value;
+  if(!file){ setStatus(t.chooseCsv,'err'); return; }
+  const fd=new FormData(); fd.append('file',file); if(tv) fd.append('turnover',tv);
+  spin(true); setStatus(t.analyzeRunning); $('analyzeBtn').disabled=true;
   try{
     const r=await fetch(base+'/analyze/trial-balance',{method:'POST',body:fd,credentials:'include'});
-    const d=await r.json(); if(!r.ok) throw new Error(d?.detail||'Erreur API');
+    const d=await r.json(); if(!r.ok) throw new Error(d?.detail||t.genericError);
     $('results').style.display='block';
     const k=d.kpi||{},tx=d.tax||{};
     $('kpi').innerHTML=`<div><span>CA</span><strong>${euro(k.revenue)}</strong></div>
@@ -547,21 +474,22 @@ async function runAnalyze(){
       <div><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>`;
     $('tax').innerHTML=`<div><span>IS estimé</span><strong>${euro(tx.corporate_income_tax)}</strong></div>
       <div><span>TVA nette</span><strong>${euro(tx.vat_balance)}</strong></div>`;
-    setStatus('Analyse terminée','ok');
-  }catch(e){ setStatus(e.message||'Erreur','err'); }
+    setStatus(t.analyzeDone,'ok');
+  }catch(e){ setStatus(e.message||t.genericError,'err'); }
   finally{ spin(false); $('analyzeBtn').disabled=false; }
 }
 $('analyzeBtn').onclick=runAnalyze;
 
 /* Audit */
 async function runAudit(){
+  const t = STRINGS;
   const base=getApiBase(); const f=$('csvInput').files?.[0]; const fw=$('framework').value;
-  if(!f){ setStatus('Veuillez choisir un CSV','err'); return; }
+  if(!f){ setStatus(t.chooseCsv,'err'); return; }
   const fd=new FormData(); fd.append('file',f); fd.append('standard',fw);
-  spin(true); setStatus('Audit en cours…'); $('auditBtn').disabled=true;
+  spin(true); setStatus(t.auditRunning); $('auditBtn').disabled=true;
   try{
     const r=await fetch(base+'/audit/test',{method:'POST',body:fd,credentials:'include'});
-    const d=await r.json(); if(!r.ok) throw new Error(d?.detail||'Erreur API');
+    const d=await r.json(); if(!r.ok) throw new Error(d?.detail||t.genericError);
     $('results').style.display='block';
     const s=d.summary||{}; const issues=d.issues||[]; const top=d.top_accounts||[];
     $('auditSummary').innerHTML=`<div>Total lignes: <strong>${s.total_rows}</strong></div>
@@ -569,13 +497,14 @@ async function runAudit(){
       <div>Crédits: <strong>${euro(s.total_credit)}</strong></div>
       <div>Écart: <strong>${euro(s.imbalance)}</strong></div>
       <div>Référentiel: <strong>${s.framework}</strong></div>`;
-    $('auditIssues').innerHTML = issues.map(i=>
-      `<li><strong>[${i.severity.toUpperCase()}]</strong> ${i.message}${i.count?' ('+i.count+')':''}</li>`
-    ).join('');
+    $('auditIssues').innerHTML = issues.map(i=>{
+      const sev = (i.severity || '').toString().toUpperCase();
+      return `<li><strong>[${sev}]</strong> ${i.message || ''}${i.count?' ('+i.count+')':''}</li>`;
+    }).join('');
     $('auditTop').innerHTML=`<table><thead><tr><th>Compte</th><th>Libellé</th><th>Solde</th><th>Absolu</th></tr></thead>
-      <tbody>${top.map(t=>`<tr><td>${t.account}</td><td>${t.label}</td><td>${euro(t.balance)}</td><td>${euro(t.abs_balance)}</td></tr>`).join('')}</tbody></table>`;
-    setStatus('Audit terminé','ok');
-  }catch(e){ setStatus(e.message||'Erreur','err'); }
+      <tbody>${top.map(tl=>`<tr><td>${tl.account}</td><td>${tl.label}</td><td>${euro(tl.balance)}</td><td>${euro(tl.abs_balance)}</td></tr>`).join('')}</tbody></table>`;
+    setStatus(t.auditDone,'ok');
+  }catch(e){ setStatus(e.message||t.genericError,'err'); }
   finally{ spin(false); $('auditBtn').disabled=false; }
 }
 $('auditBtn').onclick=runAudit;
@@ -612,16 +541,17 @@ function localOptimizeFromKPIs(kpi, tax){
   return out;
 }
 async function runOptimize(){
+  const t = STRINGS;
   const base = getApiBase();
   const file = $('csvInput').files?.[0];
-  const t = $('turnover')?.value;
-  if(!file){ setStatus('Veuillez choisir un CSV','err'); return; }
-  const fd = new FormData(); fd.append('file', file); if (t) fd.append('turnover', t);
-  spin(true); setStatus('Analyse pour optimisation…'); $('optimizeBtn').disabled = true;
+  const tv = $('turnover')?.value;
+  if(!file){ setStatus(t.chooseCsv,'err'); return; }
+  const fd = new FormData(); fd.append('file', file); if (tv) fd.append('turnover', tv);
+  spin(true); setStatus(t.optimizeRunning); $('optimizeBtn').disabled = true;
   try{
     const r = await fetch(base + '/analyze/trial-balance', { method: 'POST', body: fd, credentials:'include' });
     const analysis = await r.json();
-    if (!r.ok) throw new Error(analysis?.detail || 'Erreur analyse');
+    if (!r.ok) throw new Error(analysis?.detail || t.genericError);
     $('results').style.display='block';
     const k = analysis.kpi || {}; const tax = analysis.tax || {};
     const items = localOptimizeFromKPIs(k, tax);
@@ -629,10 +559,10 @@ async function runOptimize(){
       <div style="margin-top:8px;font-size:12px;color:#a3adbf">
         Note: recommandations indicatives à confirmer selon votre situation et la réglementation.
       </div>`;
-    setStatus('Optimisation (locale) prête','ok');
+    setStatus(t.optimizeDone,'ok');
   }catch(e){
-    setStatus(e.message || 'Erreur','err');
-    $('optimizeOut').textContent = 'Erreur: ' + (e.message || e);
+    setStatus(e.message || t.genericError,'err');
+    $('optimizeOut').textContent = (t.optimizeErrorPrefix || "Erreur : ") + (e.message || '');
   }finally{
     $('optimizeBtn').disabled = false; spin(false);
   }
@@ -647,15 +577,16 @@ function closeLogin(){ $('loginModal').style.display='none'; }
 $('loginBtn').onclick = openLogin;
 $('cancelLogin').onclick = closeLogin;
 $('doLogin').onclick = async () => {
+  const t = STRINGS;
   const base = getApiBase();
   const company_id = $('companyId').value.trim();
   const password = $('companyPwd').value;
   if(!company_id || !password){
-    setStatus('Identifiant et mot de passe requis','err');
+    setStatus(t.loginMissing,'err');
     return;
   }
   try{
-    spin(true); setStatus('Connexion…');
+    spin(true); setStatus(t.loginRunning);
     const r = await fetch(base+'/auth/login', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -663,20 +594,22 @@ $('doLogin').onclick = async () => {
       body: JSON.stringify({ company_id, password })
     });
     const d = await r.json();
-    if(!r.ok) throw new Error(d?.detail || 'Échec connexion');
+    if(!r.ok) throw new Error(d?.detail || t.genericError);
     closeLogin();
     $('who').style.display='inline-block';
     $('who').textContent = `Connecté: ${d.company_id}`;
+    $('loginBtn').style.display='inline-flex';
     $('loginBtn').style.display='none';
     $('logoutBtn').style.display='inline-flex';
-    setStatus('Connecté','ok');
+    setStatus(t.loginOk,'ok');
   }catch(e){
-    setStatus(e.message || 'Erreur','err');
+    setStatus(e.message || t.genericError,'err');
   }finally{
     spin(false);
   }
 };
 $('logoutBtn').onclick = async () => {
+  const t = STRINGS;
   const base = getApiBase();
   try{
     spin(true);
@@ -685,7 +618,7 @@ $('logoutBtn').onclick = async () => {
     $('who').style.display='none'; $('who').textContent='';
     $('loginBtn').style.display='inline-flex';
     $('logoutBtn').style.display='none';
-    setStatus('Déconnecté');
+    setStatus(t.logoutStatus);
     spin(false);
   }
 };
@@ -702,24 +635,26 @@ const appendMsg = (role, text) => {
   chatLog.scrollTop = chatLog.scrollHeight;
 };
 const isLoggedIn = () => $('logoutBtn').style.display !== 'none';
-$('openChat').onclick = () => {
+$('openChatBtn').onclick = () => {
+  const t = STRINGS;
   if (!isLoggedIn()) {
-    setStatus('Veuillez vous connecter pour utiliser le chat','err');
+    setStatus(t.chatNeedLogin,'err');
     openLogin();
     return;
   }
   chatBox.style.display = 'block';
   chatText.focus();
 };
-$('closeChat').onclick = () => chatBox.style.display = 'none';
+$('closeChatBtn').onclick = () => chatBox.style.display = 'none';
 $('sendChat').onclick = sendChat;
 chatText.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
 async function sendChat(){
+  const t = STRINGS;
   const base = getApiBase(); const text = chatText.value.trim();
   if (!text) return;
   appendMsg('user', text);
   chatText.value = '';
-  setStatus('Albert réfléchit…');
+  setStatus(t.chatThinking);
   try{
     const r = await fetch(base + '/chat', {
       method:'POST',
@@ -728,46 +663,47 @@ async function sendChat(){
       body: JSON.stringify({ messages: [{ role: 'user', content: text }] })
     });
     if (r.status === 401) {
-      setStatus('Session expirée. Veuillez vous reconnecter.','err');
+      setStatus(t.chatSessionExpired,'err');
       openLogin();
       return;
     }
     const d = await r.json();
-    if (!r.ok) throw new Error(d?.detail || 'Erreur API');
+    if (!r.ok) throw new Error(d?.detail || t.genericError);
     appendMsg('assistant', d.reply || '(réponse vide)');
-    setStatus('Prêt');
+    setStatus(t.statusReady);
   }catch(e){
-    appendMsg('assistant', 'Erreur: ' + (e.message || e));
-    setStatus('Erreur chat','err');
+    appendMsg('assistant', (t.uploadErrPrefix || "❌ ") + (e.message || t.chatErrorStatus));
+    setStatus(t.chatErrorStatus,'err');
   }
 }
 
 /* Importation des fichiers */
 async function uploadFile(inputId, endpoint, statusId){
+  const t = STRINGS;
   const file = $(inputId).files?.[0];
   const status = $(statusId);
   if(!file){
-    status.textContent="Veuillez choisir un fichier";
+    status.textContent=t.uploadChooseFile;
     status.className="status err";
     return;
   }
   const fd=new FormData();fd.append("file",file);
   try{
     spin(true);
-    status.textContent="Importation en cours…";
+    status.textContent=t.uploadRunning;
     status.className="status";
     const r=await fetch(getApiBase()+endpoint,{method:'POST',body:fd,credentials:'include'});
     if(r.ok){
-      status.textContent="✅ Importation réussie";
+      status.textContent=t.uploadOk;
       status.className="status ok";
       await loadDashboard();
     }else{
       const err=await r.text();
-      status.textContent="❌ Erreur : "+err.slice(0,150);
+      status.textContent=(t.uploadErrPrefix || "❌ Erreur : ")+err.slice(0,150);
       status.className="status err";
     }
   }catch(e){
-    status.textContent="❌ "+(e.message||'Erreur réseau');
+    status.textContent=(t.uploadNetworkErrPrefix || "❌ ")+(e.message||t.uploadNetworkErrorFallback);
     status.className="status err";
   }finally{
     spin(false);
@@ -781,8 +717,11 @@ function uploadGeneric(fileId, endpoint, statusId){
 }
 
 /* Dashboard loader with daily cashflow */
+let cashChartInstance = null;
+
 async function loadDashboard(){
   const apiBase = getApiBase();
+  const t = STRINGS;
   try{
     const [bank,sales,purchases,alerts,cashflow] = await Promise.all([
       fetch(apiBase+'/bank/summary',{credentials:'include'}).then(r=>r.json()),
@@ -810,7 +749,7 @@ async function loadDashboard(){
     if (Array.isArray(cashflow) && cashflow.length){
       labels = cashflow.map(p => p.date);
       dataPoints = cashflow.map(p => p.balance);
-      datasetLabel = i18n[currentLang].chartDailyLabel;
+      datasetLabel = t.chartDailyLabel;
     } else {
       labels = ['Entrées','Sorties','Solde'];
       dataPoints = [
@@ -818,10 +757,14 @@ async function loadDashboard(){
         Math.abs(bank.outflows || 0),
         bank.balance || 0
       ];
-      datasetLabel = i18n[currentLang].chartFallbackLabel;
+      datasetLabel = t.chartFallbackLabel;
     }
 
-    new Chart(ctx,{
+    if (cashChartInstance) {
+      cashChartInstance.destroy();
+    }
+
+    cashChartInstance = new Chart(ctx,{
       type:'line',
       data:{
         labels,
@@ -842,8 +785,8 @@ async function loadDashboard(){
       }
     });
 
-    const noInvoicesText = i18n[currentLang].noInvoices;
-    const alertsEmptyText = i18n[currentLang].alertsEmpty;
+    const noInvoicesText = t.noInvoices;
+    const alertsEmptyText = t.alertsEmpty;
 
     const row=x=>`<tr>
       <td>${x.number||'-'}</td>
@@ -866,26 +809,17 @@ async function loadDashboard(){
     $('alertsList').innerHTML =
       (Array.isArray(alerts)&&alerts.length)
         ? alerts.map(a=>`<li>${a.message||'Alerte'} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join('')
+
         : `<li>${alertsEmptyText}</li>`;
   }catch(e){
     console.error(e);
-    $('alertsList').innerHTML='<li>Erreur de chargement des données</li>';
+    $('alertsList').innerHTML = `<li>${STRINGS.alertsLoadError}</li>`;
   }
 }
 
-/* init: language + dashboard */
+/* init */
 document.addEventListener('DOMContentLoaded', () => {
-  // language buttons
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentLang = btn.dataset.lang || 'fr';
-      updateLangButtons();
-      applyLang();
-      loadDashboard();
-    });
-  });
-  updateLangButtons();
-  applyLang();
+  setStatus(STRINGS.statusReady);
   loadDashboard();
 });
 </script>
