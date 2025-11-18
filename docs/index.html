@@ -242,7 +242,7 @@
   <div class="grid2" style="margin-top:20px;align-items:flex-start;">
     <!-- Importation des fichiers -->
     <div class="card">
-      <h2>Importation des fichiers</h2>
+      <h2 id="importSectionTitle">Importation des fichiers</h2>
 
       <div class="field" style="display:block;">
         <strong>Relevé bancaire (.csv)</strong>
@@ -292,7 +292,7 @@
 
     <!-- Suivi Trésorerie & Facturation -->
     <div class="card">
-      <h2>Suivi Trésorerie &amp; Facturation</h2>
+      <h2 id="bankMainTitle">Suivi Trésorerie &amp; Facturation</h2>
       <div id="bankSummary" class="tiles">
         <div class="tile"><h3>Solde bancaire</h3><div id="bankBalance">—</div></div>
         <div class="tile"><h3>Entrées</h3><div id="bankInflows">—</div></div>
@@ -400,6 +400,7 @@ const i18n = {
     analyzeBtn: "Analyser",
     auditBtn: "Test Audit",
     optimizeBtn: "Optimisation fiscale",
+    importSectionTitle: "Importation des fichiers",
     bankSectionTitle: "Suivi Trésorerie & Facturation",
     cashChartTitle: "Évolution du solde",
     salesTableTitle: "Factures ventes",
@@ -427,6 +428,7 @@ const i18n = {
     analyzeBtn: "Analyze",
     auditBtn: "Audit test",
     optimizeBtn: "Tax optimization",
+    importSectionTitle: "File import",
     bankSectionTitle: "Cashflow & invoicing overview",
     cashChartTitle: "Balance over time",
     salesTableTitle: "Sales invoices",
@@ -461,8 +463,9 @@ function applyLang(){
   $('logoutBtn').textContent = t.logoutBtn;
   if ($('status')) $('status').textContent = t.statusReady;
 
-  const bankSectionTitle = document.querySelector('.card h2');
-  if (bankSectionTitle) bankSectionTitle.textContent = t.bankSectionTitle;
+  if ($('importSectionTitle')) $('importSectionTitle').textContent = t.importSectionTitle;
+  if ($('bankMainTitle')) $('bankMainTitle').textContent = t.bankSectionTitle;
+
   if ($('cashChartTitle')) $('cashChartTitle').textContent = t.cashChartTitle;
   if ($('salesTableTitle')) $('salesTableTitle').textContent = t.salesTableTitle;
   if ($('purchasesTableTitle')) $('purchasesTableTitle').textContent = t.purchasesTableTitle;
