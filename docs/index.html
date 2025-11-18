@@ -54,6 +54,12 @@
     #authbar{display:flex;gap:8px;align-items:center}
     #authbar .me{font-size:13px;color:#a3adbf}
 
+    /* language buttons */
+    .lang-btn.active{
+      border-color:var(--accent);
+      color:var(--accent);
+    }
+
     /* chat widget */
     #chat-btn{position:fixed;right:20px;bottom:20px;z-index:30}
     #chat-btn button{
@@ -138,9 +144,14 @@
   <header>
     <div>
       <h1>Optimis Fiscale</h1>
-      <div class="sub">Analyse de balance & estimation fiscale (FR)</div>
+      <div class="sub" id="headerSub">Analyse de balance & estimation fiscale (FR)</div>
     </div>
     <div class="row" id="authbar">
+      <!-- language switch -->
+      <div class="row" id="langBar">
+        <button class="btn-secondary lang-btn active" data-lang="fr">FR</button>
+        <button class="btn-secondary lang-btn" data-lang="en">EN</button>
+      </div>
       <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
       <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
       <button id="loginBtn" class="btn-secondary">Se connecter</button>
@@ -288,19 +299,19 @@
         <div class="tile"><h3>Sorties</h3><div id="bankOutflows">—</div></div>
       </div>
       <div style="margin-top:16px">
-        <h3>Évolution du solde</h3>
+        <h3 id="cashChartTitle">Évolution du solde</h3>
         <canvas id="cashChart" height="100"></canvas>
       </div>
       <div class="tiles" style="margin-top:20px">
         <div class="tile">
-          <h3>Factures ventes</h3>
+          <h3 id="salesTableTitle">Factures ventes</h3>
           <table id="salesTable" style="width:100%;font-size:13px">
             <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tile">
-          <h3>Factures achats</h3>
+          <h3 id="purchasesTableTitle">Factures achats</h3>
           <table id="purchasesTable" style="width:100%;font-size:13px">
             <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
             <tbody></tbody>
@@ -308,7 +319,7 @@
         </div>
       </div>
       <div class="tile" style="margin-top:20px">
-        <h3>Alertes fiscales &amp; paiements</h3>
+        <h3 id="alertsTitle">Alertes fiscales &amp; paiements</h3>
         <ul id="alertsList" style="margin:0;padding-left:18px"></ul>
       </div>
     </div>
@@ -331,14 +342,14 @@
 <!-- Login Modal -->
 <div class="modal-backdrop" id="loginModal" style="display:none">
   <div class="modal">
-    <h2>Connexion</h2>
+    <h2 id="loginTitle">Connexion</h2>
     <div class="field" style="margin-top:8px;display:block;">
-      <label><strong>Identifiant entreprise</strong></label>
+      <label id="loginCompanyLabel"><strong>Identifiant entreprise</strong></label>
       <input id="companyId" type="text" placeholder="ex: demo"
         style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
     </div>
     <div class="field" style="margin-top:8px;display:block;">
-      <label><strong>Mot de passe</strong></label>
+      <label id="loginPwdLabel"><strong>Mot de passe</strong></label>
       <input id="companyPwd" type="password" placeholder="••••••••"
         style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;" />
     </div>
@@ -377,6 +388,102 @@ const euro = v => (typeof v === 'number' && isFinite(v))
 const pct = v => (v ?? v === 0)
   ? (Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%')
   : '—';
+
+// language state
+let currentLang = 'fr';
+
+const i18n = {
+  fr: {
+    headerSub: "Analyse de balance & estimation fiscale (FR)",
+    exportBtn: "Exporter (PDF)",
+    privacyBtn: "Confidentialité",
+    analyzeBtn: "Analyser",
+    auditBtn: "Test Audit",
+    optimizeBtn: "Optimisation fiscale",
+    bankSectionTitle: "Suivi Trésorerie & Facturation",
+    cashChartTitle: "Évolution du solde",
+    salesTableTitle: "Factures ventes",
+    purchasesTableTitle: "Factures achats",
+    alertsTitle: "Alertes fiscales & paiements",
+    loginBtn: "Se connecter",
+    logoutBtn: "Se déconnecter",
+    loginTitle: "Connexion",
+    loginCompanyLabel: "Identifiant entreprise",
+    loginPwdLabel: "Mot de passe",
+    loginCancel: "Annuler",
+    loginSubmit: "Connexion",
+    chatPlaceholder: "Posez votre question…",
+    chatSend: "Envoyer",
+    statusReady: "Prêt",
+    chartDailyLabel: "Solde bancaire quotidien",
+    chartFallbackLabel: "Flux bancaires",
+    noInvoices: "Aucune facture",
+    alertsEmpty: "Aucune alerte active"
+  },
+  en: {
+    headerSub: "Trial balance analysis & tax estimation (EN)",
+    exportBtn: "Export (PDF)",
+    privacyBtn: "Privacy",
+    analyzeBtn: "Analyze",
+    auditBtn: "Audit test",
+    optimizeBtn: "Tax optimization",
+    bankSectionTitle: "Cashflow & invoicing overview",
+    cashChartTitle: "Balance over time",
+    salesTableTitle: "Sales invoices",
+    purchasesTableTitle: "Purchase invoices",
+    alertsTitle: "Tax & payment alerts",
+    loginBtn: "Log in",
+    logoutBtn: "Log out",
+    loginTitle: "Login",
+    loginCompanyLabel: "Company ID",
+    loginPwdLabel: "Password",
+    loginCancel: "Cancel",
+    loginSubmit: "Login",
+    chatPlaceholder: "Ask your question…",
+    chatSend: "Send",
+    statusReady: "Ready",
+    chartDailyLabel: "Daily bank balance",
+    chartFallbackLabel: "Bank flows",
+    noInvoices: "No invoices",
+    alertsEmpty: "No active alerts"
+  }
+};
+
+function applyLang(){
+  const t = i18n[currentLang];
+  if ($('headerSub')) $('headerSub').textContent = t.headerSub;
+  $('exportBtn').textContent = t.exportBtn;
+  $('privacyBtn').textContent = t.privacyBtn;
+  $('analyzeBtn').textContent = t.analyzeBtn;
+  $('auditBtn').textContent = t.auditBtn;
+  $('optimizeBtn').textContent = t.optimizeBtn;
+  $('loginBtn').textContent = t.loginBtn;
+  $('logoutBtn').textContent = t.logoutBtn;
+  if ($('status')) $('status').textContent = t.statusReady;
+
+  const bankSectionTitle = document.querySelector('.card h2');
+  if (bankSectionTitle) bankSectionTitle.textContent = t.bankSectionTitle;
+  if ($('cashChartTitle')) $('cashChartTitle').textContent = t.cashChartTitle;
+  if ($('salesTableTitle')) $('salesTableTitle').textContent = t.salesTableTitle;
+  if ($('purchasesTableTitle')) $('purchasesTableTitle').textContent = t.purchasesTableTitle;
+  if ($('alertsTitle')) $('alertsTitle').textContent = t.alertsTitle;
+
+  if ($('loginTitle')) $('loginTitle').textContent = t.loginTitle;
+  if ($('loginCompanyLabel')) $('loginCompanyLabel').innerHTML = `<strong>${t.loginCompanyLabel}</strong>`;
+  if ($('loginPwdLabel')) $('loginPwdLabel').innerHTML = `<strong>${t.loginPwdLabel}</strong>`;
+  if ($('cancelLogin')) $('cancelLogin').textContent = t.loginCancel;
+  if ($('doLogin')) $('doLogin').textContent = t.loginSubmit;
+
+  const chatText = $('chatText');
+  if (chatText) chatText.placeholder = t.chatPlaceholder;
+  if ($('sendChat')) $('sendChat').textContent = t.chatSend;
+}
+
+function updateLangButtons(){
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+}
 
 // Always HTTPS API
 const DEFAULT_API = "https://optimis-fiscale-production.up.railway.app";
@@ -700,7 +807,7 @@ async function loadDashboard(){
     if (Array.isArray(cashflow) && cashflow.length){
       labels = cashflow.map(p => p.date);
       dataPoints = cashflow.map(p => p.balance);
-      datasetLabel = 'Solde bancaire quotidien';
+      datasetLabel = i18n[currentLang].chartDailyLabel;
     } else {
       labels = ['Entrées','Sorties','Solde'];
       dataPoints = [
@@ -708,7 +815,7 @@ async function loadDashboard(){
         Math.abs(bank.outflows || 0),
         bank.balance || 0
       ];
-      datasetLabel = 'Flux bancaires';
+      datasetLabel = i18n[currentLang].chartFallbackLabel;
     }
 
     new Chart(ctx,{
@@ -732,6 +839,9 @@ async function loadDashboard(){
       }
     });
 
+    const noInvoicesText = i18n[currentLang].noInvoices;
+    const alertsEmptyText = i18n[currentLang].alertsEmpty;
+
     const row=x=>`<tr>
       <td>${x.number||'-'}</td>
       <td>${x.issue_date||'-'}</td>
@@ -743,23 +853,38 @@ async function loadDashboard(){
     $('salesTable').querySelector('tbody').innerHTML =
       (Array.isArray(sales)&&sales.length)
         ? sales.map(row).join('')
-        : '<tr><td colspan="5">Aucune facture</td></tr>';
+        : `<tr><td colspan="5">${noInvoicesText}</td></tr>`;
 
     $('purchasesTable').querySelector('tbody').innerHTML =
       (Array.isArray(purchases)&&purchases.length)
         ? purchases.map(row).join('')
-        : '<tr><td colspan="5">Aucune facture</td></tr>';
+        : `<tr><td colspan="5">${noInvoicesText}</td></tr>`;
 
     $('alertsList').innerHTML =
       (Array.isArray(alerts)&&alerts.length)
         ? alerts.map(a=>`<li>${a.message||'Alerte'} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join('')
-        : '<li>Aucune alerte active</li>';
+        : `<li>${alertsEmptyText}</li>`;
   }catch(e){
     console.error(e);
     $('alertsList').innerHTML='<li>Erreur de chargement des données</li>';
   }
 }
-document.addEventListener('DOMContentLoaded', loadDashboard);
+
+/* init: language + dashboard */
+document.addEventListener('DOMContentLoaded', () => {
+  // language buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentLang = btn.dataset.lang || 'fr';
+      updateLangButtons();
+      applyLang();
+      loadDashboard();
+    });
+  });
+  updateLangButtons();
+  applyLang();
+  loadDashboard();
+});
 </script>
 </body>
 </html>
