@@ -54,6 +54,12 @@
     #authbar{display:flex;gap:8px;align-items:center}
     #authbar .user-tag{font-size:13px;color:#a3adbf}
 
+    /* language buttons */
+    .lang-btn.active{
+      border-color:var(--accent);
+      color:var(--accent);
+    }
+
     /* chat widget */
     #chat-btn{position:fixed;right:20px;bottom:20px;z-index:30}
     #chat-btn button{
@@ -141,6 +147,12 @@
       <div class="sub" id="headerSub">Analyse de balance & estimation fiscale (FR)</div>
     </div>
     <div class="row" id="authbar">
+      <!-- language switch -->
+      <div class="row" id="langBar">
+        <button class="btn-secondary lang-btn active" data-lang="fr">FR</button>
+        <button class="btn-secondary lang-btn" data-lang="en">EN</button>
+        <button class="btn-secondary lang-btn" data-lang="es">ES</button>
+      </div>
       <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
       <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
       <button id="loginBtn" class="btn-secondary">Se connecter</button>
@@ -162,26 +174,26 @@
       <div class="grid2">
         <div class="field">
           <div>
-            <strong>Fichier CSV</strong><br>
-            <span class="hint">Colonnes : <code>account,label,debit,credit</code></span>
+            <strong id="csvFieldTitle">Fichier CSV</strong><br>
+            <span class="hint" id="csvFieldHint">Colonnes : <code>account,label,debit,credit</code></span>
           </div>
           <div class="row">
             <input id="csvInput" type="file" accept=".csv" style="display:none" />
-            <label class="btn-secondary" for="csvInput" style="cursor:pointer;">Choisir un fichier</label>
+            <label class="btn-secondary" for="csvInput" style="cursor:pointer;" id="csvChooseLabel">Choisir un fichier</label>
             <span id="fileName" class="badge" style="display:none"></span>
           </div>
         </div>
         <div class="field">
           <div>
-            <strong>Chiffre d'affaires (optionnel)</strong><br>
-            <span class="hint">Pour affiner les ratios</span>
+            <strong id="turnoverTitle">Chiffre d'affaires (optionnel)</strong><br>
+            <span class="hint" id="turnoverHint">Pour affiner les ratios</span>
           </div>
           <input id="turnover" type="number" step="0.01" placeholder="Ex : 100000" />
         </div>
         <div class="field">
           <div>
-            <strong>Référentiel d’audit</strong><br>
-            <span class="hint">Choisir IFRS ou US GAAP</span>
+            <strong id="frameworkTitle">Référentiel d’audit</strong><br>
+            <span class="hint" id="frameworkHint">Choisir IFRS ou US GAAP</span>
           </div>
           <select id="framework"
             style="background:#0e1428;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 10px;">
@@ -202,26 +214,26 @@
     </div>
 
     <div id="csvPreview" class="tile">
-      <h3>Aperçu CSV (10 premières lignes)</h3>
+      <h3 id="csvPreviewTitle">Aperçu CSV (10 premières lignes)</h3>
       <div id="csvTableWrap"></div>
     </div>
 
     <div id="results" style="display:none;margin-top:10px">
       <div class="tiles">
-        <div class="tile"><h3>KPIs</h3><div class="kv" id="kpi"></div></div>
-        <div class="tile"><h3>Fiscalité</h3><div class="kv" id="tax"></div></div>
+        <div class="tile"><h3 id="kpiTitle">KPIs</h3><div class="kv" id="kpi"></div></div>
+        <div class="tile"><h3 id="taxTitle">Fiscalité</h3><div class="kv" id="tax"></div></div>
       </div>
       <div class="tiles" style="margin-top:12px">
-        <div class="tile"><h3>Audit — Résumé</h3><div class="kv" id="auditSummary"></div></div>
-        <div class="tile"><h3>Audit — Points relevés</h3><ul id="auditIssues" style="margin:0;padding-left:18px"></ul></div>
+        <div class="tile"><h3 id="auditSummaryTitle">Audit — Résumé</h3><div class="kv" id="auditSummary"></div></div>
+        <div class="tile"><h3 id="auditIssuesTitle">Audit — Points relevés</h3><ul id="auditIssues" style="margin:0;padding-left:18px"></ul></div>
       </div>
       <div class="tile" style="margin-top:12px">
-        <h3>Top comptes (par solde absolu)</h3>
+        <h3 id="topAccountsTitle">Top comptes (par solde absolu)</h3>
         <div id="auditTop"></div>
       </div>
 
       <div class="tile" style="margin-top:12px">
-        <h3>Optimisation fiscale — Recommandations</h3>
+        <h3 id="optimizeTitle">Optimisation fiscale — Recommandations</h3>
         <div id="optimizeOut" style="white-space:pre-wrap"></div>
       </div>
     </div>
@@ -234,12 +246,12 @@
       <h2 id="importSectionTitle">Importation des fichiers</h2>
 
       <div class="field" style="display:block;">
-        <strong>Relevé bancaire (.csv)</strong>
+        <strong id="bankFileTitle">Relevé bancaire (.csv)</strong>
         <input type="file" id="bankFile" accept=".csv"
           style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn" id="uploadBankBtn" style="margin-top:8px;">Importer relevé</button>
         <div id="bankUploadStatus" class="status"></div>
-        <div class="hint-import">
+        <div class="hint-import" id="bankFileHint">
           Format attendu : CSV avec au moins les colonnes
           <code>date</code>, <code>label</code>, <code>amount</code> (ou <code>montant</code>).<br>
           Séparateur <code>;</code> ou <code>,</code>.
@@ -247,12 +259,12 @@
       </div>
 
       <div class="field" style="display:block;margin-top:12px;">
-        <strong>Factures de ventes (.csv / .xlsx)</strong>
+        <strong id="salesFileTitle">Factures de ventes (.csv / .xlsx)</strong>
         <input type="file" id="salesFile" accept=".csv,.xlsx"
           style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn-secondary" id="uploadSalesBtn" style="margin-top:8px;">Importer ventes</button>
         <div id="salesUploadStatus" class="status"></div>
-        <div class="hint-import">
+        <div class="hint-import" id="salesFileHint">
           CSV recommandé avec colonnes :
           <code>number</code> (ou <code>invoice_number</code>),
           <code>date</code> (ou <code>issue_date</code>),
@@ -263,12 +275,12 @@
       </div>
 
       <div class="field" style="display:block;margin-top:12px;">
-        <strong>Factures d’achats (.csv / .xlsx)</strong>
+        <strong id="purchasesFileTitle">Factures d’achats (.csv / .xlsx)</strong>
         <input type="file" id="purchasesFile" accept=".csv,.xlsx"
           style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
         <button class="btn-secondary" id="uploadPurchasesBtn" style="margin-top:8px;">Importer achats</button>
         <div id="purchasesUploadStatus" class="status"></div>
-        <div class="hint-import">
+        <div class="hint-import" id="purchasesFileHint">
           CSV recommandé avec colonnes :
           <code>number</code> (ou <code>invoice_number</code>),
           <code>date</code> (ou <code>issue_date</code>),
@@ -283,9 +295,9 @@
     <div class="card">
       <h2 id="bankMainTitle">Suivi Trésorerie &amp; Facturation</h2>
       <div id="bankSummary" class="tiles">
-        <div class="tile"><h3>Solde bancaire</h3><div id="bankBalance">—</div></div>
-        <div class="tile"><h3>Entrées</h3><div id="bankInflows">—</div></div>
-        <div class="tile"><h3>Sorties</h3><div id="bankOutflows">—</div></div>
+        <div class="tile"><h3 id="bankBalanceTitle">Solde bancaire</h3><div id="bankBalance">—</div></div>
+        <div class="tile"><h3 id="bankInflowsTitle">Entrées</h3><div id="bankInflows">—</div></div>
+        <div class="tile"><h3 id="bankOutflowsTitle">Sorties</h3><div id="bankOutflows">—</div></div>
       </div>
       <div style="margin-top:16px">
         <h3 id="cashChartTitle">Évolution du solde</h3>
@@ -295,14 +307,30 @@
         <div class="tile">
           <h3 id="salesTableTitle">Factures ventes</h3>
           <table id="salesTable" style="width:100%;font-size:13px">
-            <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
+            <thead>
+              <tr>
+                <th id="salesColNumber">#</th>
+                <th id="salesColDate">Date</th>
+                <th id="salesColDueDate">Échéance</th>
+                <th id="salesColAmount">Montant</th>
+                <th id="salesColStatus">Statut</th>
+              </tr>
+            </thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tile">
           <h3 id="purchasesTableTitle">Factures achats</h3>
           <table id="purchasesTable" style="width:100%;font-size:13px">
-            <thead><tr><th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th></tr></thead>
+            <thead>
+              <tr>
+                <th id="purchColNumber">#</th>
+                <th id="purchColDate">Date</th>
+                <th id="purchColDueDate">Échéance</th>
+                <th id="purchColAmount">Montant</th>
+                <th id="purchColStatus">Statut</th>
+              </tr>
+            </thead>
             <tbody></tbody>
           </table>
         </div>
@@ -381,40 +409,531 @@ const pct = v => (v ?? v === 0)
   ? (Number(v).toLocaleString(undefined,{maximumFractionDigits:2})+'%')
   : '—';
 
-/* Textes FR */
-const STRINGS = {
-  statusReady: "Prêt",
-  genericError: "Erreur",
-  chooseCsv: "Veuillez choisir un CSV",
-  analyzeRunning: "Analyse en cours…",
-  analyzeDone: "Analyse terminée",
-  auditRunning: "Audit en cours…",
-  auditDone: "Audit terminé",
-  optimizeRunning: "Analyse pour optimisation…",
-  optimizeDone: "Optimisation (locale) prête",
-  optimizeErrorPrefix: "Erreur : ",
-  loginMissing: "Identifiant et mot de passe requis",
-  loginRunning: "Connexion…",
-  loginOk: "Connecté",
-  logoutStatus: "Déconnecté",
-  chatNeedLogin: "Veuillez vous connecter pour utiliser le chat",
-  chatThinking: "Albert réfléchit…",
-  chatSessionExpired: "Session expirée. Veuillez vous reconnecter.",
-  chatErrorStatus: "Erreur chat",
-  uploadErrPrefix: "❌ Erreur : ",
-  uploadChooseFile: "Veuillez choisir un fichier",
-  uploadRunning: "Importation en cours…",
-  uploadOk: "✅ Importation réussie",
-  uploadNetworkErrPrefix: "❌ ",
-  uploadNetworkErrorFallback: "Erreur réseau",
-  chartDailyLabel: "Solde bancaire quotidien",
-  chartFallbackLabel: "Flux bancaires",
-  noInvoices: "Aucune facture",
-  alertsEmpty: "Aucune alerte active",
-  alertsLoadError: "Erreur de chargement des données"
+/* ========= i18n ========= */
+
+let currentLang = 'fr';
+
+const i18n = {
+  fr: {
+    headerSub: "Analyse de balance & estimation fiscale (FR)",
+    exportBtn: "Exporter (PDF)",
+    privacyBtn: "Confidentialité",
+    analyzeBtn: "Analyser",
+    auditBtn: "Test Audit",
+    optimizeBtn: "Optimisation fiscale",
+
+    csvFieldTitle: "Fichier CSV",
+    csvFieldHint: "Colonnes : account,label,debit,credit",
+    csvChooseLabel: "Choisir un fichier",
+    csvPreviewTitle: "Aperçu CSV (10 premières lignes)",
+
+    turnoverTitle: "Chiffre d'affaires (optionnel)",
+    turnoverHint: "Pour affiner les ratios",
+    frameworkTitle: "Référentiel d’audit",
+    frameworkHint: "Choisir IFRS ou US GAAP",
+
+    kpiTitle: "KPIs",
+    taxTitle: "Fiscalité",
+    auditSummaryTitle: "Audit — Résumé",
+    auditIssuesTitle: "Audit — Points relevés",
+    topAccountsTitle: "Top comptes (par solde absolu)",
+    optimizeTitle: "Optimisation fiscale — Recommandations",
+
+    kpiRevenue: "CA",
+    kpiGrossMargin: "Marge brute",
+    kpiEBITDA: "EBITDA",
+    kpiNetResult: "Résultat net",
+    taxCorporate: "IS estimé",
+    taxVAT: "TVA nette",
+
+    importSectionTitle: "Importation des fichiers",
+    bankSectionTitle: "Suivi Trésorerie & Facturation",
+    bankFileTitle: "Relevé bancaire (.csv)",
+    bankFileHint:
+      "Format attendu : CSV avec au moins les colonnes date, label, amount (ou montant). Séparateur ; ou ,.",
+    salesFileTitle: "Factures de ventes (.csv / .xlsx)",
+    salesFileHint:
+      "CSV recommandé avec colonnes : number (ou invoice_number), date (ou issue_date), due_date, amount (ou total), status (optionnel).",
+    purchasesFileTitle: "Factures d’achats (.csv / .xlsx)",
+    purchasesFileHint:
+      "CSV recommandé avec colonnes : number (ou invoice_number), date (ou issue_date), due_date, amount (ou total), status (optionnel).",
+
+    uploadBankBtn: "Importer relevé",
+    uploadSalesBtn: "Importer ventes",
+    uploadPurchasesBtn: "Importer achats",
+
+    bankBalanceTitle: "Solde bancaire",
+    bankInflowsTitle: "Entrées",
+    bankOutflowsTitle: "Sorties",
+
+    salesTableTitle: "Factures ventes",
+    purchasesTableTitle: "Factures achats",
+    salesColNumber: "#",
+    salesColDate: "Date",
+    salesColDueDate: "Échéance",
+    salesColAmount: "Montant",
+    salesColStatus: "Statut",
+    purchColNumber: "#",
+    purchColDate: "Date",
+    purchColDueDate: "Échéance",
+    purchColAmount: "Montant",
+    purchColStatus: "Statut",
+
+    alertsTitle: "Alertes fiscales & paiements",
+    alertGeneric: "Alerte",
+
+    loginBtn: "Se connecter",
+    logoutBtn: "Se déconnecter",
+    loginTitle: "Connexion",
+    loginCompanyLabel: "Identifiant entreprise",
+    loginPwdLabel: "Mot de passe",
+    loginCancel: "Annuler",
+    loginSubmit: "Connexion",
+    connectedLabel: "Connecté :", 
+
+    privacyTitle: "Confidentialité",
+    privacyBody:
+      "Les fichiers sont traités en mémoire côté serveur uniquement pendant l’analyse. Aucune donnée n’est stockée ni réutilisée. Le chatbot ne garde aucun historique.",
+    privacyClose: "Fermer",
+    footerText: "© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.",
+
+    chatHeaderTitle: "Albert — Assistant Fiscal",
+    chatOpen: "Chat",
+    chatClose: "Fermer",
+    chatPlaceholder: "Posez votre question…",
+    chatSend: "Envoyer",
+    emptyReply: "(réponse vide)",
+
+    statusReady: "Prêt",
+    genericError: "Erreur",
+    chooseCsv: "Veuillez choisir un CSV",
+    analyzeRunning: "Analyse en cours…",
+    analyzeDone: "Analyse terminée",
+    auditRunning: "Audit en cours…",
+    auditDone: "Audit terminé",
+    optimizeRunning: "Analyse pour optimisation…",
+    optimizeDone: "Optimisation (locale) prête",
+    optimizeErrorPrefix: "Erreur : ",
+    optimizeNote:
+      "Note : recommandations indicatives à confirmer selon votre situation et la réglementation.",
+
+    loginMissing: "Identifiant et mot de passe requis",
+    loginRunning: "Connexion…",
+    loginOk: "Connecté",
+    logoutStatus: "Déconnecté",
+    chatNeedLogin: "Veuillez vous connecter pour utiliser le chat",
+    chatThinking: "Albert réfléchit…",
+    chatSessionExpired: "Session expirée. Veuillez vous reconnecter.",
+    chatErrorStatus: "Erreur chat",
+
+    uploadChooseFile: "Veuillez choisir un fichier",
+    uploadRunning: "Importation en cours…",
+    uploadOk: "✅ Importation réussie",
+    uploadErrPrefix: "❌ Erreur : ",
+    uploadNetworkErrPrefix: "❌ ",
+    uploadNetworkErrorFallback: "Erreur réseau",
+
+    chartDailyLabel: "Solde bancaire quotidien",
+    chartFallbackLabel: "Flux bancaires",
+    chartFallbackLabels: ["Entrées","Sorties","Solde"],
+    noInvoices: "Aucune facture",
+    alertsEmpty: "Aucune alerte active",
+    alertsLoadError: "Erreur de chargement des données",
+
+    optLowGrossMargin: "Marge brute faible : renégocier achats, optimiser transport refacturable, revoir stocks et démarques.",
+    optLowEBITDA: "Déductibilité des charges : abonnements, télécoms, assurances. Vérifier CAPEX vs OPEX pour amortir.",
+    optEBITDApositive: "Optimiser les plans d’amortissement (composants, durées). Étudier le dégressif si applicable.",
+    optNetLoss: "Examiner report en avant des déficits et, si pertinent, report en arrière (carry-back).",
+    optRDI: "Qualifier des travaux R&D/innovation pour CIR/CII (documentation, temps passés, sous-traitance éligible).",
+    optJEI: "Vérifier l’éligibilité JEI/JEU, exonérations locales et aides régionales selon votre profil.",
+    optVatPositive: "TVA collectée > déductible : adapter régime et sécuriser récupération sur immobilisations et frais.",
+    optVatNegative: "Crédit de TVA récurrent : demandes de remboursement périodiques, vérifier déduction des factures.",
+    optNetPositive: "Arbitrer rémunération vs dividendes vs intéressement pour optimiser charges (IS/IR/cotisations).",
+    optProvisions: "Revoir provisions (clients douteux, stocks) et CCA/PCA pour lisser le résultat sans risque.",
+    optIntragroup: "Si intragroupe : documenter refacturations et prix de transfert pour réduire le risque de redressement.",
+    optSmallCompanyRate: "Vérifier l’éligibilité au taux réduit PME sur la fraction du bénéfice concernée, si conditions réunies."
+  },
+  en: {
+    headerSub: "Trial balance analysis & tax estimation (EN)",
+    exportBtn: "Export (PDF)",
+    privacyBtn: "Privacy",
+    analyzeBtn: "Analyze",
+    auditBtn: "Audit test",
+    optimizeBtn: "Tax optimization",
+
+    csvFieldTitle: "CSV file",
+    csvFieldHint: "Columns: account,label,debit,credit",
+    csvChooseLabel: "Choose a file",
+    csvPreviewTitle: "CSV preview (first 10 lines)",
+
+    turnoverTitle: "Revenue (optional)",
+    turnoverHint: "Used to refine ratios",
+    frameworkTitle: "Audit framework",
+    frameworkHint: "Choose IFRS or US GAAP",
+
+    kpiTitle: "KPIs",
+    taxTitle: "Tax",
+    auditSummaryTitle: "Audit — Summary",
+    auditIssuesTitle: "Audit — Issues",
+    topAccountsTitle: "Top accounts (by absolute balance)",
+    optimizeTitle: "Tax optimization — Recommendations",
+
+    kpiRevenue: "Revenue",
+    kpiGrossMargin: "Gross margin",
+    kpiEBITDA: "EBITDA",
+    kpiNetResult: "Net income",
+    taxCorporate: "Estimated CIT",
+    taxVAT: "Net VAT",
+
+    importSectionTitle: "File import",
+    bankSectionTitle: "Cashflow & invoicing overview",
+    bankFileTitle: "Bank statement (.csv)",
+    bankFileHint:
+      "Expected format: CSV with at least date, label, amount columns. Separator ; or ,.",
+    salesFileTitle: "Sales invoices (.csv / .xlsx)",
+    salesFileHint:
+      "Recommended CSV columns: number (or invoice_number), date (or issue_date), due_date, amount (or total), status (optional).",
+    purchasesFileTitle: "Purchase invoices (.csv / .xlsx)",
+    purchasesFileHint:
+      "Recommended CSV columns: number (or invoice_number), date (or issue_date), due_date, amount (or total), status (optional).",
+
+    uploadBankBtn: "Import statement",
+    uploadSalesBtn: "Import sales",
+    uploadPurchasesBtn: "Import purchases",
+
+    bankBalanceTitle: "Bank balance",
+    bankInflowsTitle: "Inflows",
+    bankOutflowsTitle: "Outflows",
+
+    salesTableTitle: "Sales invoices",
+    purchasesTableTitle: "Purchase invoices",
+    salesColNumber: "#",
+    salesColDate: "Date",
+    salesColDueDate: "Due date",
+    salesColAmount: "Amount",
+    salesColStatus: "Status",
+    purchColNumber: "#",
+    purchColDate: "Date",
+    purchColDueDate: "Due date",
+    purchColAmount: "Amount",
+    purchColStatus: "Status",
+
+    alertsTitle: "Tax & payment alerts",
+    alertGeneric: "Alert",
+
+    loginBtn: "Log in",
+    logoutBtn: "Log out",
+    loginTitle: "Login",
+    loginCompanyLabel: "Company ID",
+    loginPwdLabel: "Password",
+    loginCancel: "Cancel",
+    loginSubmit: "Login",
+    connectedLabel: "Logged in as:", 
+
+    privacyTitle: "Privacy",
+    privacyBody:
+      "Files are processed in memory on the server only during analysis. No data is stored or reused. The chatbot does not keep any history.",
+    privacyClose: "Close",
+    footerText: "© 2025 Optimis Fiscale — Files are never stored.",
+
+    chatHeaderTitle: "Albert — Tax Assistant",
+    chatOpen: "Chat",
+    chatClose: "Close",
+    chatPlaceholder: "Ask your question…",
+    chatSend: "Send",
+    emptyReply: "(empty reply)",
+
+    statusReady: "Ready",
+    genericError: "Error",
+    chooseCsv: "Please choose a CSV file",
+    analyzeRunning: "Analysis in progress…",
+    analyzeDone: "Analysis completed",
+    auditRunning: "Audit in progress…",
+    auditDone: "Audit completed",
+    optimizeRunning: "Analyzing for optimization…",
+    optimizeDone: "Local optimization ready",
+    optimizeErrorPrefix: "Error: ",
+    optimizeNote:
+      "Note: indicative recommendations to be validated based on your situation and applicable regulations.",
+
+    loginMissing: "Company ID and password are required",
+    loginRunning: "Logging in…",
+    loginOk: "Logged in",
+    logoutStatus: "Logged out",
+    chatNeedLogin: "Please log in to use the chat",
+    chatThinking: "Albert is thinking…",
+    chatSessionExpired: "Session expired. Please log in again.",
+    chatErrorStatus: "Chat error",
+
+    uploadChooseFile: "Please choose a file",
+    uploadRunning: "Uploading…",
+    uploadOk: "✅ Upload successful",
+    uploadErrPrefix: "❌ Error: ",
+    uploadNetworkErrPrefix: "❌ ",
+    uploadNetworkErrorFallback: "Network error",
+
+    chartDailyLabel: "Daily bank balance",
+    chartFallbackLabel: "Bank flows",
+    chartFallbackLabels: ["Inflows","Outflows","Balance"],
+    noInvoices: "No invoices",
+    alertsEmpty: "No active alerts",
+    alertsLoadError: "Error loading data",
+
+    optLowGrossMargin: "Low gross margin: renegotiate purchases, optimize refacturable transport, review stock and markdowns.",
+    optLowEBITDA: "Check deductibility of expenses: subscriptions, telecom, insurance. Review CAPEX vs OPEX for amortization.",
+    optEBITDApositive: "Optimize depreciation plans (components, useful lives). Consider declining balance where applicable.",
+    optNetLoss: "Review loss carry-forward and, where relevant, carry-back options.",
+    optRDI: "Qualify R&D/innovation work for tax credits (documentation, timesheets, eligible subcontracting).",
+    optJEI: "Check eligibility for young innovative company regimes and local tax exemptions or grants.",
+    optVatPositive: "VAT collected > deductible: adjust regime and secure recovery on fixed assets and expenses.",
+    optVatNegative: "Recurring VAT credit: file refund claims regularly and review input VAT deductibility.",
+    optNetPositive: "Arbitrate between salary, dividends and profit-sharing to optimize tax and social charges.",
+    optProvisions: "Review provisions (doubtful receivables, inventory) and accruals to smooth results without risk.",
+    optIntragroup: "For intra-group operations: document recharge mechanisms and transfer pricing to mitigate reassessment risk.",
+    optSmallCompanyRate: "Check eligibility for reduced corporate tax rate for SMEs on the applicable profit bracket."
+  },
+  es: {
+    headerSub: "Análisis de balanza y estimación fiscal (ES)",
+    exportBtn: "Exportar (PDF)",
+    privacyBtn: "Privacidad",
+    analyzeBtn: "Analizar",
+    auditBtn: "Prueba de auditoría",
+    optimizeBtn: "Optimización fiscal",
+
+    csvFieldTitle: "Archivo CSV",
+    csvFieldHint: "Columnas: account,label,debit,credit",
+    csvChooseLabel: "Elegir archivo",
+    csvPreviewTitle: "Vista previa CSV (primeras 10 líneas)",
+
+    turnoverTitle: "Cifra de negocios (opcional)",
+    turnoverHint: "Para afinar los ratios",
+    frameworkTitle: "Marco de auditoría",
+    frameworkHint: "Elegir IFRS o US GAAP",
+
+    kpiTitle: "KPIs",
+    taxTitle: "Fiscalidad",
+    auditSummaryTitle: "Auditoría — Resumen",
+    auditIssuesTitle: "Auditoría — Puntos detectados",
+    topAccountsTitle: "Cuentas principales (por saldo absoluto)",
+    optimizeTitle: "Optimización fiscal — Recomendaciones",
+
+    kpiRevenue: "Ingresos",
+    kpiGrossMargin: "Margen bruto",
+    kpiEBITDA: "EBITDA",
+    kpiNetResult: "Resultado neto",
+    taxCorporate: "IS estimado",
+    taxVAT: "IVA neto",
+
+    importSectionTitle: "Importación de archivos",
+    bankSectionTitle: "Seguimiento de tesorería y facturación",
+    bankFileTitle: "Extracto bancario (.csv)",
+    bankFileHint:
+      "Formato esperado: CSV con al menos las columnas date, label, amount (o montant). Separador ; o ,.",
+    salesFileTitle: "Facturas de ventas (.csv / .xlsx)",
+    salesFileHint:
+      "CSV recomendado con columnas: number (o invoice_number), date (o issue_date), due_date, amount (o total), status (opcional).",
+    purchasesFileTitle: "Facturas de compras (.csv / .xlsx)",
+    purchasesFileHint:
+      "CSV recomendado con columnas: number (o invoice_number), date (o issue_date), due_date, amount (o total), status (opcional).",
+
+    uploadBankBtn: "Importar extracto",
+    uploadSalesBtn: "Importar ventas",
+    uploadPurchasesBtn: "Importar compras",
+
+    bankBalanceTitle: "Saldo bancario",
+    bankInflowsTitle: "Entradas",
+    bankOutflowsTitle: "Salidas",
+
+    salesTableTitle: "Facturas de ventas",
+    purchasesTableTitle: "Facturas de compras",
+    salesColNumber: "#",
+    salesColDate: "Fecha",
+    salesColDueDate: "Vencimiento",
+    salesColAmount: "Importe",
+    salesColStatus: "Estado",
+    purchColNumber: "#",
+    purchColDate: "Fecha",
+    purchColDueDate: "Vencimiento",
+    purchColAmount: "Importe",
+    purchColStatus: "Estado",
+
+    alertsTitle: "Alertas fiscales y pagos",
+    alertGeneric: "Alerta",
+
+    loginBtn: "Iniciar sesión",
+    logoutBtn: "Cerrar sesión",
+    loginTitle: "Inicio de sesión",
+    loginCompanyLabel: "ID de empresa",
+    loginPwdLabel: "Contraseña",
+    loginCancel: "Cancelar",
+    loginSubmit: "Conectar",
+    connectedLabel: "Conectado:", 
+
+    privacyTitle: "Privacidad",
+    privacyBody:
+      "Los archivos se procesan en memoria en el servidor solo durante el análisis. No se almacenan ni reutilizan datos. El chatbot no guarda historial.",
+    privacyClose: "Cerrar",
+    footerText: "© 2025 Optimis Fiscale — Los archivos nunca se almacenan.",
+
+    chatHeaderTitle: "Albert — Asistente Fiscal",
+    chatOpen: "Chat",
+    chatClose: "Cerrar",
+    chatPlaceholder: "Haga su pregunta…",
+    chatSend: "Enviar",
+    emptyReply: "(respuesta vacía)",
+
+    statusReady: "Listo",
+    genericError: "Error",
+    chooseCsv: "Seleccione un archivo CSV",
+    analyzeRunning: "Análisis en curso…",
+    analyzeDone: "Análisis terminado",
+    auditRunning: "Auditoría en curso…",
+    auditDone: "Auditoría terminada",
+    optimizeRunning: "Analizando para optimización…",
+    optimizeDone: "Optimización local lista",
+    optimizeErrorPrefix: "Error: ",
+    optimizeNote:
+      "Nota: recomendaciones indicativas que deben confirmarse según su situación y la normativa aplicable.",
+
+    loginMissing: "Se requieren ID de empresa y contraseña",
+    loginRunning: "Conectando…",
+    loginOk: "Conectado",
+    logoutStatus: "Desconectado",
+    chatNeedLogin: "Inicie sesión para usar el chat",
+    chatThinking: "Albert está pensando…",
+    chatSessionExpired: "Sesión expirada. Vuelva a iniciar sesión.",
+    chatErrorStatus: "Error en el chat",
+
+    uploadChooseFile: "Seleccione un archivo",
+    uploadRunning: "Subiendo…",
+    uploadOk: "✅ Subida correcta",
+    uploadErrPrefix: "❌ Error: ",
+    uploadNetworkErrPrefix: "❌ ",
+    uploadNetworkErrorFallback: "Error de red",
+
+    chartDailyLabel: "Saldo bancario diario",
+    chartFallbackLabel: "Flujos bancarios",
+    chartFallbackLabels: ["Entradas","Salidas","Saldo"],
+    noInvoices: "No hay facturas",
+    alertsEmpty: "No hay alertas activas",
+    alertsLoadError: "Error al cargar los datos",
+
+    optLowGrossMargin: "Margen bruto bajo: renegociar compras, optimizar transporte refacturable, revisar existencias y rebajas.",
+    optLowEBITDA: "Deducibilidad de gastos: suscripciones, telecomunicaciones, seguros. Revisar CAPEX vs OPEX para amortización.",
+    optEBITDApositive: "Optimizar planes de amortización (componentes, vidas útiles). Considerar amortización acelerada si aplica.",
+    optNetLoss: "Analizar compensación de pérdidas futuras y, si procede, retroactiva.",
+    optRDI: "Calificar trabajos de I+D/innovación para créditos fiscales (documentación, tiempos, subcontratación elegible).",
+    optJEI: "Verificar elegibilidad a regímenes de empresa innovadora y exenciones fiscales locales.",
+    optVatPositive: "IVA repercutido > soportado: ajustar régimen y asegurar recuperación en inmovilizados y gastos.",
+    optVatNegative: "Crédito de IVA recurrente: solicitar devoluciones periódicas y revisar deducibilidad.",
+    optNetPositive: "Arbitrar entre salario, dividendos y participación para optimizar impuestos y cotizaciones.",
+    optProvisions: "Revisar provisiones (clientes dudosos, existencias) y ajustes para suavizar el resultado sin riesgo.",
+    optIntragroup: "Si hay operaciones intragrupo: documentar refacturaciones y precios de transferencia para reducir riesgos.",
+    optSmallCompanyRate: "Verificar elegibilidad a tipos reducidos de IS para PYMEs sobre la parte de beneficio correspondiente."
+  }
 };
 
-// Always HTTPS API
+function applyLang(){
+  const t = i18n[currentLang];
+
+  document.documentElement.lang = currentLang;
+
+  // Header / main buttons
+  $('headerSub').textContent = t.headerSub;
+  $('exportBtn').textContent = t.exportBtn;
+  $('privacyBtn').textContent = t.privacyBtn;
+  $('analyzeBtn').textContent = t.analyzeBtn;
+  $('auditBtn').textContent = t.auditBtn;
+  $('optimizeBtn').textContent = t.optimizeBtn;
+
+  // CSV section
+  $('csvFieldTitle').textContent = t.csvFieldTitle;
+  $('csvFieldHint').textContent = t.csvFieldHint;
+  $('csvChooseLabel').textContent = t.csvChooseLabel;
+  $('csvPreviewTitle').textContent = t.csvPreviewTitle;
+
+  $('turnoverTitle').textContent = t.turnoverTitle;
+  $('turnoverHint').textContent = t.turnoverHint;
+  $('frameworkTitle').textContent = t.frameworkTitle;
+  $('frameworkHint').textContent = t.frameworkHint;
+
+  // Tiles titles
+  $('kpiTitle').textContent = t.kpiTitle;
+  $('taxTitle').textContent = t.taxTitle;
+  $('auditSummaryTitle').textContent = t.auditSummaryTitle;
+  $('auditIssuesTitle').textContent = t.auditIssuesTitle;
+  $('topAccountsTitle').textContent = t.topAccountsTitle;
+  $('optimizeTitle').textContent = t.optimizeTitle;
+
+  // Import sections
+  $('importSectionTitle').textContent = t.importSectionTitle;
+  $('bankMainTitle').textContent = t.bankSectionTitle;
+
+  $('bankFileTitle').textContent = t.bankFileTitle;
+  $('bankFileHint').textContent = t.bankFileHint;
+  $('salesFileTitle').textContent = t.salesFileTitle;
+  $('salesFileHint').textContent = t.salesFileHint;
+  $('purchasesFileTitle').textContent = t.purchasesFileTitle;
+  $('purchasesFileHint').textContent = t.purchasesFileHint;
+
+  $('uploadBankBtn').textContent = t.uploadBankBtn;
+  $('uploadSalesBtn').textContent = t.uploadSalesBtn;
+  $('uploadPurchasesBtn').textContent = t.uploadPurchasesBtn;
+
+  $('bankBalanceTitle').textContent = t.bankBalanceTitle;
+  $('bankInflowsTitle').textContent = t.bankInflowsTitle;
+  $('bankOutflowsTitle').textContent = t.bankOutflowsTitle;
+
+  $('salesTableTitle').textContent = t.salesTableTitle;
+  $('purchasesTableTitle').textContent = t.purchasesTableTitle;
+
+  $('salesColNumber').textContent = t.salesColNumber;
+  $('salesColDate').textContent = t.salesColDate;
+  $('salesColDueDate').textContent = t.salesColDueDate;
+  $('salesColAmount').textContent = t.salesColAmount;
+  $('salesColStatus').textContent = t.salesColStatus;
+
+  $('purchColNumber').textContent = t.purchColNumber;
+  $('purchColDate').textContent = t.purchColDate;
+  $('purchColDueDate').textContent = t.purchColDueDate;
+  $('purchColAmount').textContent = t.purchColAmount;
+  $('purchColStatus').textContent = t.purchColStatus;
+
+  $('alertsTitle').textContent = t.alertsTitle;
+
+  // Auth / privacy / footer
+  $('loginBtn').textContent = t.loginBtn;
+  $('logoutBtn').textContent = t.logoutBtn;
+  $('loginTitle').textContent = t.loginTitle;
+  $('loginCompanyLabel').innerHTML = `<strong>${t.loginCompanyLabel}</strong>`;
+  $('loginPwdLabel').innerHTML = `<strong>${t.loginPwdLabel}</strong>`;
+  $('cancelLogin').textContent = t.loginCancel;
+  $('doLogin').textContent = t.loginSubmit;
+
+  $('privacyTitle').textContent = t.privacyTitle;
+  $('privacyBody').textContent = t.privacyBody;
+  $('closePrivacy').textContent = t.privacyClose;
+  $('footerText').textContent = t.footerText;
+
+  // Chat
+  $('chatHeaderTitle').textContent = t.chatHeaderTitle;
+  $('openChatBtn').textContent = t.chatOpen;
+  $('closeChatBtn').textContent = t.chatClose;
+  $('chatText').placeholder = t.chatPlaceholder;
+  $('sendChat').textContent = t.chatSend;
+
+  // Status
+  $('status').textContent = t.statusReady;
+}
+
+function updateLangButtons(){
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+}
+
+/* ========= API & status helpers ========= */
+
 const DEFAULT_API = "https://optimis-fiscale-production.up.railway.app";
 
 const getApiBase = () => DEFAULT_API;
@@ -458,7 +977,7 @@ $('csvInput').addEventListener('change', () => {
 
 /* Analyze */
 async function runAnalyze(){
-  const t = STRINGS;
+  const t = i18n[currentLang];
   const base=getApiBase(); const file=$('csvInput').files?.[0]; const tv=$('turnover').value;
   if(!file){ setStatus(t.chooseCsv,'err'); return; }
   const fd=new FormData(); fd.append('file',file); if(tv) fd.append('turnover',tv);
@@ -468,12 +987,12 @@ async function runAnalyze(){
     const d=await r.json(); if(!r.ok) throw new Error(d?.detail||t.genericError);
     $('results').style.display='block';
     const k=d.kpi||{},tx=d.tax||{};
-    $('kpi').innerHTML=`<div><span>CA</span><strong>${euro(k.revenue)}</strong></div>
-      <div><span>Marge brute</span><strong>${euro(k.gross_margin)}</strong></div>
-      <div><span>EBITDA</span><strong>${euro(k.ebitda_approx)} (${pct(k.ebitda_margin_pct)})</strong></div>
-      <div><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>`;
-    $('tax').innerHTML=`<div><span>IS estimé</span><strong>${euro(tx.corporate_income_tax)}</strong></div>
-      <div><span>TVA nette</span><strong>${euro(tx.vat_balance)}</strong></div>`;
+    $('kpi').innerHTML=`<div><span>${t.kpiRevenue}</span><strong>${euro(k.revenue)}</strong></div>
+      <div><span>${t.kpiGrossMargin}</span><strong>${euro(k.gross_margin)}</strong></div>
+      <div><span>${t.kpiEBITDA}</span><strong>${euro(k.ebitda_approx)} (${pct(k.ebitda_margin_pct)})</strong></div>
+      <div><span>${t.kpiNetResult}</span><strong>${euro(k.net_result)}</strong></div>`;
+    $('tax').innerHTML=`<div><span>${t.taxCorporate}</span><strong>${euro(tx.corporate_income_tax)}</strong></div>
+      <div><span>${t.taxVAT}</span><strong>${euro(tx.vat_balance)}</strong></div>`;
     setStatus(t.analyzeDone,'ok');
   }catch(e){ setStatus(e.message||t.genericError,'err'); }
   finally{ spin(false); $('analyzeBtn').disabled=false; }
@@ -482,7 +1001,7 @@ $('analyzeBtn').onclick=runAnalyze;
 
 /* Audit */
 async function runAudit(){
-  const t = STRINGS;
+  const t = i18n[currentLang];
   const base=getApiBase(); const f=$('csvInput').files?.[0]; const fw=$('framework').value;
   if(!f){ setStatus(t.chooseCsv,'err'); return; }
   const fd=new FormData(); fd.append('file',f); fd.append('standard',fw);
@@ -492,7 +1011,7 @@ async function runAudit(){
     const d=await r.json(); if(!r.ok) throw new Error(d?.detail||t.genericError);
     $('results').style.display='block';
     const s=d.summary||{}; const issues=d.issues||[]; const top=d.top_accounts||[];
-    $('auditSummary').innerHTML=`<div>Total lignes: <strong>${s.total_rows}</strong></div>
+    $('auditSummary').innerHTML=`<div>${'Total lignes'}: <strong>${s.total_rows}</strong></div>
       <div>Débits: <strong>${euro(s.total_debit)}</strong></div>
       <div>Crédits: <strong>${euro(s.total_credit)}</strong></div>
       <div>Écart: <strong>${euro(s.imbalance)}</strong></div>
@@ -501,7 +1020,9 @@ async function runAudit(){
       const sev = (i.severity || '').toString().toUpperCase();
       return `<li><strong>[${sev}]</strong> ${i.message || ''}${i.count?' ('+i.count+')':''}</li>`;
     }).join('');
-    $('auditTop').innerHTML=`<table><thead><tr><th>Compte</th><th>Libellé</th><th>Solde</th><th>Absolu</th></tr></thead>
+    $('auditTop').innerHTML=`<table><thead><tr>
+        <th>Compte</th><th>Libellé</th><th>Solde</th><th>Absolu</th>
+      </tr></thead>
       <tbody>${top.map(tl=>`<tr><td>${tl.account}</td><td>${tl.label}</td><td>${euro(tl.balance)}</td><td>${euro(tl.abs_balance)}</td></tr>`).join('')}</tbody></table>`;
     setStatus(t.auditDone,'ok');
   }catch(e){ setStatus(e.message||t.genericError,'err'); }
@@ -509,8 +1030,9 @@ async function runAudit(){
 }
 $('auditBtn').onclick=runAudit;
 
-/* Optimisation fiscale locale (sans /chat) */
+/* Optimisation fiscale locale (lang-aware) */
 function localOptimizeFromKPIs(kpi, tax){
+  const t = i18n[currentLang];
   const out = [];
   const rev = +kpi.revenue || 0;
   const gm  = +kpi.gross_margin || 0;
@@ -520,28 +1042,28 @@ function localOptimizeFromKPIs(kpi, tax){
   const vat = +(tax?.vat_balance ?? 0);
 
   if ((rev>0) && (gm/(rev||1) < 0.30))
-    out.push("Marge brute faible: renégocier achats, optimiser transport refacturable, revoir stocks et démarques.");
+    out.push(t.optLowGrossMargin);
   if (ebitdaPct < 10)
-    out.push("Déductibilité des charges: abonnements, télécoms, assurances. Vérifier CAPEX vs OPEX pour amortir.");
+    out.push(t.optLowEBITDA);
   if (ebitda > 0)
-    out.push("Optimiser les plans d’amortissement (composants, durées). Étudier le dégressif si applicable.");
+    out.push(t.optEBITDApositive);
   if (net < 0)
-    out.push("Examiner report en avant des déficits et, si pertinent, report en arrière (carry-back).");
-  out.push("Qualifier des travaux R&D/innovation pour CIR/CII (documentation, temps passés, sous-traitance éligible).");
-  out.push("Vérifier l’éligibilité JEI/JEU, exonérations locales et aides régionales selon votre profil.");
+    out.push(t.optNetLoss);
+  out.push(t.optRDI);
+  out.push(t.optJEI);
   if (vat > 0)
-    out.push("TVA collectée > déductible: adapter régime et sécuriser récupération sur immobilisations et frais.");
+    out.push(t.optVatPositive);
   if (vat < 0)
-    out.push("Crédit de TVA récurrent: demandes de remboursement périodiques, vérifier déduction des factures.");
+    out.push(t.optVatNegative);
   if (net > 0 && ebitdaPct > 8)
-    out.push("Arbitrer rémunération vs dividendes vs intéressement pour optimiser charges (IS/IR/cotisations).");
-  out.push("Revoir provisions (clients douteux, stocks) et CCA/PCA pour lisser le résultat sans risque.");
-  out.push("Si intragroupe: documenter refacturations et prix de transfert pour réduire le risque de redressement.");
-  out.push("Vérifier l’éligibilité au taux réduit PME sur la fraction du bénéfice concernée, si conditions réunies.");
+    out.push(t.optNetPositive);
+  out.push(t.optProvisions);
+  out.push(t.optIntragroup);
+  out.push(t.optSmallCompanyRate);
   return out;
 }
 async function runOptimize(){
-  const t = STRINGS;
+  const t = i18n[currentLang];
   const base = getApiBase();
   const file = $('csvInput').files?.[0];
   const tv = $('turnover')?.value;
@@ -557,7 +1079,7 @@ async function runOptimize(){
     const items = localOptimizeFromKPIs(k, tax);
     $('optimizeOut').innerHTML = `<ul>${items.map(x=>`<li>${x}</li>`).join('')}</ul>
       <div style="margin-top:8px;font-size:12px;color:#a3adbf">
-        Note: recommandations indicatives à confirmer selon votre situation et la réglementation.
+        ${t.optimizeNote}
       </div>`;
     setStatus(t.optimizeDone,'ok');
   }catch(e){
@@ -577,7 +1099,7 @@ function closeLogin(){ $('loginModal').style.display='none'; }
 $('loginBtn').onclick = openLogin;
 $('cancelLogin').onclick = closeLogin;
 $('doLogin').onclick = async () => {
-  const t = STRINGS;
+  const t = i18n[currentLang];
   const base = getApiBase();
   const company_id = $('companyId').value.trim();
   const password = $('companyPwd').value;
@@ -597,8 +1119,7 @@ $('doLogin').onclick = async () => {
     if(!r.ok) throw new Error(d?.detail || t.genericError);
     closeLogin();
     $('who').style.display='inline-block';
-    $('who').textContent = `Connecté: ${d.company_id}`;
-    $('loginBtn').style.display='inline-flex';
+    $('who').textContent = `${t.connectedLabel} ${d.company_id}`;
     $('loginBtn').style.display='none';
     $('logoutBtn').style.display='inline-flex';
     setStatus(t.loginOk,'ok');
@@ -609,7 +1130,7 @@ $('doLogin').onclick = async () => {
   }
 };
 $('logoutBtn').onclick = async () => {
-  const t = STRINGS;
+  const t = i18n[currentLang];
   const base = getApiBase();
   try{
     spin(true);
@@ -636,7 +1157,7 @@ const appendMsg = (role, text) => {
 };
 const isLoggedIn = () => $('logoutBtn').style.display !== 'none';
 $('openChatBtn').onclick = () => {
-  const t = STRINGS;
+  const t = i18n[currentLang];
   if (!isLoggedIn()) {
     setStatus(t.chatNeedLogin,'err');
     openLogin();
@@ -649,7 +1170,7 @@ $('closeChatBtn').onclick = () => chatBox.style.display = 'none';
 $('sendChat').onclick = sendChat;
 chatText.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
 async function sendChat(){
-  const t = STRINGS;
+  const t = i18n[currentLang];
   const base = getApiBase(); const text = chatText.value.trim();
   if (!text) return;
   appendMsg('user', text);
@@ -669,7 +1190,7 @@ async function sendChat(){
     }
     const d = await r.json();
     if (!r.ok) throw new Error(d?.detail || t.genericError);
-    appendMsg('assistant', d.reply || '(réponse vide)');
+    appendMsg('assistant', d.reply || i18n[currentLang].emptyReply);
     setStatus(t.statusReady);
   }catch(e){
     appendMsg('assistant', (t.uploadErrPrefix || "❌ ") + (e.message || t.chatErrorStatus));
@@ -677,9 +1198,9 @@ async function sendChat(){
   }
 }
 
-/* Importation des fichiers */
+/* Importation / Uploads */
 async function uploadFile(inputId, endpoint, statusId){
-  const t = STRINGS;
+  const t = i18n[currentLang];
   const file = $(inputId).files?.[0];
   const status = $(statusId);
   if(!file){
@@ -699,7 +1220,7 @@ async function uploadFile(inputId, endpoint, statusId){
       await loadDashboard();
     }else{
       const err=await r.text();
-      status.textContent=(t.uploadErrPrefix || "❌ Erreur : ")+err.slice(0,150);
+      status.textContent=(t.uploadErrPrefix || "❌ ")+err.slice(0,150);
       status.className="status err";
     }
   }catch(e){
@@ -721,7 +1242,7 @@ let cashChartInstance = null;
 
 async function loadDashboard(){
   const apiBase = getApiBase();
-  const t = STRINGS;
+  const t = i18n[currentLang];
   try{
     const [bank,sales,purchases,alerts,cashflow] = await Promise.all([
       fetch(apiBase+'/bank/summary',{credentials:'include'}).then(r=>r.json()),
@@ -751,7 +1272,7 @@ async function loadDashboard(){
       dataPoints = cashflow.map(p => p.balance);
       datasetLabel = t.chartDailyLabel;
     } else {
-      labels = ['Entrées','Sorties','Solde'];
+      labels = t.chartFallbackLabels;
       dataPoints = [
         bank.inflows || 0,
         Math.abs(bank.outflows || 0),
@@ -808,18 +1329,30 @@ async function loadDashboard(){
 
     $('alertsList').innerHTML =
       (Array.isArray(alerts)&&alerts.length)
-        ? alerts.map(a=>`<li>${a.message||'Alerte'} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join('')
-
+        ? alerts.map(a=>`<li>${a.message||t.alertGeneric} — <span style="color:#a3adbf">${a.due_date||''}</span></li>`).join('')
         : `<li>${alertsEmptyText}</li>`;
   }catch(e){
     console.error(e);
-    $('alertsList').innerHTML = `<li>${STRINGS.alertsLoadError}</li>`;
+    $('alertsList').innerHTML = `<li>${i18n[currentLang].alertsLoadError}</li>`;
   }
 }
 
 /* init */
 document.addEventListener('DOMContentLoaded', () => {
-  setStatus(STRINGS.statusReady);
+  // language buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentLang = btn.dataset.lang || 'fr';
+      updateLangButtons();
+      applyLang();
+      setStatus(i18n[currentLang].statusReady);
+      loadDashboard();
+    });
+  });
+
+  updateLangButtons();
+  applyLang();          // default FR
+  setStatus(i18n[currentLang].statusReady);
   loadDashboard();
 });
 </script>
