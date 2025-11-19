@@ -1,6 +1,14 @@
 from sqlalchemy import Column, Integer, String, Numeric, Date, Text, ForeignKey, CheckConstraint, TIMESTAMP, func
 from sqlalchemy.orm import relationship
 from .database import Base
+from sqlalchemy import Column, Integer, Float, Date
+from app.database import Base
+
+class DailyCashflow(Base):
+    __tablename__ = "cashflow_daily"
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, index=True)
+    balance = Column(Float)
 
 class Client(Base):
     __tablename__ = "clients"
