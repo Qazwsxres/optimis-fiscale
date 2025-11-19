@@ -26,7 +26,15 @@ from .routers import bank, invoices, alerts, cashflow
 # FASTAPI APP
 # ---------------------------------------------------------------------
 app = FastAPI(title="Optimis Fiscale MVP", version="0.2.1")
+# ---------------------------------------------------------------------
+# AUTO-CREATE DB TABLES AT STARTUP
+# ---------------------------------------------------------------------
+from app.database import Base, engine
 
+@app.on_event("startup")
+def create_tables():
+    print("▶ Creating database tables if missing...")
+    Base.metadata.create_all(bind=engine)
 
 # ---------------------------------------------------------------------
 # CORS CONFIGURATION
