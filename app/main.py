@@ -4,6 +4,8 @@ import logging
 import asyncio
 from typing import List, Optional
 from collections import defaultdict
+from .routers import cashflow
+app.include_router(cashflow.router)
 
 import httpx
 import pandas as pd
