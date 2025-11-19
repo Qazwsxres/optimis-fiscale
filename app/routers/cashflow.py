@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from datetime import datetime, date
+from datetime import date
 from ..database import SessionLocal
 from ..models_extended import BankTransaction, DailyCashflow
 
@@ -16,31 +16,28 @@ CORS_HEADERS = {
 @router.post("/compute")
 def compute_daily_cashflow():
     """
-    Recompute daily balances from all bank transactions.
+    Recompute daily balances from BankTransaction table.
     """
     with SessionLocal() as db:
-        # fetch all transactions
         tx = db.query(BankTransaction).order_by(BankTransaction.date.asc()).all()
 
         daily = {}
         for t in tx:
-            if t.date not in daily:
-                daily[t.date] = 0
+            daily.setdefault(t.date, 0)
             daily[t.date] += t.amount
 
-        # compute running balance
         running = 0
         result = []
         for day in sorted(daily.keys()):
             running += daily[day]
             result.append({"date": str(day), "balance": running})
 
-        # clear & repopulate table
         db.query(DailyCashflow).delete()
         for row in result:
-            obj = DailyCashflow(date=row["date"], balance=row["balance"])
-            db.add(obj)
-
+            db.add(DailyCashflow(
+                date=row["date"],
+                balance=row["balance"]
+            ))
         db.commit()
 
         return JSONResponse(
@@ -52,13 +49,10 @@ def compute_daily_cashflow():
 @router.get("/daily")
 def get_daily_cashflow():
     """
-    Return daily cashflow from DB.
+    Return prepared daily cashflow table.
     """
     with SessionLocal() as db:
         items = db.query(DailyCashflow).order_by(DailyCashflow.date.asc()).all()
-        data = [{"date": str(i.date), "balance": i.balance} for i in items]
+        data = [{"date": str(row.date), "balance": row.balance} for row in items]
 
-        return JSONResponse(
-            content=data,
-            headers=CORS_HEADERS
-        )
+        return JSONResponse(content=data, headers=CORS_HEADERS)
