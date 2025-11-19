@@ -1,11 +1,8 @@
 import os
 import time
-import logging
 import asyncio
 from typing import List, Optional
 from collections import defaultdict
-from .routers import cashflow
-app.include_router(cashflow.router)
 
 import httpx
 import pandas as pd
@@ -18,18 +15,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # ---------------------------------------------------------------------
-# App imports (your existing analyzers & routers)
+# App imports
 # ---------------------------------------------------------------------
 from app.models import AnalysisResult
 from app.analyzers import analyze_trial_balance
-from .routers import bank, invoices, alerts
+from .routers import bank, invoices, alerts, cashflow   # ✔️ Correct location
 
 # ---------------------------------------------------------------------
 # App & CORS
 # ---------------------------------------------------------------------
 app = FastAPI(title="Optimis Fiscale MVP", version="0.2.1")
 
-# Allow GitHub Pages + local dev by default
 _env_origins = os.getenv("ALLOWED_ORIGIN")
 if _env_origins:
     ALLOWED_ORIGINS = [o.strip() for o in _env_origins.split(",") if o.strip()]
@@ -54,7 +50,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY or SECRET_KEY == "CHANGE_ME":
-    raise RuntimeError("SECRET_KEY must be set in environment")
+    raise RuntimeError("SECRET_KEY must be set in Railway variables")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ALGO = "HS256"
@@ -89,8 +85,8 @@ def set_session_cookie(resp: Response, token: str):
         key=COOKIE_NAME,
         value=token,
         httponly=True,
-        secure=True,      # required for cross-site cookies over HTTPS
-        samesite="none",  # so GitHub Pages can send the cookie
+        secure=True,
+        samesite="none",
         path="/",
         max_age=60 * 60,
     )
@@ -105,8 +101,6 @@ def require_auth(request: Request) -> str:
 # ---------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------
-
-
 @app.get("/")
 def root():
     return {"ok": True, "service": "optimis-fiscale-api"}
@@ -119,28 +113,21 @@ def health():
 # ---------------------------------------------------------------------
 # Analysis
 # ---------------------------------------------------------------------
-
-
 @app.post("/analyze/trial-balance", response_model=AnalysisResult)
 async def analyze_trial_balance_endpoint(
     file: UploadFile = File(...),
     turnover: float | None = None,
 ):
     if not file.filename.endswith(".csv"):
-        raise HTTPException(
-            400,
-            "Veuillez fournir un CSV (colonnes: account,label,debit,credit).",
-        )
+        raise HTTPException(400, "Veuillez fournir un CSV.")
     try:
         import io
         df = pd.read_csv(io.BytesIO(await file.read()))
         df.columns = df.columns.str.strip().str.lower()
     except Exception:
         raise HTTPException(400, "CSV illisible")
-    try:
-        return analyze_trial_balance(df, turnover=turnover)
-    except Exception as e:
-        raise HTTPException(400, str(e))
+
+    return analyze_trial_balance(df, turnover=turnover)
 
 
 @app.post("/analyze/json", response_model=AnalysisResult)
@@ -150,14 +137,11 @@ async def analyze_json_endpoint(payload: dict):
         df.columns = df.columns.str.strip().str.lower()
     except Exception:
         raise HTTPException(400, "JSON invalide")
-    turnover = payload.get("turnover")
-    return analyze_trial_balance(df, turnover=turnover)
+    return analyze_trial_balance(df, payload.get("turnover"))
 
 # ---------------------------------------------------------------------
-# Auth
+# Auth endpoints
 # ---------------------------------------------------------------------
-
-
 class LoginBody(BaseModel):
     company_id: str
     password: str
@@ -178,113 +162,80 @@ def logout(response: Response):
     return {"ok": True}
 
 # ---------------------------------------------------------------------
-# Chat (OpenAI)
+# Chat
 # ---------------------------------------------------------------------
-
-
 class ChatMessage(BaseModel):
     role: str
     content: str
 
-
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
-
 
 class ChatResponse(BaseModel):
     reply: str
 
-
 _last_call = defaultdict(float)
 
-
-def throttle(company_id: str, min_interval: float = 2.0):
+def throttle(cid: str, interval=2.0):
     now = time.time()
-    if now - _last_call[company_id] < min_interval:
-        raise HTTPException(
-            429,
-            "Trop de requêtes. Réessayez dans 2–3 secondes.",
-        )
-    _last_call[company_id] = now
+    if now - _last_call[cid] < interval:
+        raise HTTPException(429, "Trop de requêtes")
+    _last_call[cid] = now
 
 
-async def call_openai_with_retry(
-    json_payload,
-    api_key: str,
-    max_retries: int = 4,
-) -> str:
+async def call_openai_with_retry(payload, api_key, max_retries=4):
     backoff = 1.5
     async with httpx.AsyncClient(timeout=40) as client:
-        for attempt in range(1, max_retries + 1):
+        for attempt in range(max_retries):
             r = await client.post(
                 "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=json_payload,
+                headers={"Authorization": f"Bearer {api_key}",
+                         "Content-Type":"application/json"},
+                json=payload,
             )
             if r.status_code == 200:
-                data = r.json()
-                return data["choices"][0]["message"]["content"]
-
-            if r.status_code == 429 and attempt < max_retries:
-                retry_after = r.headers.get("retry-after")
-                wait_s = float(retry_after) if retry_after else backoff
-                await asyncio.sleep(wait_s)
+                return r.json()["choices"][0]["message"]["content"]
+            if r.status_code == 429:
+                await asyncio.sleep(backoff)
                 backoff *= 2
                 continue
-
-            raise HTTPException(
-                502,
-                f"OpenAI error {r.status_code}: {r.text[:200]}",
-            )
-        raise HTTPException(
-            429,
-            "OpenAI rate limit: réessayez plus tard.",
-        )
+            raise HTTPException(502, f"OpenAI error {r.status_code}: {r.text[:200]}")
+    raise HTTPException(429, "OpenAI rate limit")
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     if not OPENAI_API_KEY:
         raise HTTPException(500, "Server missing OPENAI_API_KEY")
-    throttle(company_id, 2.0)
+    throttle(company_id)
     payload = {
         "model": "gpt-4o-mini",
+        "temperature": 0.2,
         "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Tu es Albert, un assistant fiscal pour les PME françaises. "
-                    "Sois professionnel, clair et concis."
-                ),
-            },
+            {"role":"system",
+             "content": "Tu es Albert, assistant fiscal pour PME françaises."},
             *[m.model_dump() for m in req.messages],
         ],
-        "temperature": 0.2,
     }
-    reply = await call_openai_with_retry(payload, OPENAI_API_KEY, 4)
+    reply = await call_openai_with_retry(payload, OPENAI_API_KEY)
     return ChatResponse(reply=reply)
 
 # ---------------------------------------------------------------------
-# Include your existing DB routers (bank / invoices / alerts)
+# Routers (IMPORTANT: must be AFTER app = FastAPI)
 # ---------------------------------------------------------------------
 app.include_router(bank.router)
 app.include_router(invoices.router)
 app.include_router(alerts.router)
+app.include_router(cashflow.router)
 
 # ---------------------------------------------------------------------
 # Audit
 # ---------------------------------------------------------------------
-
-
 class AuditIssue(BaseModel):
     code: str
     severity: str
     message: str
     count: Optional[int] = None
-
 
 class AuditSummary(BaseModel):
     ok: bool
@@ -293,7 +244,6 @@ class AuditSummary(BaseModel):
     total_credit: float
     imbalance: float
     framework: str
-
 
 class AuditResult(BaseModel):
     summary: AuditSummary
@@ -307,131 +257,39 @@ async def test_audit(
     standard: str = Form("IFRS"),
     company_id: str = Depends(require_auth),
 ):
-    standard = (standard or "IFRS").strip().upper()
-    framework = "USGAAP" if standard.startswith("US") else "IFRS"
-
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(
-            400,
-            "Veuillez fournir un CSV (colonnes: account,label,debit,credit).",
-        )
-
     import io
+    df = pd.read_csv(io.BytesIO(await file.read()))
+    df.columns = df.columns.str.strip().str.lower()
 
-    try:
-        df = pd.read_csv(io.BytesIO(await file.read()))
-        df.columns = df.columns.str.strip().str.lower()
-    except Exception:
-        raise HTTPException(400, "CSV illisible")
-
-    required = {"account", "label", "debit", "credit"}
+    required = {"account","label","debit","credit"}
     if not required.issubset(df.columns):
-        missing = sorted(list(required - set(df.columns)))
-        raise HTTPException(
-            400,
-            f"Colonnes manquantes: {', '.join(missing)}",
-        )
+        raise HTTPException(400, "Colonnes manquantes")
 
-    for c in ["debit", "credit"]:
-        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
+    df["debit"] = pd.to_numeric(df["debit"], errors="coerce").fillna(0)
+    df["credit"] = pd.to_numeric(df["credit"], errors="coerce").fillna(0)
 
-    total_debit = float(df["debit"].sum())
-    total_credit = float(df["credit"].sum())
-    imbalance = float(abs(total_debit - total_credit))
+    total_debit = df["debit"].sum()
+    total_credit = df["credit"].sum()
+    imbalance = abs(total_debit - total_credit)
 
-    issues: List[AuditIssue] = []
+    issues = []
     if imbalance > 0.01:
-        issues.append(
-            AuditIssue(
-                code="IMBALANCE",
-                severity="error",
-                message=f"Écart entre débits et crédits: {imbalance:,.2f} €",
-            )
-        )
+        issues.append(AuditIssue(code="IMBALANCE", severity="error",
+                                 message=f"Écart de {imbalance:.2f}€"))
 
-    missing_labels = int(
-        df["label"].isna().sum()
-        + (df["label"].astype(str).str.strip() == "").sum()
-    )
-    if missing_labels > 0:
-        issues.append(
-            AuditIssue(
-                code="MISSING_LABELS",
-                severity="warning",
-                message="Libellés manquants",
-                count=missing_labels,
-            )
-        )
-
-    neg_debit = int((df["debit"] < 0).sum())
-    neg_credit = int((df["credit"] < 0).sum())
-    if neg_debit > 0:
-        issues.append(
-            AuditIssue(
-                code="NEG_DEBIT",
-                severity="warning",
-                message="Débits négatifs détectés",
-                count=neg_debit,
-            )
-        )
-    if neg_credit > 0:
-        issues.append(
-            AuditIssue(
-                code="NEG_CREDIT",
-                severity="warning",
-                message="Crédits négatifs détectés",
-                count=neg_credit,
-            )
-        )
-
-    dups = df["account"].astype(str).str.strip().duplicated().sum()
-    if dups > 0:
-        issues.append(
-            AuditIssue(
-                code="DUP_ACCOUNTS",
-                severity="info",
-                message="Comptes apparaissant plusieurs fois",
-                count=int(dups),
-            )
-        )
-
-    issues.append(
-        AuditIssue(
-            code="FRAMEWORK",
-            severity="info",
-            message=f"Contrôles exécutés avec le référentiel {framework}.",
-        )
+    summary = AuditSummary(
+        ok=imbalance <= 0.01,
+        total_rows=len(df),
+        total_debit=round(total_debit,2),
+        total_credit=round(total_credit,2),
+        imbalance=round(imbalance,2),
+        framework="IFRS" if not standard.startswith("US") else "USGAAP"
     )
 
     df["balance"] = df["debit"] - df["credit"]
-    grp = (
-        df.groupby(["account", "label"], dropna=False)["balance"]
-        .sum()
-        .reset_index()
-    )
+    grp = df.groupby(["account","label"])["balance"].sum().reset_index()
     grp["abs_balance"] = grp["balance"].abs()
     top = grp.sort_values("abs_balance", ascending=False).head(10)
-    top = (
-        top.assign(
-            account=top["account"].astype(str),
-            label=top["label"].astype(str),
-            balance=top["balance"].round(2),
-            abs_balance=top["abs_balance"].round(2),
-        )[["account", "label", "balance", "abs_balance"]]
-        .to_dict(orient="records")
-    )
+    top = top.to_dict(orient="records")
 
-    summary = AuditSummary(
-        ok=(
-            imbalance <= 0.01
-            and missing_labels == 0
-            and neg_debit == 0
-            and neg_credit == 0
-        ),
-        total_rows=len(df),
-        total_debit=round(total_debit, 2),
-        total_credit=round(total_credit, 2),
-        imbalance=round(imbalance, 2),
-        framework=framework,
-    )
     return AuditResult(summary=summary, issues=issues, top_accounts=top)
