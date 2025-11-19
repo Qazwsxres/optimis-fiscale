@@ -10,6 +10,7 @@ CORS_HEADERS = {
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "*",
     "Access-Control-Allow-Headers": "*",
+    "Content-Type": "application/json"
 }
 
 # Global in-memory summary
@@ -20,15 +21,10 @@ _bank_summary = {
 }
 
 
-# ---------------- BANK UPLOAD ----------------
-
 @router.post("/upload")
 async def upload_bank_statement(file: UploadFile = File(...)):
     """
-    Upload a bank statement CSV and compute:
-    - inflows
-    - outflows
-    - total balance
+    Upload bank CSV & compute inflows/outflows/balance.
     """
     global _bank_summary
 
@@ -36,7 +32,7 @@ async def upload_bank_statement(file: UploadFile = File(...)):
         return JSONResponse(
             content={"detail": "Veuillez fournir un fichier CSV"},
             status_code=400,
-            headers=CORS_HEADERS
+            headers=CORS_HEADERS,
         )
 
     try:
@@ -53,12 +49,13 @@ async def upload_bank_statement(file: UploadFile = File(...)):
                 or row.get("Amount")
                 or row.get("Montant")
             )
+
             if raw_amount is None:
                 continue
 
             try:
                 amount = float(str(raw_amount).replace(",", "."))
-            except Exception:
+            except:
                 continue
 
             if amount >= 0:
@@ -68,41 +65,28 @@ async def upload_bank_statement(file: UploadFile = File(...)):
 
         balance = inflows + outflows
 
-        # Save summary
         _bank_summary["balance"] = balance
         _bank_summary["inflows"] = inflows
         _bank_summary["outflows"] = outflows
 
         return JSONResponse(
-            content={
-                "ok": True,
-                "balance": balance,
-                "inflows": inflows,
-                "outflows": outflows,
-            },
-            headers=CORS_HEADERS
+            content=_bank_summary,
+            headers=CORS_HEADERS,
         )
 
     except Exception as e:
         return JSONResponse(
             content={"detail": f"Erreur fichier: {e}"},
             status_code=500,
-            headers=CORS_HEADERS
+            headers=CORS_HEADERS,
         )
 
 
-# ---------------- BANK SUMMARY ----------------
-
 @router.get("/summary")
 def bank_summary():
-    return JSONResponse(
-        content=_bank_summary,
-        headers=CORS_HEADERS
-    )
+    return JSONResponse(content=_bank_summary, headers=CORS_HEADERS)
 
-
-# ---------------- OPTIONS (CORS PREFLIGHT) ----------------
 
 @router.options("/{path:path}")
-def bank_options():
+def bank_preflight(path: str):
     return JSONResponse(content={"ok": True}, headers=CORS_HEADERS)
