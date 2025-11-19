@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -13,10 +13,12 @@ CORS_HEADERS = {
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "*",
     "Access-Control-Allow-Headers": "*",
+    "Content-Type": "application/json",
+    "Access-Control-Max-Age": "3600",
 }
 
 # --------------------------
-#   Request Model
+# Request Model
 # --------------------------
 class AlertIn(BaseModel):
     message: str
@@ -24,7 +26,19 @@ class AlertIn(BaseModel):
 
 
 # --------------------------
-#   GET /alerts
+# CORS Preflight (ALL ROUTES)
+# --------------------------
+@router.options("/{path:path}")
+def alerts_preflight(path: str):
+    return JSONResponse(
+        content={"ok": True},
+        status_code=200,
+        headers=CORS_HEADERS
+    )
+
+
+# --------------------------
+# GET /alerts
 # --------------------------
 @router.get("/")
 def list_alerts():
@@ -41,19 +55,14 @@ def list_alerts():
             for a in items
         ]
 
-        return JSONResponse(content=data, headers=CORS_HEADERS)
+        return JSONResponse(
+            content=data,
+            headers=CORS_HEADERS
+        )
 
 
 # --------------------------
-#   OPTIONS (fix preflight)
-# --------------------------
-@router.options("/")
-def alerts_options():
-    return JSONResponse(content={"ok": True}, headers=CORS_HEADERS)
-
-
-# --------------------------
-#   POST /alerts
+# POST /alerts
 # --------------------------
 @router.post("/")
 def create_alert(alert: AlertIn):
