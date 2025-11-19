@@ -11,6 +11,9 @@ router = APIRouter(prefix="/invoices", tags=["Invoices"])
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "https://qazwsxres.github.io",
     "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "*",
+    "Access-Control-Allow-Headers": "*",
+    "Content-Type": "application/json"
 }
 
 
@@ -23,7 +26,7 @@ class InvoiceIn(BaseModel):
     status: str = "draft"
 
 
-# -------------- SALES -----------------
+# ----------- SALES CREATE -----------
 
 @router.post("/sales")
 def create_sale(inv: InvoiceIn):
@@ -39,13 +42,15 @@ def create_sale(inv: InvoiceIn):
                 "number": obj.number,
                 "issue_date": str(obj.issue_date),
                 "due_date": str(obj.due_date),
-                "amount": obj.amount,
-                "vat": obj.vat,
+                "amount": float(obj.amount),
+                "vat": float(obj.vat),
                 "status": obj.status,
             },
-            headers=CORS_HEADERS
+            headers=CORS_HEADERS,
         )
 
+
+# ----------- SALES LIST -----------
 
 @router.get("/sales")
 def list_sales():
@@ -58,8 +63,8 @@ def list_sales():
                 "number": i.number,
                 "issue_date": str(i.issue_date),
                 "due_date": str(i.due_date),
-                "amount": i.amount,
-                "vat": i.vat,
+                "amount": float(i.amount),
+                "vat": float(i.vat),
                 "status": i.status,
             }
             for i in items
@@ -68,7 +73,7 @@ def list_sales():
         return JSONResponse(content=data, headers=CORS_HEADERS)
 
 
-# -------------- PURCHASES -----------------
+# ----------- PURCHASES CREATE -----------
 
 @router.post("/purchases")
 def create_purchase(inv: InvoiceIn):
@@ -84,13 +89,15 @@ def create_purchase(inv: InvoiceIn):
                 "number": obj.number,
                 "issue_date": str(obj.issue_date),
                 "due_date": str(obj.due_date),
-                "amount": obj.amount,
-                "vat": obj.vat,
+                "amount": float(obj.amount),
+                "vat": float(obj.vat),
                 "status": obj.status,
             },
-            headers=CORS_HEADERS
+            headers=CORS_HEADERS,
         )
 
+
+# ----------- PURCHASES LIST -----------
 
 @router.get("/purchases")
 def list_purchases():
@@ -103,11 +110,18 @@ def list_purchases():
                 "number": i.number,
                 "issue_date": str(i.issue_date),
                 "due_date": str(i.due_date),
-                "amount": i.amount,
-                "vat": i.vat,
+                "amount": float(i.amount),
+                "vat": float(i.vat),
                 "status": i.status,
             }
             for i in items
         ]
 
         return JSONResponse(content=data, headers=CORS_HEADERS)
+
+
+# ----------- PRE-FLIGHT (CORS) -----------
+
+@router.options("/{path:path}")
+def invoice_preflight(path: str):
+    return JSONResponse(content={"ok": True}, headers=CORS_HEADERS)
