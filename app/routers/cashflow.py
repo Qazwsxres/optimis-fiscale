@@ -101,3 +101,8 @@ def get_forecast():
             forecast.append({"date": str(day), "balance": balance})
 
         return JSONResponse(forecast, headers=CORS_HEADERS)
+
+@router.options("/{path:path}")
+def opts():
+    return JSONResponse({"ok": True}, headers=CORS_HEADERS)
+
