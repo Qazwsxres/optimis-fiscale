@@ -3,6 +3,7 @@ import time
 import asyncio
 from typing import List, Optional
 from collections import defaultdict
+from .routers import bank, invoices, alerts, cashflow, email_import
 
 import httpx
 import pandas as pd
@@ -255,7 +256,7 @@ app.include_router(bank.router)
 app.include_router(invoices.router)
 app.include_router(alerts.router)
 app.include_router(cashflow.router)
-
+app.include_router(email_import.router)
 
 # ---------------------------------------------------------------------
 # AUDIT
