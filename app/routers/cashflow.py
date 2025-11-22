@@ -56,3 +56,48 @@ def get_daily_cashflow():
         data = [{"date": str(row.date), "balance": row.balance} for row in items]
 
         return JSONResponse(content=data, headers=CORS_HEADERS)
+
+@router.get("/forecast")
+def get_forecast():
+    """
+    30-day cashflow forecast:
+      - Starts from last daily cashflow balance
+      - Adds incoming invoice payments on due_date
+      - Subtracts purchase invoices on due_date
+    """
+    with SessionLocal() as db:
+
+        # 1. Load last known daily cashflow
+        daily = db.query(DailyCashflow).order_by(DailyCashflow.date.asc()).all()
+        if not daily:
+            return JSONResponse({"error": "No cashflow data"}, status_code=400)
+
+        last_balance = float(daily[-1].balance)
+        start_date = daily[-1].date
+
+        # 2. Load invoices
+        sales = db.query(InvoiceSale).filter(InvoiceSale.status != "paid").all()
+        purchases = db.query(InvoicePurchase).filter(InvoicePurchase.status != "paid").all()
+
+        # 3. Construct 30-day future window
+        from datetime import timedelta
+
+        forecast = []
+        balance = last_balance
+
+        for i in range(1, 31):
+            day = start_date + timedelta(days=i)
+
+            # incoming payments
+            for inv in sales:
+                if inv.due_date == day:
+                    balance += float(inv.amount)
+
+            # outgoing payments
+            for inv in purchases:
+                if inv.due_date == day:
+                    balance -= float(inv.amount)
+
+            forecast.append({"date": str(day), "balance": balance})
+
+        return JSONResponse(forecast, headers=CORS_HEADERS)
