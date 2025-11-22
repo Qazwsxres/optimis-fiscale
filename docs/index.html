@@ -830,29 +830,50 @@ async function loadDashboard() {
     /* =======================
        🆕 DAILY CASHFLOW CHART
     =======================*/
-    const daily = await fetch(apiBase + "/cashflow/daily").then(r => r.json());
+    async function loadDailyCashflow() {
+  const r = await fetch(API_BASE + "/bank/daily");
+  const data = await r.json();
 
-    const ctxDaily = $("dailyCashChart");
-    new Chart(ctxDaily, {
-      type: "line",
-      data: {
-        labels: daily.map(x => x.date),
-        datasets: [{
-          label: "Solde journalier",
-          data: daily.map(x => x.balance),
-          borderColor: "#2ecc71",
-          backgroundColor: "rgba(46,204,113,0.2)",
-          tension: 0.3
-        }]
-      },
-      options: {
-        plugins:{legend:{display:false}},
-        scales:{
-          x:{ticks:{color:"#a3adbf"}},
-          y:{ticks:{color:"#a3adbf"}}
-        }
+  if (!Array.isArray(data) || data.length === 0) {
+    console.warn("No cashflow data");
+    return;
+  }
+
+  const labels = data.map(x => x.date);
+  const balances = data.map(x => x.balance);
+
+  drawCashChart(labels, balances);
+}
+
+function drawCashChart(labels, balances) {
+  const ctx = document.getElementById("cashChart").getContext("2d");
+
+  if (window.cashChart) {
+    window.cashChart.destroy();
+  }
+
+  window.cashChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Solde quotidien",
+        data: balances,
+        borderColor: "#3a71ff",
+        backgroundColor: "rgba(58,113,255,0.25)",
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "#a3adbf" }},
+        y: { ticks: { color: "#a3adbf" }}
       }
-    });
+    }
+  });
+}
 
     /* SALES */
     $("salesTable").querySelector("tbody").innerHTML =
