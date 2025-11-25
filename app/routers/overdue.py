@@ -1,5 +1,4 @@
-from datetime import date, timedelta
-
+from datetime import date
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -17,22 +16,80 @@ CORS_HEADERS = {
 }
 
 
+# -------------------------------
+#  NEW: GET /overdue
+#  Returns list of overdue invoices
+# -------------------------------
+@router.get("/")
+def get_overdue_list():
+    today = date.today()
+
+    with SessionLocal() as db:
+        # Sales overdue (client invoices)
+        sales = (
+            db.query(InvoiceSale)
+            .filter(InvoiceSale.status != "paid")
+            .filter(InvoiceSale.due_date < today)
+            .all()
+        )
+
+        clients = []
+        for inv in sales:
+            days_late = (today - inv.due_date).days
+            clients.append({
+                "id": inv.id,
+                "number": inv.number,
+                "due_date": str(inv.due_date),
+                "days_overdue": days_late,
+                "amount": float(inv.amount or 0),
+                "type": "sale"
+            })
+
+        # Purchase overdue (supplier invoices)
+        purchases = (
+            db.query(InvoicePurchase)
+            .filter(InvoicePurchase.status != "paid")
+            .filter(InvoicePurchase.due_date < today)
+            .all()
+        )
+
+        suppliers = []
+        for inv in purchases:
+            days_late = (today - inv.due_date).days
+            suppliers.append({
+                "id": inv.id,
+                "number": inv.number,
+                "due_date": str(inv.due_date),
+                "days_overdue": days_late,
+                "amount": float(inv.amount or 0),
+                "type": "purchase"
+            })
+
+        return JSONResponse(
+            content={
+                "clients_overdue": clients,
+                "suppliers_overdue": suppliers,
+                "counts": {
+                    "clients": len(clients),
+                    "suppliers": len(suppliers),
+                }
+            },
+            headers=CORS_HEADERS
+        )
+
+
+# -------------------------------
+#  POST /overdue/check
+#  Create alerts for overdue invoices
+# -------------------------------
 @router.post("/check")
 def check_overdue_invoices():
-    """
-    Scan all sales & purchase invoices and create alerts
-    for those that are overdue and not paid.
-
-    - Sales:   type = "overdue_sale"
-    - Purchases: type = "overdue_purchase"
-    """
     today = date.today()
 
     with SessionLocal() as db:
         created = 0
         skipped = 0
 
-        # 1) Overdue sales (client invoices)
         overdue_sales = (
             db.query(InvoiceSale)
             .filter(InvoiceSale.status != "paid")
@@ -40,7 +97,6 @@ def check_overdue_invoices():
             .all()
         )
 
-        # 2) Overdue purchases (supplier invoices)
         overdue_purchases = (
             db.query(InvoicePurchase)
             .filter(InvoicePurchase.status != "paid")
@@ -51,23 +107,25 @@ def check_overdue_invoices():
         def ensure_alert(alert_type: str, inv, is_sale: bool):
             nonlocal created, skipped
 
-            # Avoid duplicates for same invoice
-            existing = (
+            exists = (
                 db.query(Alert)
                 .filter(Alert.type == alert_type)
                 .filter(Alert.related_id == inv.id)
                 .filter(Alert.status == "pending")
                 .first()
             )
-            if existing:
+
+            if exists:
                 skipped += 1
                 return
 
-            amount = float(inv.amount) if inv.amount is not None else 0.0
-            if is_sale:
-                msg = f"Facture client en retard: {inv.number} – {amount:.2f} €"
-            else:
-                msg = f"Facture fournisseur en retard: {inv.number} – {amount:.2f} €"
+            amount = float(inv.amount or 0)
+
+            msg = (
+                f"Facture client en retard: {inv.number} – {amount:.2f} €"
+                if is_sale else
+                f"Facture fournisseur en retard: {inv.number} – {amount:.2f} €"
+            )
 
             alert = Alert(
                 type=alert_type,
@@ -79,28 +137,26 @@ def check_overdue_invoices():
             db.add(alert)
             created += 1
 
-        # Create alerts for each overdue invoice
         for inv in overdue_sales:
-            ensure_alert("overdue_sale", inv, is_sale=True)
+            ensure_alert("overdue_sale", inv, True)
 
         for inv in overdue_purchases:
-            ensure_alert("overdue_purchase", inv, is_sale=False)
+            ensure_alert("overdue_purchase", inv, False)
 
         db.commit()
 
-        payload = {
-            "today": str(today),
-            "overdue_sales": len(overdue_sales),
-            "overdue_purchases": len(overdue_purchases),
-            "alerts_created": created,
-            "alerts_skipped_existing": skipped,
-        }
-        return JSONResponse(content=payload, headers=CORS_HEADERS)
+        return JSONResponse(
+            content={
+                "today": str(today),
+                "overdue_sales": len(overdue_sales),
+                "overdue_purchases": len(overdue_purchases),
+                "alerts_created": created,
+                "alerts_skipped_existing": skipped,
+            },
+            headers=CORS_HEADERS
+        )
 
 
 @router.options("/{path:path}")
 def overdue_options(path: str):
-    """
-    CORS preflight support if you ever call this from the browser.
-    """
     return JSONResponse(content={"ok": True}, headers=CORS_HEADERS)
