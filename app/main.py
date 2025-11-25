@@ -15,17 +15,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # ---------------------------------------------------------------------
-# App imports
+# INTERNAL IMPORTS
 # ---------------------------------------------------------------------
 from app.models import AnalysisResult
 from app.analyzers import analyze_trial_balance
+from app.database import Base, engine
 from .routers import bank, invoices, alerts, cashflow, overdue
 
 # ---------------------------------------------------------------------
-# App & CORS
+# FASTAPI APP
 # ---------------------------------------------------------------------
 app = FastAPI(title="Optimis Fiscale MVP", version="0.2.1")
 
+# Auto-create DB tables
+@app.on_event("startup")
+def create_tables():
+    print("▶ Creating database tables if missing…")
+    Base.metadata.create_all(bind=engine)
+
+# ---------------------------------------------------------------------
+# CORS
+# ---------------------------------------------------------------------
 _env_origins = os.getenv("ALLOWED_ORIGIN")
 if _env_origins:
     ALLOWED_ORIGINS = [o.strip() for o in _env_origins.split(",") if o.strip()]
@@ -46,7 +56,7 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------
-# Auth & Secrets
+# AUTH & SECURITY
 # ---------------------------------------------------------------------
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY or SECRET_KEY == "CHANGE_ME":
@@ -58,8 +68,7 @@ COOKIE_NAME = "session"
 
 
 def validate_company_password(company_id: str, password: str) -> bool:
-    env_key = f"COMPANY_{company_id}_PASSWORD"
-    expected = os.getenv(env_key)
+    expected = os.getenv(f"COMPANY_{company_id}_PASSWORD")
     return bool(expected and password == expected)
 
 
@@ -74,8 +83,8 @@ def make_token(company_id: str, ttl_seconds: int = 60 * 60) -> str:
 
 def parse_token(token: str) -> str:
     try:
-        data = jwt.decode(token, SECRET_KEY, algorithms=[ALGO])
-        return data["sub"]
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGO])
+        return decoded["sub"]
     except JWTError:
         raise HTTPException(401, "Invalid or expired session")
 
@@ -88,18 +97,19 @@ def set_session_cookie(resp: Response, token: str):
         secure=True,
         samesite="none",
         path="/",
-        max_age=60 * 60,
+        max_age=3600,
     )
 
 
-def require_auth(request: Request) -> str:
+def require_auth(request: Request):
     token = request.cookies.get(COOKIE_NAME)
     if not token:
         raise HTTPException(401, "Not authenticated")
     return parse_token(token)
 
+
 # ---------------------------------------------------------------------
-# Health
+# HEALTH ROUTES
 # ---------------------------------------------------------------------
 @app.get("/")
 def root():
@@ -110,8 +120,9 @@ def root():
 def health():
     return {"status": "ok"}
 
+
 # ---------------------------------------------------------------------
-# Analysis
+# ANALYSIS
 # ---------------------------------------------------------------------
 @app.post("/analyze/trial-balance", response_model=AnalysisResult)
 async def analyze_trial_balance_endpoint(
@@ -120,10 +131,11 @@ async def analyze_trial_balance_endpoint(
 ):
     if not file.filename.endswith(".csv"):
         raise HTTPException(400, "Veuillez fournir un CSV.")
+
+    import io
     try:
-        import io
         df = pd.read_csv(io.BytesIO(await file.read()))
-        df.columns = df.columns.str.strip().str.lower()
+        df.columns = df.columns.str.lower().str.strip()
     except Exception:
         raise HTTPException(400, "CSV illisible")
 
@@ -134,13 +146,15 @@ async def analyze_trial_balance_endpoint(
 async def analyze_json_endpoint(payload: dict):
     try:
         df = pd.DataFrame(payload["trial_balance"])
-        df.columns = df.columns.str.strip().str.lower()
+        df.columns = df.columns.str.lower().str.strip()
     except Exception:
         raise HTTPException(400, "JSON invalide")
+
     return analyze_trial_balance(df, payload.get("turnover"))
 
+
 # ---------------------------------------------------------------------
-# Auth endpoints
+# AUTH ROUTES
 # ---------------------------------------------------------------------
 class LoginBody(BaseModel):
     company_id: str
@@ -151,6 +165,7 @@ class LoginBody(BaseModel):
 def login(body: LoginBody, response: Response):
     if not validate_company_password(body.company_id, body.password):
         raise HTTPException(401, "Bad credentials")
+
     token = make_token(body.company_id)
     set_session_cookie(response, token)
     return {"ok": True, "company_id": body.company_id}
@@ -161,8 +176,9 @@ def logout(response: Response):
     response.delete_cookie(COOKIE_NAME, path="/")
     return {"ok": True}
 
+
 # ---------------------------------------------------------------------
-# Chat
+# CHAT
 # ---------------------------------------------------------------------
 class ChatMessage(BaseModel):
     role: str
@@ -193,10 +209,7 @@ async def call_openai_with_retry(payload, api_key, max_retries=4):
         for attempt in range(max_retries):
             r = await client.post(
                 "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 json=payload,
             )
             if r.status_code == 200:
@@ -206,13 +219,14 @@ async def call_openai_with_retry(payload, api_key, max_retries=4):
                 backoff *= 2
                 continue
             raise HTTPException(502, f"OpenAI error {r.status_code}: {r.text[:200]}")
-    raise HTTPException(429, "OpenAI rate limit")
+    raise HTTPException(429, "OpenAI rate limit reached")
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     if not OPENAI_API_KEY:
         raise HTTPException(500, "Server missing OPENAI_API_KEY")
+
     throttle(company_id)
     payload = {
         "model": "gpt-4o-mini",
@@ -228,8 +242,9 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     reply = await call_openai_with_retry(payload, OPENAI_API_KEY)
     return ChatResponse(reply=reply)
 
+
 # ---------------------------------------------------------------------
-# Routers
+# ROUTERS
 # ---------------------------------------------------------------------
 app.include_router(bank.router)
 app.include_router(invoices.router)
@@ -237,8 +252,9 @@ app.include_router(alerts.router)
 app.include_router(cashflow.router)
 app.include_router(overdue.router)
 
+
 # ---------------------------------------------------------------------
-# Audit
+# AUDIT
 # ---------------------------------------------------------------------
 class AuditIssue(BaseModel):
     code: str
@@ -284,7 +300,7 @@ async def test_audit(
     total_credit = df["credit"].sum()
     imbalance = abs(total_debit - total_credit)
 
-    issues: List[AuditIssue] = []
+    issues = []
     if imbalance > 0.01:
         issues.append(
             AuditIssue(
@@ -300,7 +316,7 @@ async def test_audit(
         total_debit=round(total_debit, 2),
         total_credit=round(total_credit, 2),
         imbalance=round(imbalance, 2),
-        framework="IFRS" if not standard.startswith("US") else "USGAAP",
+        framework="USGAAP" if standard.upper().startswith("US") else "IFRS",
     )
 
     df["balance"] = df["debit"] - df["credit"]
