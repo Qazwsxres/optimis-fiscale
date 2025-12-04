@@ -50,17 +50,20 @@ class InvoiceSale(Base):
     __tablename__ = "invoices_sales"
 
     id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(Integer, ForeignKey("clients.id"))
-    number = Column(String(255))
-    issue_date = Column(Date)
-    due_date = Column(Date)
-    amount = Column(Numeric(12, 2))
-    vat = Column(Numeric(12, 2))
-    status = Column(String(50), default="draft")
-    paid_at = Column(Date)
-    created_at = Column(TIMESTAMP, server_default=func.now())
+    client_name = Column(String, nullable=False)
+    client_email = Column(String)
 
-    client = relationship("Client")
+    number = Column(String, nullable=False)
+    issue_date = Column(Date, nullable=False)
+    due_date = Column(Date, nullable=False)
+
+    amount_ht = Column(Numeric(12, 2))
+    vat_rate = Column(Numeric(4, 3), default=0.20)  # ex: 0.20
+    amount_ttc = Column(Numeric(12, 2))
+
+    description = Column(Text)
+    status = Column(String, default="unpaid")  # unpaid / paid / sent
+    created_at = Column(TIMESTAMP, server_default=func.now())
 
 
 # ----------------------------
