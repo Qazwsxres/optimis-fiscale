@@ -964,8 +964,11 @@ async function loadDashboard(){
           ).join("")
         : `<li>Aucune alerte active</li>`;
 
-    // DAILY + FORECAST CASHFLOW
-    await loadDailyCashflow();
+    // DAILY + FORECAST CASHFLOW (from backend)
+    await Promise.all([
+      loadDailyCashflow(),
+      loadForecastCashflow()
+    ]);
   } catch(e) {
     console.error(e);
     $("alertsList").innerHTML = "<li>Erreur de chargement des données</li>";
@@ -975,7 +978,9 @@ async function loadDashboard(){
 
 /* ===============================
    DAILY & FORECAST CASHFLOW
-   Uses backend route: GET /cashflow/daily
+   Uses backend routes:
+   - GET /cashflow/daily
+   - GET /cashflow/forecast
 ================================*/
 async function loadDailyCashflow(){
   const apiBase = getApiBase();
@@ -990,11 +995,28 @@ async function loadDailyCashflow(){
       console.warn("No daily cashflow yet");
       return;
     }
-
     renderDailyChart(data);
-    renderForecastChart(data);
   } catch(e) {
     console.error("Daily cashflow error", e);
+  }
+}
+
+async function loadForecastCashflow(){
+  const apiBase = getApiBase();
+  try {
+    const r = await fetch(apiBase + "/cashflow/forecast");
+    if (!r.ok) {
+      console.warn("cashflow/forecast HTTP", r.status);
+      return;
+    }
+    const data = await r.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      console.warn("No forecast cashflow yet");
+      return;
+    }
+    renderForecastChart(data);
+  } catch(e) {
+    console.error("Forecast cashflow error", e);
   }
 }
 
@@ -1029,34 +1051,8 @@ function renderDailyChart(data){
 }
 
 function renderForecastChart(data){
-  // Simple forecast: average daily variation and project 7 days
-  if (data.length < 2) return;
-  const balances = data.map(x => Number(x.balance) || 0);
-  const dates = data.map(x => x.date);
-
-  const deltas = [];
-  for (let i=1; i<balances.length; i++){
-    deltas.push(balances[i] - balances[i-1]);
-  }
-  const avgDelta = deltas.reduce((a,b)=>a+b,0) / deltas.length;
-
-  const lastBalance = balances[balances.length-1];
-  const lastDateStr = dates[dates.length-1];
-  const lastDate = new Date(lastDateStr);
-
-  const forecastLabels = [];
-  const forecastBalances = [];
-
-  for (let i=1; i<=7; i++){
-    const d = new Date(lastDate);
-    d.setDate(d.getDate() + i);
-    const iso = d.toISOString().slice(0,10);
-    forecastLabels.push(iso);
-    forecastBalances.push(lastBalance + avgDelta * i);
-  }
-
-  const allLabels = [...dates, ...forecastLabels];
-  const allBalances = [...balances, ...forecastBalances];
+  const labels = data.map(x => x.date);
+  const balances = data.map(x => x.balance);
 
   const ctx = $("forecastCashChart").getContext("2d");
   if (cashForecastChart) cashForecastChart.destroy();
@@ -1064,10 +1060,10 @@ function renderForecastChart(data){
   cashForecastChart = new Chart(ctx, {
     type:"line",
     data:{
-      labels:allLabels,
+      labels,
       datasets:[{
-        label:"Historique + Prévisionnel",
-        data:allBalances,
+        label:"Prévisionnel de trésorerie",
+        data:balances,
         borderColor:"#f1c40f",
         backgroundColor:"rgba(241,196,15,0.15)",
         tension:0.3,
