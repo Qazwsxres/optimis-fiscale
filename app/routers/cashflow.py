@@ -1,13 +1,14 @@
+from datetime import date, timedelta
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
-from datetime import date, datetime, timedelta
+
 from ..database import SessionLocal
 from ..models_extended import (
     BankTransaction,
     DailyCashflow,
     InvoiceSale,
-    InvoicePurchase
+    InvoicePurchase,
 )
 
 router = APIRouter(prefix="/cashflow", tags=["Cashflow"])
@@ -20,104 +21,118 @@ CORS_HEADERS = {
 }
 
 
-# =========================================================
-#   POST /cashflow/compute
-# =========================================================
 @router.post("/compute")
 def compute_daily_cashflow():
-    """Recompute daily balances from bank transactions."""
+    """
+    Recompute daily balances from BankTransaction table and persist them
+    into `cashflow_daily`.
+    """
     with SessionLocal() as db:
-        tx = db.query(BankTransaction).order_by(BankTransaction.date.asc()).all()
+        tx = (
+            db.query(BankTransaction)
+            .order_by(BankTransaction.date.asc())
+            .all()
+        )
 
-        daily = {}
+        # aggregate by date
+        daily_totals: dict[date, float] = {}
         for t in tx:
-            daily.setdefault(t.date, 0)
-            daily[t.date] += float(t.amount)
+            daily_totals.setdefault(t.date, 0.0)
+            daily_totals[t.date] += float(t.amount)
 
-        running = 0
+        running = 0.0
         result = []
-        for day in sorted(daily.keys()):
-            running += daily[day]
-            result.append({"date": str(day), "balance": running})
+        for d in sorted(daily_totals.keys()):
+            running += daily_totals[d]
+            result.append({"date": d, "balance": running})
 
-        # Reset table
+        # reset table
         db.query(DailyCashflow).delete()
-
         for row in result:
-            db.add(DailyCashflow(
-                date=datetime.fromisoformat(row["date"]).date(),
-                balance=row["balance"]
-            ))
-
+            db.add(
+                DailyCashflow(
+                    date=row["date"],
+                    balance=row["balance"],
+                )
+            )
         db.commit()
 
         return JSONResponse(
             content={"ok": True, "count": len(result)},
-            headers=CORS_HEADERS
+            headers=CORS_HEADERS,
         )
 
 
-# =========================================================
-#   GET /cashflow/daily
-# =========================================================
 @router.get("/daily")
 def get_daily_cashflow():
-    """Return daily cumulative cashflow."""
+    """Return prepared daily cashflow table."""
     with SessionLocal() as db:
-        items = db.query(DailyCashflow).order_by(DailyCashflow.date.asc()).all()
-        data = [{"date": str(row.date), "balance": float(row.balance)} for row in items]
+        items = (
+            db.query(DailyCashflow)
+            .order_by(DailyCashflow.date.asc())
+            .all()
+        )
+        data = [
+            {"date": str(row.date), "balance": float(row.balance or 0)}
+            for row in items
+        ]
 
         return JSONResponse(content=data, headers=CORS_HEADERS)
 
 
-# =========================================================
-#   GET /cashflow/forecast  (30-day)
-# =========================================================
 @router.get("/forecast")
 def get_forecast():
-    """Return 30-day cashflow prediction using invoice due dates."""
+    """
+    30-day cashflow forecast:
+      - Starts from last DailyCashflow balance
+      - Adds incoming sales invoices on due_date
+      - Subtracts purchase invoices on due_date
+    """
     with SessionLocal() as db:
-
-        # Load last known daily balance
-        daily = db.query(DailyCashflow).order_by(DailyCashflow.date.asc()).all()
+        daily = (
+            db.query(DailyCashflow)
+            .order_by(DailyCashflow.date.asc())
+            .all()
+        )
         if not daily:
             return JSONResponse(
-                {"error": "No cashflow data"},
+                content={"error": "No cashflow data"},
                 status_code=400,
-                headers=CORS_HEADERS
+                headers=CORS_HEADERS,
             )
 
-        last_balance = float(daily[-1].balance)
+        last_balance = float(daily[-1].balance or 0)
         start_date = daily[-1].date
 
-        # Load unpaid invoices
-        sales = db.query(InvoiceSale).filter(InvoiceSale.status != "paid").all()
-        purchases = db.query(InvoicePurchase).filter(InvoicePurchase.status != "paid").all()
+        sales = (
+            db.query(InvoiceSale)
+            .filter(InvoiceSale.status != "paid")
+            .all()
+        )
+        purchases = (
+            db.query(InvoicePurchase)
+            .filter(InvoicePurchase.status != "paid")
+            .all()
+        )
 
         forecast = []
         balance = last_balance
-
         for i in range(1, 31):
             day = start_date + timedelta(days=i)
 
-            # incoming invoices
             for inv in sales:
-                if inv.due_date and inv.due_date == day:
-                    balance += float(inv.amount)
+                if inv.due_date == day:
+                    balance += float(inv.amount_ttc or 0)
 
-            # outgoing invoices
             for inv in purchases:
-                if inv.due_date and inv.due_date == day:
-                    balance -= float(inv.amount)
+                if inv.due_date == day:
+                    balance -= float(inv.amount or 0)
 
             forecast.append({"date": str(day), "balance": balance})
 
-        return JSONResponse(forecast, headers=CORS_HEADERS)
+        return JSONResponse(content=forecast, headers=CORS_HEADERS)
 
 
-# =========================================================
-#   OPTIONS (CORS preflight)
-# =========================================================
 @router.options("/{path:path}")
-def opts(path: str):
-    return JSONResponse({"ok": True}, headers=CORS_HEADERS)
+def cashflow_options(path: str):
+    return JSONResponse(content={"ok": True}, headers=CORS_HEADERS)
