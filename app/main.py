@@ -3,7 +3,6 @@ import time
 import asyncio
 from typing import List, Optional
 from collections import defaultdict
-from app.database import Base, engine
 
 import httpx
 import pandas as pd
@@ -27,12 +26,7 @@ from .routers import bank, invoices, alerts, cashflow, overdue
 # FASTAPI APP
 # ---------------------------------------------------------------------
 app = FastAPI(title="Optimis Fiscale MVP", version="0.2.1")
-@app.on_event("startup")
-def create_tables():
-    print("▶ Creating database tables if missing...")
-    Base.metadata.create_all(bind=engine)
 
-# Auto-create DB tables
 @app.on_event("startup")
 def create_tables():
     print("▶ Creating database tables if missing…")
