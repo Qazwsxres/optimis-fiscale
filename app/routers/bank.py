@@ -1,16 +1,22 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
+import os
 import csv
 from io import TextIOWrapper
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/bank", tags=["Bank"])
 
-CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "https://qazwsxres.github.io",
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Methods": "*",
-    "Access-Control-Allow-Headers": "*",
-}
+# Get CORS origin from environment
+FRONTEND_URL = os.getenv("ALLOWED_ORIGIN", "https://qazwsxres.github.io").split(",")[0]
+
+def get_cors_headers():
+    """Standard CORS headers for all responses"""
+    return {
+        "Access-Control-Allow-Origin": FRONTEND_URL,
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*"
+    }
 
 # In-memory state
 _bank_summary = {
@@ -36,7 +42,11 @@ async def upload_bank_csv(file: UploadFile = File(...)):
     global _bank_summary, _bank_daily, _bank_transactions
 
     if file.content_type not in ("text/csv", "application/vnd.ms-excel"):
-        raise HTTPException(400, "File must be CSV")
+        return JSONResponse(
+            status_code=400,
+            content={"error": "File must be CSV"},
+            headers=get_cors_headers()
+        )
 
     try:
         wrapper = TextIOWrapper(file.file, encoding="utf-8")
@@ -44,9 +54,12 @@ async def upload_bank_csv(file: UploadFile = File(...)):
 
         required = {"date", "label", "amount", "balance", "category", "transaction_type"}
         if not required.issubset({c.strip().lower() for c in reader.fieldnames}):
-            raise HTTPException(
-                400,
-                f"Missing required columns. CSV must contain: {', '.join(required)}"
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": f"Missing required columns. CSV must contain: {', '.join(required)}"
+                },
+                headers=get_cors_headers()
             )
 
         _bank_transactions = []
@@ -100,28 +113,36 @@ async def upload_bank_csv(file: UploadFile = File(...)):
                 "summary": _bank_summary,
                 "count": len(_bank_transactions)
             },
-            headers=CORS_HEADERS
+            headers=get_cors_headers()
         )
 
     except Exception as e:
-        raise HTTPException(500, f"Erreur lecture CSV: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Erreur lecture CSV: {e}"},
+            headers=get_cors_headers()
+        )
 
 
 @router.get("/summary")
 def bank_summary():
-    return JSONResponse(_bank_summary, headers=CORS_HEADERS)
+    return JSONResponse(
+        content=_bank_summary,
+        headers=get_cors_headers()
+    )
 
 
 @router.get("/transactions")
 def bank_transactions():
-    return JSONResponse(_bank_transactions, headers=CORS_HEADERS)
+    return JSONResponse(
+        content=_bank_transactions,
+        headers=get_cors_headers()
+    )
 
 
 @router.get("/daily")
 def bank_daily():
-    return JSONResponse(_bank_daily, headers=CORS_HEADERS)
-
-
-@router.options("/{path:path}")
-def options_handler():
-    return JSONResponse({"ok": True}, headers=CORS_HEADERS)
+    return JSONResponse(
+        content=_bank_daily,
+        headers=get_cors_headers()
+    )
