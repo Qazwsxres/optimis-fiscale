@@ -12,6 +12,7 @@ from fastapi import (
     Request, Response, Depends, Form
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # ---------------------------------------------------------------------
@@ -22,19 +23,50 @@ from app.analyzers import analyze_trial_balance
 from app.database import Base, engine
 from .routers import bank, invoices, alerts, cashflow, overdue
 
+# =====================================================
+# HTTPS REDIRECT MIDDLEWARE
+# =====================================================
+class HTTPSRedirectMiddleware:
+    """Force HTTPS on Railway by checking x-forwarded-proto header"""
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            headers = dict(scope.get("headers", []))
+            forwarded_proto = headers.get(b"x-forwarded-proto", b"https").decode()
+            
+            if forwarded_proto == "http":
+                host = headers.get(b"host", b"").decode()
+                path = scope.get("path", "")
+                query = scope.get("query_string", b"").decode()
+                url = f"https://{host}{path}"
+                if query:
+                    url += f"?{query}"
+                
+                response = JSONResponse(
+                    {"detail": "Redirecting to HTTPS"},
+                    status_code=301,
+                    headers={"Location": url}
+                )
+                await response(scope, receive, send)
+                return
+        
+        await self.app(scope, receive, send)
+
 # ---------------------------------------------------------------------
 # FASTAPI APP
 # ---------------------------------------------------------------------
 app = FastAPI(title="Optimis Fiscale MVP", version="0.2.1")
 
-@app.on_event("startup")
-def create_tables():
-    print("▶ Creating database tables if missing…")
-    Base.metadata.create_all(bind=engine)
+# =====================================================
+# MIDDLEWARE CONFIGURATION
+# =====================================================
 
-# ---------------------------------------------------------------------
-# CORS
-# ---------------------------------------------------------------------
+# 1. HTTPS Redirect (must be first)
+app.add_middleware(HTTPSRedirectMiddleware)
+
+# 2. CORS (global configuration)
 _env_origins = os.getenv("ALLOWED_ORIGIN")
 if _env_origins:
     ALLOWED_ORIGINS = [o.strip() for o in _env_origins.split(",") if o.strip()]
@@ -50,9 +82,46 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600
 )
+
+# =====================================================
+# DATABASE SETUP (SINGLE STARTUP EVENT)
+# =====================================================
+@app.on_event("startup")
+def create_tables():
+    """Create all database tables on startup"""
+    print("🚀 Creating database tables if missing…")
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created successfully")
+
+# =====================================================
+# CORS HEADERS HELPER
+# =====================================================
+def get_cors_headers():
+    """Standard CORS headers for all responses"""
+    origin = ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
+    return {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*"
+    }
+
+# =====================================================
+# GLOBAL OPTIONS HANDLER
+# =====================================================
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    """Handle all OPTIONS requests globally"""
+    return JSONResponse(
+        content={"message": "OK"},
+        status_code=200,
+        headers=get_cors_headers()
+    )
 
 # ---------------------------------------------------------------------
 # AUTH & SECURITY
@@ -93,7 +162,7 @@ def set_session_cookie(resp: Response, token: str):
         key=COOKIE_NAME,
         value=token,
         httponly=True,
-        secure=True,
+        secure=True,  # HTTPS only
         samesite="none",
         path="/",
         max_age=3600,
@@ -112,12 +181,22 @@ def require_auth(request: Request):
 # ---------------------------------------------------------------------
 @app.get("/")
 def root():
-    return {"ok": True, "service": "optimis-fiscale-api"}
+    return JSONResponse(
+        content={
+            "ok": True,
+            "service": "optimis-fiscale-api",
+            "https": "enforced"
+        },
+        headers=get_cors_headers()
+    )
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return JSONResponse(
+        content={"status": "ok"},
+        headers=get_cors_headers()
+    )
 
 
 # ---------------------------------------------------------------------
@@ -138,7 +217,11 @@ async def analyze_trial_balance_endpoint(
     except Exception:
         raise HTTPException(400, "CSV illisible")
 
-    return analyze_trial_balance(df, turnover=turnover)
+    result = analyze_trial_balance(df, turnover=turnover)
+    return JSONResponse(
+        content=result.model_dump(),
+        headers=get_cors_headers()
+    )
 
 
 @app.post("/analyze/json", response_model=AnalysisResult)
@@ -149,7 +232,11 @@ async def analyze_json_endpoint(payload: dict):
     except Exception:
         raise HTTPException(400, "JSON invalide")
 
-    return analyze_trial_balance(df, payload.get("turnover"))
+    result = analyze_trial_balance(df, payload.get("turnover"))
+    return JSONResponse(
+        content=result.model_dump(),
+        headers=get_cors_headers()
+    )
 
 
 # ---------------------------------------------------------------------
@@ -167,13 +254,20 @@ def login(body: LoginBody, response: Response):
 
     token = make_token(body.company_id)
     set_session_cookie(response, token)
-    return {"ok": True, "company_id": body.company_id}
+    
+    return JSONResponse(
+        content={"ok": True, "company_id": body.company_id},
+        headers=get_cors_headers()
+    )
 
 
 @app.post("/auth/logout")
 def logout(response: Response):
     response.delete_cookie(COOKIE_NAME, path="/")
-    return {"ok": True}
+    return JSONResponse(
+        content={"ok": True},
+        headers=get_cors_headers()
+    )
 
 
 # ---------------------------------------------------------------------
@@ -239,7 +333,11 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
         ],
     }
     reply = await call_openai_with_retry(payload, OPENAI_API_KEY)
-    return ChatResponse(reply=reply)
+    
+    return JSONResponse(
+        content={"reply": reply},
+        headers=get_cors_headers()
+    )
 
 
 # ---------------------------------------------------------------------
@@ -324,4 +422,21 @@ async def test_audit(
     top = grp.sort_values("abs_balance", ascending=False).head(10)
     top = top.to_dict(orient="records")
 
-    return AuditResult(summary=summary, issues=issues, top_accounts=top)
+    result = AuditResult(summary=summary, issues=issues, top_accounts=top)
+    
+    return JSONResponse(
+        content=result.model_dump(),
+        headers=get_cors_headers()
+    )
+
+
+# =====================================================
+# GLOBAL EXCEPTION HANDLER
+# =====================================================
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers=get_cors_headers()
+    )
