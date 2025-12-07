@@ -9,134 +9,432 @@
   <link rel="icon" href="https://placehold.co/32x32/3a71ff/ffffff?text=O" />
 
   <style>
-    :root{
-      --bg:#0b1020;--card:#11172c;--muted:#a3adbf;--line:#243155;
-      --accent:#3a71ff;--text:#e6e9ef;--ok:#2ecc71;--err:#e74c3c;
+    :root {
+      --bg: #0b1020;
+      --card: #11172c;
+      --muted: #a3adbf;
+      --line: #243155;
+      --accent: #3a71ff;
+      --text: #e6e9ef;
+      --ok: #2ecc71;
+      --err: #e74c3c;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;background:var(--bg);color:var(--text);
-      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
+
+    * {
+      box-sizing: border-box;
     }
-    .wrap{max-width:980px;margin:0 auto;padding:20px}
-    header{
-      display:flex;align-items:center;justify-content:space-between;
-      gap:12px;margin-bottom:16px
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
     }
-    h1{font-size:22px;margin:0}
-    .sub{color:var(--muted);font-size:14px;margin-top:4px}
-    .card{
-      background:var(--card);border:1px solid var(--line);
-      border-radius:16px;padding:16px;box-shadow:0 12px 28px rgba(0,0,0,.25)
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
     }
-    .controls{display:grid;gap:12px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .field{
-      background:#0e1428;border:1px solid var(--line);border-radius:12px;
-      padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
     }
-    .btn,.btn-secondary{
-      display:inline-flex;align-items:center;gap:8px;padding:12px 16px;
-      border-radius:12px;font-weight:600;cursor:pointer;border:1px solid transparent
+
+    h1 {
+      font-size: 22px;
+      margin: 0;
     }
-    .btn{background:var(--accent);color:#fff}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .btn-secondary{
-      background:#0e1428;color:var(--text);border-color:var(--line)
+
+    h2 {
+      margin-top: 0;
     }
-    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    .status{font-size:13px;color:var(--muted)}
-    .status.ok{color:var(--ok)}
-    .status.err{color:var(--err)}
-    .tiles{
-      display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:12px;margin-top:14px
+
+    h3 {
+      margin-top: 0;
+      font-size: 16px;
     }
-    .tile{
-      background:#0e1428;border:1px solid var(--line);
-      border-radius:14px;padding:14px
+
+    .sub {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 4px;
     }
-    footer{margin-top:16px;color:var(--muted);font-size:13px}
-    .modal-backdrop{
-      position:fixed;inset:0;background:rgba(0,0,0,.5);
-      display:none;place-items:center;z-index:100
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
     }
-    .modal{
-      width:min(560px,92vw);background:var(--card);border:1px solid var(--line);
-      border-radius:16px;padding:16px
+
+    .controls {
+      display: grid;
+      gap: 12px;
     }
-    .gear{
-      background:#0e1428;border:1px solid var(--line);width:40px;height:40px;
-      display:grid;place-items:center;border-radius:12px;cursor:pointer
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      background: #0e1428;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .btn,
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-size: 14px;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #0e1428;
+      color: var(--text);
+      border-color: var(--line);
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    .status.err {
+      color: var(--err);
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .tile {
+      background: #0e1428;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 16px;
+      font-size: 14px;
+    }
+
+    .kv > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .kv span {
+      color: var(--muted);
+    }
+
+    .kv strong {
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #1a2340;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    footer {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      place-items: center;
+      z-index: 100;
+    }
+
+    .modal {
+      width: min(560px, 92vw);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .gear {
+      background: #0e1428;
+      border: 1px solid var(--line);
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .gear:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     /* CHAT */
-    #chat-btn{
-      position:fixed;right:20px;bottom:20px;z-index:30
-    }
-    #chat-btn button{
-      background:#3a71ff;color:#fff;border:0;padding:14px 16px;
-      border-radius:999px;font-weight:700;cursor:pointer;
-      box-shadow:0 8px 20px rgba(0,0,0,.35)
-    }
-    #chat-box{
-      position:fixed;right:20px;bottom:80px;width:min(380px,92vw);
-      background:#11172c;border:1px solid #243155;border-radius:16px;
-      overflow:hidden;display:none;z-index:30
-    }
-    #chat-head{
-      padding:12px 14px;font-weight:700;border-bottom:1px solid #243155;
-      display:flex;justify-content:space-between;align-items:center
-    }
-    #chat-head img{
-      width:28px;height:28px;border-radius:50%;border:1px solid #243155
-    }
-    #chat-log{
-      height:280px;overflow:auto;padding:12px;
-      display:flex;flex-direction:column;gap:10px
-    }
-    .msg{
-      padding:10px 12px;border-radius:12px;max-width:85%;
-      font-size:14px;line-height:1.35
-    }
-    .me{background:#3a71ff;color:#fff;align-self:flex-end}
-    .bot{
-      background:#0e1428;border:1px solid #243155;
-      color:#e6e9ef;align-self:flex-start
-    }
-    #chat-input{
-      display:flex;gap:8px;padding:10px;border-top:1px solid #243155;
-      background:#0e1428
-    }
-    #chat-input input{
-      flex:1;background:#0e1428;border:1px solid #33416d;color:#e6e9ef;
-      border-radius:10px;padding:10px
-    }
-    #chat-input button{
-      background:#3a71ff;color:#fff;border:0;padding:10px 14px;
-      border-radius:10px;font-weight:700;cursor:pointer
+    #chat-btn {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 30;
     }
 
-    .spinner{display:none;gap:8px;align-items:center}
-    .spinner.active{display:inline-flex}
-    .spinner .dot{
-      width:8px;height:8px;border-radius:50%;background:#3a71ff;
-      animation:b 1s infinite
-    }
-    .spinner .dot:nth-child(2){animation-delay:.15s}
-    .spinner .dot:nth-child(3){animation-delay:.3s}
-    @keyframes b{
-      0%,80%,100%{opacity:.2;transform:scale(.9)}
-      40%{opacity:1;transform:scale(1)}
+    #chat-btn button {
+      background: #3a71ff;
+      color: #fff;
+      border: 0;
+      padding: 14px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
     }
 
-    @media print{
-      #chat-btn,#chat-box,header,.controls,.modal-backdrop{display:none!important}
-      body{background:#fff;color:#000}
-      .card{border:0;box-shadow:none}
+    #chat-box {
+      position: fixed;
+      right: 20px;
+      bottom: 80px;
+      width: min(380px, 92vw);
+      background: #11172c;
+      border: 1px solid #243155;
+      border-radius: 16px;
+      overflow: hidden;
+      display: none;
+      z-index: 30;
     }
-    @media (max-width:960px){
-      .grid2{grid-template-columns:1fr}
+
+    #chat-head {
+      padding: 12px 14px;
+      font-weight: 700;
+      border-bottom: 1px solid #243155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #chat-head img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid #243155;
+    }
+
+    #chat-log {
+      height: 280px;
+      overflow: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg {
+      padding: 10px 12px;
+      border-radius: 12px;
+      max-width: 85%;
+      font-size: 14px;
+      line-height: 1.35;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .msg.me {
+      background: #3a71ff;
+      color: #fff;
+      align-self: flex-end;
+    }
+
+    .msg.bot {
+      background: #0e1428;
+      border: 1px solid #243155;
+      color: #e6e9ef;
+      align-self: flex-start;
+    }
+
+    #chat-input {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid #243155;
+      background: #0e1428;
+    }
+
+    #chat-input input {
+      flex: 1;
+      background: #0e1428;
+      border: 1px solid #33416d;
+      color: #e6e9ef;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    #chat-input button {
+      background: #3a71ff;
+      color: #fff;
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .spinner {
+      display: none;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .spinner.active {
+      display: inline-flex;
+    }
+
+    .spinner .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3a71ff;
+      animation: b 1s infinite;
+    }
+
+    .spinner .dot:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .spinner .dot:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes b {
+      0%,
+      80%,
+      100% {
+        opacity: 0.2;
+        transform: scale(0.9);
+      }
+      40% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #1a2340;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    @media print {
+      #chat-btn,
+      #chat-box,
+      header,
+      .controls,
+      .modal-backdrop {
+        display: none !important;
+      }
+
+      body {
+        background: #fff;
+        color: #000;
+      }
+
+      .card {
+        border: 0;
+        box-shadow: none;
+      }
+    }
+
+    @media (max-width: 960px) {
+      .grid2 {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -150,24 +448,27 @@
     </div>
 
     <div class="row" id="authbar">
-      <div class="gear" id="openSettings" title="Paramètres (API)">⚙️</div>
-      <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank">API Docs</a>
-      <button id="loginBtn" class="btn-secondary">Se connecter</button>
-      <span id="who" class="me" style="display:none"></span>
-      <button id="logoutBtn" class="btn-secondary" style="display:none">Se déconnecter</button>
+      <button class="gear" id="openSettings" type="button" title="Paramètres (API)">⚙️</button>
+      <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank" rel="noreferrer">
+        API Docs
+      </a>
+      <button id="loginBtn" class="btn-secondary" type="button">Se connecter</button>
+      <span id="who" class="badge" style="display:none"></span>
+      <button id="logoutBtn" class="btn-secondary" type="button" style="display:none">Se déconnecter</button>
     </div>
   </header>
 
   <div class="row" style="margin:8px 0;gap:8px">
-    <button class="btn-secondary" id="exportBtn">Exporter (PDF)</button>
-    <button class="btn-secondary" id="privacyBtn">Confidentialité</button>
-    <span class="spinner" id="globalSpin">
+    <button class="btn-secondary" id="exportBtn" type="button">Exporter (PDF)</button>
+    <button class="btn-secondary" id="privacyBtn" type="button">Confidentialité</button>
+    <span class="spinner" id="globalSpin" aria-hidden="true">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
     </span>
+    <span class="status" id="status" aria-live="polite">Prêt</span>
   </div>
 
   <!-- ================= ANALYSE COMPTABLE ================= -->
-  <div class="card">
+  <div class="card" aria-label="Analyse comptable">
     <div class="controls">
       <div class="grid2">
         <div class="field">
@@ -187,16 +488,17 @@
             <strong>Chiffre d'affaires (optionnel)</strong><br>
             <span class="hint">Pour affiner les ratios</span>
           </div>
-          <input id="turnover" type="number" step="0.01" placeholder="Ex : 100000" />
+          <input id="turnover" type="number" step="0.01" placeholder="Ex : 100000"
+                 aria-label="Chiffre d'affaires estimé">
         </div>
 
         <div class="field">
           <div>
-            <strong>Référentiel d’audit</strong><br>
+            <strong>Référentiel d'audit</strong><br>
             <span class="hint">Choisir IFRS ou US GAAP</span>
           </div>
-          <select id="framework" style="background:#0e1428;border:1px solid var(--line);
-            color:var(--text);border-radius:10px;padding:8px 10px;">
+          <select id="framework"
+                  style="background:#0e1428;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 10px;">
             <option value="IFRS" selected>IFRS</option>
             <option value="USGAAP">US GAAP</option>
           </select>
@@ -205,11 +507,10 @@
 
       <div class="row" style="justify-content:space-between">
         <div class="row">
-          <button id="analyzeBtn" class="btn">Analyser</button>
-          <button id="auditBtn" class="btn-secondary">Test Audit</button>
-          <button id="optimizeBtn" class="btn-secondary">Optimisation fiscale</button>
+          <button id="analyzeBtn" class="btn" type="button">Analyser</button>
+          <button id="auditBtn" class="btn-secondary" type="button">Test Audit</button>
+          <button id="optimizeBtn" class="btn-secondary" type="button">Optimisation fiscale</button>
         </div>
-        <div class="status" id="status">Prêt</div>
       </div>
     </div>
 
@@ -220,13 +521,23 @@
 
     <div id="results" style="display:none;margin-top:10px">
       <div class="tiles">
-        <div class="tile"><h3>KPIs</h3><div class="kv" id="kpi"></div></div>
-        <div class="tile"><h3>Fiscalité</h3><div class="kv" id="tax"></div></div>
+        <div class="tile">
+          <h3>KPIs</h3>
+          <div class="kv" id="kpi"></div>
+        </div>
+        <div class="tile">
+          <h3>Fiscalité</h3>
+          <div class="kv" id="tax"></div>
+        </div>
       </div>
 
       <div class="tiles" style="margin-top:12px">
-        <div class="tile"><h3>Audit — Résumé</h3><div class="kv" id="auditSummary"></div></div>
-        <div class="tile"><h3>Audit — Points relevés</h3>
+        <div class="tile">
+          <h3>Audit — Résumé</h3>
+          <div class="kv" id="auditSummary"></div>
+        </div>
+        <div class="tile">
+          <h3>Audit — Points relevés</h3>
           <ul id="auditIssues" style="margin:0;padding-left:18px"></ul>
         </div>
       </div>
@@ -243,92 +554,110 @@
     </div>
   </div>
 
-
   <!-- ================= IMPORT + DASHBOARD ================= -->
   <div class="grid2" style="margin-top:20px;align-items:flex-start;">
 
     <!-- LEFT: IMPORT -->
-    <div class="card">
+    <div class="card" aria-label="Importation des fichiers">
       <h2>Importation des fichiers</h2>
 
       <div class="field" style="display:block;">
         <strong>Relevé bancaire (.csv)</strong>
-        <div class="hint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
+        <div class="hint" style="margin-top:4px;">
           Doit contenir au minimum : <code>date,label,amount</code>.
         </div>
         <input type="file" id="bankFile" accept=".csv"
-          style="margin-top:8px;width:100%;padding:10px;background:#0e1428;
-          border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
-        <button class="btn" id="uploadBankBtn" style="margin-top:8px;">Importer relevé</button>
+               style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <button class="btn" id="uploadBankBtn" style="margin-top:8px;" type="button">Importer relevé</button>
         <div id="bankUploadStatus" class="status"></div>
       </div>
 
       <div class="field" style="display:block;margin-top:12px;">
         <strong>Factures de ventes (.csv / .xlsx)</strong>
-        <div class="hint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
+        <div class="hint" style="margin-top:4px;">
           Une ligne par facture : numéro, date, échéance, client, montant TTC.
         </div>
         <input type="file" id="salesFile" accept=".csv,.xlsx"
-          style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
-        <button class="btn-secondary" id="uploadSalesBtn" style="margin-top:8px;">Importer ventes</button>
+               style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <button class="btn-secondary" id="uploadSalesBtn" style="margin-top:8px;" type="button">Importer ventes</button>
         <div id="salesUploadStatus" class="status"></div>
       </div>
 
       <div class="field" style="display:block;margin-top:12px;">
-        <strong>Factures d’achats (.csv / .xlsx)</strong>
-        <div class="hint" style="font-size:12px;color:#a3adbf;margin-top:4px;">
+        <strong>Factures d'achats (.csv / .xlsx)</strong>
+        <div class="hint" style="margin-top:4px;">
           Une ligne par facture : numéro, date, échéance, fournisseur, montant TTC.
         </div>
         <input type="file" id="purchasesFile" accept=".csv,.xlsx"
-          style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
-        <button class="btn-secondary" id="uploadPurchasesBtn" style="margin-top:8px;">Importer achats</button>
+               style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
+        <button class="btn-secondary" id="uploadPurchasesBtn" style="margin-top:8px;" type="button">Importer achats</button>
         <div id="purchasesUploadStatus" class="status"></div>
       </div>
     </div>
 
-
     <!-- RIGHT: DASHBOARD -->
-    <div class="card">
+    <div class="card" aria-label="Suivi trésorerie et facturation">
       <h2>Suivi Trésorerie &amp; Facturation</h2>
 
       <div id="bankSummary" class="tiles">
-        <div class="tile"><h3>Solde bancaire</h3><div id="bankBalance">—</div></div>
-        <div class="tile"><h3>Entrées</h3><div id="bankInflows">—</div></div>
-        <div class="tile"><h3>Sorties</h3><div id="bankOutflows">—</div></div>
+        <div class="tile">
+          <h3>Solde bancaire</h3>
+          <div id="bankBalance">—</div>
+        </div>
+        <div class="tile">
+          <h3>Entrées</h3>
+          <div id="bankInflows">—</div>
+        </div>
+        <div class="tile">
+          <h3>Sorties</h3>
+          <div id="bankOutflows">—</div>
+        </div>
       </div>
 
       <div style="margin-top:16px">
         <h3>Résumé flux (Entrées / Sorties / Solde)</h3>
-        <canvas id="cashChart" height="100"></canvas>
+        <canvas id="cashChart" height="100" aria-label="Résumé des flux de trésorerie" role="img"></canvas>
       </div>
 
       <div style="margin-top:16px">
         <h3>Trésorerie quotidienne (historique)</h3>
-        <canvas id="dailyCashChart" height="100"></canvas>
+        <canvas id="dailyCashChart" height="100" aria-label="Trésorerie quotidienne" role="img"></canvas>
       </div>
 
       <div style="margin-top:16px">
         <h3>Prévisionnel de trésorerie (7 jours)</h3>
-        <canvas id="forecastCashChart" height="100"></canvas>
+        <canvas id="forecastCashChart" height="100" aria-label="Prévisionnel de trésorerie" role="img"></canvas>
       </div>
 
       <div class="tiles" style="margin-top:20px">
         <div class="tile">
           <h3>Factures ventes</h3>
-          <table id="salesTable" style="width:100%;font-size:13px">
-            <thead><tr>
-              <th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th>
-            </tr></thead>
+          <table id="salesTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Échéance</th>
+                <th>Montant</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
             <tbody></tbody>
           </table>
         </div>
 
         <div class="tile">
           <h3>Factures achats</h3>
-          <table id="purchasesTable" style="width:100%;font-size:13px">
-            <thead><tr>
-              <th>#</th><th>Date</th><th>Échéance</th><th>Montant</th><th>Statut</th>
-            </tr></thead>
+          <table id="purchasesTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Échéance</th>
+                <th>Montant</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
             <tbody></tbody>
           </table>
         </div>
@@ -338,68 +667,65 @@
         <h3>Alertes fiscales &amp; paiements</h3>
         <ul id="alertsList" style="margin:0;padding-left:18px"></ul>
       </div>
-
     </div>
   </div>
-
 
   <footer>© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.</footer>
 </div>
 
-
 <!-- PRIVACY MODAL -->
-<div class="modal-backdrop" id="privacyModal" style="display:none">
-  <div class="modal">
-    <h2>Confidentialité</h2>
-    <p>Les fichiers sont traités en mémoire uniquement pendant l’analyse. Aucune donnée n’est stockée.</p>
+<div class="modal-backdrop" id="privacyModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+    <h2 id="privacyTitle">Confidentialité</h2>
+    <p>Les fichiers sont traités en mémoire uniquement pendant l'analyse. Aucune donnée n'est stockée.</p>
     <div class="row" style="justify-content:flex-end">
-      <button class="btn" id="closePrivacy">Fermer</button>
+      <button class="btn" id="closePrivacy" type="button">Fermer</button>
     </div>
   </div>
 </div>
 
 <!-- LOGIN MODAL -->
-<div class="modal-backdrop" id="loginModal" style="display:none">
-  <div class="modal">
-    <h2>Connexion</h2>
+<div class="modal-backdrop" id="loginModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <h2 id="loginTitle">Connexion</h2>
 
     <div class="field" style="margin-top:8px;display:block;">
-      <label><strong>Identifiant entreprise</strong></label>
+      <label for="companyId"><strong>Identifiant entreprise</strong></label>
       <input id="companyId" type="text" placeholder="ex: demo"
-        style="width:100%;margin-top:8px;padding:10px;border-radius:10px;
-        background:#0e1428;border:1px solid var(--line);color:#e6e9ef;">
+             style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;">
     </div>
 
     <div class="field" style="margin-top:8px;display:block;">
-      <label><strong>Mot de passe</strong></label>
+      <label for="companyPwd"><strong>Mot de passe</strong></label>
       <input id="companyPwd" type="password" placeholder="••••••••"
-        style="width:100%;margin-top:8px;padding:10px;border-radius:10px;
-        background:#0e1428;border:1px solid var(--line);color:#e6e9ef;">
+             style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;">
     </div>
 
     <div class="row" style="margin-top:12px;justify-content:flex-end;">
-      <button class="btn-secondary" id="cancelLogin">Annuler</button>
-      <button class="btn" id="doLogin">Connexion</button>
+      <button class="btn-secondary" id="cancelLogin" type="button">Annuler</button>
+      <button class="btn" id="doLogin" type="button">Connexion</button>
     </div>
   </div>
 </div>
 
 <!-- CHAT BUTTON -->
-<div id="chat-btn"><button id="openChat">Chat</button></div>
+<div id="chat-btn">
+  <button id="openChat" type="button" aria-haspopup="dialog" aria-controls="chat-box">Chat</button>
+</div>
 
 <!-- CHAT BOX -->
-<div id="chat-box">
+<div id="chat-box" role="dialog" aria-modal="false" aria-labelledby="chatTitle">
   <div id="chat-head">
     <div class="name" style="display:flex;gap:8px;align-items:center">
-      <img src="https://placehold.co/56x56/3a71ff/ffffff?text=A" alt="Albert">
-      <span>Albert — Assistant Fiscal</span>
+      <img src="https://placehold.co/56x56/3a71ff/ffffff?text=A" alt="Avatar Albert">
+      <span id="chatTitle">Albert — Assistant Fiscal</span>
     </div>
-    <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px">Fermer</button>
+    <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px" type="button">Fermer</button>
   </div>
   <div id="chat-log"></div>
   <div id="chat-input">
-    <input id="chatText" type="text" placeholder="Posez votre question…" />
-    <button id="sendChat">Envoyer</button>
+    <input id="chatText" type="text" placeholder="Posez votre question…" aria-label="Message pour le chat">
+    <button id="sendChat" type="button">Envoyer</button>
   </div>
 </div>
 
@@ -410,684 +736,721 @@
 /* ===============================
    BASIC HELPERS
 ================================*/
-const $ = id => document.getElementById(id);
-const euro = v =>
-  (typeof v === "number" && isFinite(v))
-    ? v.toLocaleString(undefined,{style:"currency",currency:"EUR"})
-    : "—";
-const pct = v =>
-  (v ?? v === 0)
-    ? Number(v).toLocaleString(undefined,{maximumFractionDigits:2}) + "%"
-    : "—";
+(function () {
+  const $ = id => document.getElementById(id);
 
-const DEFAULT_API = "https://optimis-fiscale-production.up.railway.app";
-const getApiBase = () => DEFAULT_API;
+  const euro = v =>
+    (typeof v === "number" && isFinite(v))
+      ? v.toLocaleString(undefined, { style: "currency", currency: "EUR" })
+      : "—";
 
-const setStatus = (msg, cls) => {
-  const el = $("status");
-  if (!el) return;
-  el.textContent = msg;
-  el.className = "status" + (cls ? " " + cls : "");
-};
-const spin = s => $("globalSpin")?.classList.toggle("active", !!s);
+  const pct = v =>
+    (v ?? v === 0)
+      ? Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%"
+      : "—";
 
+  const DEFAULT_API = "https://optimis-fiscale-production.up.railway.app";
+  const getApiBase = () => DEFAULT_API;
 
-/* ===============================
-   PRIVACY MODAL
-================================*/
-$("exportBtn").onclick = () => window.print();
-$("privacyBtn").onclick = () => $("privacyModal").style.display = "grid";
-$("closePrivacy").onclick = () => $("privacyModal").style.display = "none";
-$("privacyModal").addEventListener("click", e => {
-  if (e.target === e.currentTarget) e.currentTarget.style.display = "none";
-});
-
-
-/* ===============================
-   CSV PREVIEW (TRIAL BALANCE)
-================================*/
-$("csvInput").addEventListener("change", () => {
-  const f = $("csvInput").files?.[0];
-  if (!f) {
-    $("csvPreview").style.display = "none";
-    return;
-  }
-
-  $("fileName").style.display = "inline-block";
-  $("fileName").textContent = f.name;
-
-  const r = new FileReader();
-  r.onload = () => {
-    const text = String(r.result || "");
-    const rows = text.trim().split(/\r?\n/).slice(0,11)
-      .map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/));
-
-    if (!rows.length) return;
-
-    $("csvPreview").style.display = "block";
-    $("csvTableWrap").innerHTML =
-      `<table>
-        <thead>${rows[0].map(h => `<th>${h}</th>`).join("")}</thead>
-        <tbody>${
-          rows.slice(1)
-            .map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`)
-            .join("")
-        }</tbody>
-      </table>`;
+  const setStatus = (msg, cls) => {
+    const el = $("status");
+    if (!el) return;
+    el.textContent = msg;
+    el.className = "status" + (cls ? " " + cls : "");
   };
-  r.readAsText(f);
-});
 
+  const spin = s => $("globalSpin")?.classList.toggle("active", !!s);
 
-/* ===============================
-   ANALYZE CSV
-================================*/
-async function runAnalyze() {
-  const base = getApiBase();
-  const file = $("csvInput").files?.[0];
-  const t = $("turnover").value;
+  /* ===============================
+     PRIVACY MODAL
+  =================================*/
+  $("exportBtn").onclick = () => window.print();
+  $("privacyBtn").onclick = () => $("privacyModal").style.display = "grid";
+  $("closePrivacy").onclick = () => $("privacyModal").style.display = "none";
+  $("privacyModal").addEventListener("click", e => {
+    if (e.target === e.currentTarget) e.currentTarget.style.display = "none";
+  });
 
-  if (!file) {
-    setStatus("Veuillez choisir un CSV","err");
-    return;
-  }
+  /* ===============================
+     CSV PREVIEW (TRIAL BALANCE)
+  =================================*/
+  $("csvInput").addEventListener("change", () => {
+    const f = $("csvInput").files?.[0];
+    if (!f) {
+      $("csvPreview").style.display = "none";
+      $("fileName").style.display = "none";
+      $("fileName").textContent = "";
+      return;
+    }
 
-  const fd = new FormData();
-  fd.append("file", file);
-  if (t) fd.append("turnover", t);
+    $("fileName").style.display = "inline-block";
+    $("fileName").textContent = f.name;
 
-  spin(true);
-  setStatus("Analyse en cours…");
-  $("analyzeBtn").disabled = true;
+    const r = new FileReader();
+    r.onload = () => {
+      const text = String(r.result || "");
+      const rows = text.trim().split(/\r?\n/).slice(0, 11)
+        .map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/));
 
-  try {
-    const r = await fetch(base + "/analyze/trial-balance", {
-      method:"POST",
-      body: fd,
-      credentials:"include"
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d?.detail || "Erreur API");
+      if (!rows.length) {
+        $("csvPreview").style.display = "none";
+        return;
+      }
 
-    $("results").style.display = "block";
-    const k = d.kpi || {};
-    const tx = d.tax || {};
+      $("csvPreview").style.display = "block";
+      $("csvTableWrap").innerHTML =
+        `<table>
+          <thead>${rows[0].map(h => `<th>${h}</th>`).join("")}</thead>
+          <tbody>${
+            rows.slice(1)
+              .map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`)
+              .join("")
+          }</tbody>
+        </table>`;
+    };
+    r.readAsText(f);
+  });
 
-    $("kpi").innerHTML = `
-      <div><span>CA</span><strong>${euro(k.revenue)}</strong></div>
-      <div><span>Marge brute</span><strong>${euro(k.gross_margin)}</strong></div>
-      <div><span>EBITDA</span><strong>${euro(k.ebitda_approx)} (${pct(k.ebitda_margin_pct)})</strong></div>
-      <div><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>
-    `;
+  /* ===============================
+     ANALYZE CSV
+  =================================*/
+  async function runAnalyze() {
+    const base = getApiBase();
+    const file = $("csvInput").files?.[0];
+    const t = $("turnover").value;
 
-    $("tax").innerHTML = `
-      <div><span>IS estimé</span><strong>${euro(tx.corporate_income_tax)}</strong></div>
-      <div><span>TVA nette</span><strong>${euro(tx.vat_balance)}</strong></div>
-    `;
+    if (!file) {
+      setStatus("Veuillez choisir un CSV", "err");
+      return;
+    }
 
-    setStatus("Analyse terminée","ok");
-  } catch(e) {
-    setStatus(e.message || "Erreur","err");
-  } finally {
-    spin(false);
-    $("analyzeBtn").disabled = false;
-  }
-}
-$("analyzeBtn").onclick = runAnalyze;
+    const fd = new FormData();
+    fd.append("file", file);
+    if (t) fd.append("turnover", t);
 
-
-/* ===============================
-   AUDIT
-================================*/
-async function runAudit() {
-  const base = getApiBase();
-  const f = $("csvInput").files?.[0];
-  const fw = $("framework").value;
-
-  if (!f) {
-    setStatus("Veuillez choisir un CSV","err");
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append("file", f);
-  fd.append("standard", fw);
-
-  spin(true);
-  setStatus("Audit en cours…");
-  $("auditBtn").disabled = true;
-
-  try {
-    const r = await fetch(base + "/audit/test", {
-      method:"POST",
-      body: fd,
-      credentials:"include"
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d?.detail || "Erreur API");
-
-    $("results").style.display = "block";
-    const s = d.summary || {};
-    const issues = d.issues || [];
-    const top = d.top_accounts || [];
-
-    $("auditSummary").innerHTML = `
-      <div>Total lignes: <strong>${s.total_rows}</strong></div>
-      <div>Débits: <strong>${euro(s.total_debit)}</strong></div>
-      <div>Crédits: <strong>${euro(s.total_credit)}</strong></div>
-      <div>Écart: <strong>${euro(s.imbalance)}</strong></div>
-      <div>Référentiel: <strong>${s.framework}</strong></div>
-    `;
-
-    $("auditIssues").innerHTML =
-      issues.map(i =>
-        `<li><strong>[${i.severity.toUpperCase()}]</strong> ${i.message}${i.count ? " ("+i.count+")" : ""}</li>`
-      ).join("");
-
-    $("auditTop").innerHTML = `
-      <table>
-        <thead><tr><th>Compte</th><th>Libellé</th><th>Solde</th><th>Absolu</th></tr></thead>
-        <tbody>${
-          top.map(t =>
-            `<tr>
-              <td>${t.account}</td>
-              <td>${t.label}</td>
-              <td>${euro(t.balance)}</td>
-              <td>${euro(t.abs_balance)}</td>
-            </tr>`
-          ).join("")
-        }</tbody>
-      </table>
-    `;
-
-    setStatus("Audit terminé","ok");
-  } catch(e) {
-    setStatus(e.message || "Erreur","err");
-  } finally {
-    spin(false);
-    $("auditBtn").disabled = false;
-  }
-}
-$("auditBtn").onclick = runAudit;
-
-
-/* ===============================
-   LOCAL FISCAL OPTIMIZATION
-================================*/
-function localOptimizeFromKPIs(kpi, tax) {
-  const out = [];
-  const rev = +kpi.revenue || 0;
-  const gm  = +kpi.gross_margin || 0;
-  const ebitdaPct = +kpi.ebitda_margin_pct || 0;
-  const net  = +kpi.net_result || 0;
-  const vat  = +(tax?.vat_balance ?? 0);
-
-  if (rev > 0 && gm / (rev || 1) < 0.30)
-    out.push("Marge brute faible: renégocier achats, optimiser transport, revoir stocks.");
-  if (ebitdaPct < 10)
-    out.push("Vérifier CAPEX/OPEX, abonnements, assurances.");
-  if (net < 0)
-    out.push("Déficit: examiner report en avant / arrière.");
-
-  out.push("Examiner éligibilité CIR/CII selon projets R&D.");
-  out.push("Vérifier aides JEI/JEU, exonérations régionales.");
-
-  if (vat > 0) out.push("TVA collectée > déductible: revoir régime et récupération.");
-  if (vat < 0) out.push("Crédit de TVA: envisager remboursement régulier.");
-
-  if (net > 0) out.push("Arbitrer rémunération vs dividendes vs intéressement.");
-  out.push("Revoir provisions clients douteux et stocks.");
-
-  return out;
-}
-
-async function runOptimize() {
-  const base = getApiBase();
-  const file = $("csvInput").files?.[0];
-  const t = $("turnover")?.value;
-
-  if (!file) {
-    setStatus("Veuillez choisir un CSV","err");
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append("file", file);
-  if (t) fd.append("turnover", t);
-
-  spin(true);
-  setStatus("Analyse pour optimisation…");
-  $("optimizeBtn").disabled = true;
-
-  try {
-    const r = await fetch(base + "/analyze/trial-balance", {
-      method:"POST",
-      body: fd,
-      credentials:"include"
-    });
-    const analysis = await r.json();
-    if (!r.ok) throw new Error(analysis?.detail || "Erreur analyse");
-
-    $("results").style.display = "block";
-
-    const k = analysis.kpi || {};
-    const tx = analysis.tax || {};
-
-    const items = localOptimizeFromKPIs(k, tx);
-
-    $("optimizeOut").innerHTML =
-      `<ul>${items.map(x => `<li>${x}</li>`).join("")}</ul>
-       <div style="margin-top:8px;font-size:12px;color:#a3adbf">
-         Note: recommandations indicatives selon votre situation.
-       </div>`;
-
-    setStatus("Optimisation (locale) prête","ok");
-  } catch(e) {
-    setStatus(e.message || "Erreur","err");
-    $("optimizeOut").textContent = "Erreur: " + (e.message || e);
-  } finally {
-    $("optimizeBtn").disabled = false;
-    spin(false);
-  }
-}
-$("optimizeBtn").onclick = runOptimize;
-
-
-/* ===============================
-   LOGIN / LOGOUT
-================================*/
-function openLogin(){ $("loginModal").style.display = "grid"; }
-function closeLogin(){ $("loginModal").style.display = "none"; }
-
-$("loginBtn").onclick = openLogin;
-$("cancelLogin").onclick = closeLogin;
-
-$("doLogin").onclick = async () => {
-  const base = getApiBase();
-  const id = $("companyId").value.trim();
-  const pwd = $("companyPwd").value;
-
-  if (!id || !pwd) {
-    setStatus("Identifiant et mot de passe requis","err");
-    return;
-  }
-
-  spin(true);
-  setStatus("Connexion…");
-
-  try {
-    const r = await fetch(base + "/auth/login", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      credentials:"include",
-      body:JSON.stringify({ company_id:id, password:pwd })
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d?.detail || "Échec connexion");
-
-    closeLogin();
-    $("who").style.display = "inline-block";
-    $("who").textContent = "Connecté: " + d.company_id;
-
-    $("loginBtn").style.display = "none";
-    $("logoutBtn").style.display = "inline-flex";
-    setStatus("Connecté","ok");
-  } catch(e) {
-    setStatus(e.message || "Erreur connexion","err");
-  } finally {
-    spin(false);
-  }
-};
-
-$("logoutBtn").onclick = async () => {
-  const base = getApiBase();
-  try {
     spin(true);
-    await fetch(base + "/auth/logout", {
-      method:"POST",
-      credentials:"include"
-    });
-  } finally {
-    $("who").style.display = "none";
-    $("who").textContent = "";
-    $("loginBtn").style.display = "inline-flex";
-    $("logoutBtn").style.display = "none";
-    setStatus("Déconnecté","ok");
-    spin(false);
+    setStatus("Analyse en cours…");
+    $("analyzeBtn").disabled = true;
+
+    try {
+      const r = await fetch(base + "/analyze/trial-balance", {
+        method: "POST",
+        body: fd,
+        credentials: "include"
+      });
+
+      const d = await r.json().catch(() => ({}));
+
+      if (!r.ok) throw new Error(d?.detail || "Erreur API");
+
+      $("results").style.display = "block";
+      const k = d.kpi || {};
+      const tx = d.tax || {};
+
+      $("kpi").innerHTML = `
+        <div><span>CA</span><strong>${euro(k.revenue)}</strong></div>
+        <div><span>Marge brute</span><strong>${euro(k.gross_margin)}</strong></div>
+        <div><span>EBITDA</span><strong>${euro(k.ebitda_approx)} (${pct(k.ebitda_margin_pct)})</strong></div>
+        <div><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>
+      `;
+
+      $("tax").innerHTML = `
+        <div><span>IS estimé</span><strong>${euro(tx.corporate_income_tax)}</strong></div>
+        <div><span>TVA nette</span><strong>${euro(tx.vat_balance)}</strong></div>
+      `;
+
+      setStatus("Analyse terminée", "ok");
+    } catch (e) {
+      setStatus(e.message || "Erreur", "err");
+    } finally {
+      spin(false);
+      $("analyzeBtn").disabled = false;
+    }
   }
-};
+  $("analyzeBtn").onclick = runAnalyze;
 
+  /* ===============================
+     AUDIT
+  =================================*/
+  async function runAudit() {
+    const base = getApiBase();
+    const f = $("csvInput").files?.[0];
+    const fw = $("framework").value;
 
-/* ===============================
-   CHAT
-================================*/
-const chatBox = $("chat-box");
-const chatLog = $("chat-log");
-const chatText = $("chatText");
+    if (!f) {
+      setStatus("Veuillez choisir un CSV", "err");
+      return;
+    }
 
-const appendMsg = (role, text) => {
-  const div = document.createElement("div");
-  div.className = "msg " + (role === "user" ? "me" : "bot");
-  div.textContent = text;
-  chatLog.appendChild(div);
-  chatLog.scrollTop = chatLog.scrollHeight;
-};
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("standard", fw);
 
-const isLoggedIn = () => $("logoutBtn").style.display !== "none";
+    spin(true);
+    setStatus("Audit en cours…");
+    $("auditBtn").disabled = true;
 
-$("openChat").onclick = () => {
-  if (!isLoggedIn()) {
-    setStatus("Veuillez vous connecter pour utiliser le chat","err");
-    openLogin();
-    return;
+    try {
+      const r = await fetch(base + "/audit/test", {
+        method: "POST",
+        body: fd,
+        credentials: "include"
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.detail || "Erreur API");
+
+      $("results").style.display = "block";
+      const s = d.summary || {};
+      const issues = d.issues || [];
+      const top = d.top_accounts || [];
+
+      $("auditSummary").innerHTML = `
+        <div><span>Total lignes</span><strong>${s.total_rows ?? "—"}</strong></div>
+        <div><span>Débits</span><strong>${euro(s.total_debit)}</strong></div>
+        <div><span>Crédits</span><strong>${euro(s.total_credit)}</strong></div>
+        <div><span>Écart</span><strong>${euro(s.imbalance)}</strong></div>
+        <div><span>Référentiel</span><strong>${s.framework || fw}</strong></div>
+      `;
+
+      $("auditIssues").innerHTML =
+        issues.length
+          ? issues.map(i =>
+              `<li><strong>[${(i.severity || "").toString().toUpperCase()}]</strong> ${i.message || ""}${
+                i.count ? " (" + i.count + ")" : ""
+              }</li>`
+            ).join("")
+          : "<li>Aucun point d'audit majeur relevé</li>";
+
+      $("auditTop").innerHTML = `
+        <table>
+          <thead><tr><th>Compte</th><th>Libellé</th><th>Solde</th><th>Absolu</th></tr></thead>
+          <tbody>${
+            top.map(t =>
+              `<tr>
+                <td>${t.account}</td>
+                <td>${t.label}</td>
+                <td>${euro(t.balance)}</td>
+                <td>${euro(t.abs_balance)}</td>
+              </tr>`
+            ).join("")
+          }</tbody>
+        </table>
+      `;
+
+      setStatus("Audit terminé", "ok");
+    } catch (e) {
+      setStatus(e.message || "Erreur", "err");
+    } finally {
+      spin(false);
+      $("auditBtn").disabled = false;
+    }
   }
-  chatBox.style.display = "block";
-  chatText.focus();
-};
-$("closeChat").onclick = () => chatBox.style.display = "none";
+  $("auditBtn").onclick = runAudit;
 
-$("sendChat").onclick = sendChat;
-chatText.addEventListener("keydown", e => {
-  if (e.key === "Enter") sendChat();
-});
+  /* ===============================
+     LOCAL FISCAL OPTIMIZATION
+  =================================*/
+  function localOptimizeFromKPIs(kpi, tax) {
+    const out = [];
+    const rev = +kpi.revenue || 0;
+    const gm = +kpi.gross_margin || 0;
+    const ebitdaPct = +kpi.ebitda_margin_pct || 0;
+    const net = +kpi.net_result || 0;
+    const vat = +(tax?.vat_balance ?? 0);
 
-async function sendChat(){
-  const base = getApiBase();
-  const text = chatText.value.trim();
-  if (!text) return;
+    if (rev > 0 && gm / (rev || 1) < 0.30) {
+      out.push("Marge brute faible : renégocier les achats, optimiser les coûts logistiques (transport, stockage) et revoir la gestion des stocks.");
+    }
+    if (ebitdaPct < 10) {
+      out.push("EBITDA faible : analyser les charges récurrentes (abonnements, logiciels, loyers, assurances) et les rationaliser.");
+    }
+    if (net < 0) {
+      out.push("Résultat net déficitaire : vérifier les possibilités de report des déficits (en avant / en arrière) et l'impact sur l'IS.");
+    }
 
-  appendMsg("user", text);
-  chatText.value = "";
-  setStatus("Albert réfléchit…");
+    out.push("Analyser l'éligibilité aux dispositifs de type CIR/CII en cas de projets R&D ou d'innovation.");
+    out.push("Vérifier les régimes JEI/JEU et autres exonérations ou réductions possibles au niveau local (ZFU, ZRR, etc.).");
 
-  try {
-    const r = await fetch(base + "/chat", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      credentials:"include",
-      body:JSON.stringify({ messages:[{ role:"user", content:text }] })
-    });
+    if (vat > 0) {
+      out.push("TVA collectée significativement supérieure à la TVA déductible : revoir le régime de TVA et les possibilités d'optimisation (périodicité, acomptes, etc.).");
+    }
+    if (vat < 0) {
+      out.push("Crédit de TVA récurrent : envisager un remboursement de crédit de TVA plutôt qu'un simple report.");
+    }
 
-    if (r.status === 401) {
-      setStatus("Session expirée. Veuillez vous reconnecter.","err");
+    if (net > 0) {
+      out.push("Arbitrer entre rémunération, dividendes, intéressement et participation pour optimiser la fiscalité globale dirigeant / société.");
+    }
+
+    out.push("Revoir les provisions (clients douteux, stocks) et s'assurer qu'elles sont correctement documentées pour limiter le risque fiscal.");
+    return out;
+  }
+
+  async function runOptimize() {
+    const base = getApiBase();
+    const file = $("csvInput").files?.[0];
+    const t = $("turnover")?.value;
+
+    if (!file) {
+      setStatus("Veuillez choisir un CSV", "err");
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("file", file);
+    if (t) fd.append("turnover", t);
+
+    spin(true);
+    setStatus("Analyse pour optimisation…");
+    $("optimizeBtn").disabled = true;
+
+    try {
+      const r = await fetch(base + "/analyze/trial-balance", {
+        method: "POST",
+        body: fd,
+        credentials: "include"
+      });
+      const analysis = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(analysis?.detail || "Erreur analyse");
+
+      $("results").style.display = "block";
+
+      const k = analysis.kpi || {};
+      const tx = analysis.tax || {};
+
+      const items = localOptimizeFromKPIs(k, tx);
+
+      $("optimizeOut").innerHTML =
+        `<ul>${items.map(x => `<li>${x}</li>`).join("")}</ul>
+         <div style="margin-top:8px;font-size:12px;color:#a3adbf">
+           Note : recommandations indicatives, à valider avec votre conseil fiscal habituel.
+         </div>`;
+
+      setStatus("Optimisation (locale) prête", "ok");
+    } catch (e) {
+      setStatus(e.message || "Erreur", "err");
+      $("optimizeOut").textContent = "Erreur : " + (e.message || e);
+    } finally {
+      $("optimizeBtn").disabled = false;
+      spin(false);
+    }
+  }
+  $("optimizeBtn").onclick = runOptimize;
+
+  /* ===============================
+     LOGIN / LOGOUT
+  =================================*/
+  function openLogin() {
+    $("loginModal").style.display = "grid";
+  }
+  function closeLogin() {
+    $("loginModal").style.display = "none";
+  }
+
+  $("loginBtn").onclick = openLogin;
+  $("cancelLogin").onclick = closeLogin;
+
+  $("doLogin").onclick = async () => {
+    const base = getApiBase();
+    const id = $("companyId").value.trim();
+    const pwd = $("companyPwd").value;
+
+    if (!id || !pwd) {
+      setStatus("Identifiant et mot de passe requis", "err");
+      return;
+    }
+
+    spin(true);
+    setStatus("Connexion…");
+    try {
+      const r = await fetch(base + "/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ company_id: id, password: pwd })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.detail || "Échec connexion");
+
+      closeLogin();
+      $("who").style.display = "inline-block";
+      $("who").textContent = "Connecté : " + (d.company_id || id);
+
+      $("loginBtn").style.display = "none";
+      $("logoutBtn").style.display = "inline-flex";
+      setStatus("Connecté", "ok");
+
+      // Rafraîchit le dashboard après connexion
+      await loadDashboard();
+    } catch (e) {
+      setStatus(e.message || "Erreur connexion", "err");
+    } finally {
+      spin(false);
+    }
+  };
+
+  $("logoutBtn").onclick = async () => {
+    const base = getApiBase();
+    try {
+      spin(true);
+      await fetch(base + "/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+    } finally {
+      $("who").style.display = "none";
+      $("who").textContent = "";
+      $("loginBtn").style.display = "inline-flex";
+      $("logoutBtn").style.display = "none";
+      setStatus("Déconnecté", "ok");
+      spin(false);
+    }
+  };
+
+  /* ===============================
+     CHAT
+  =================================*/
+  const chatBox = $("chat-box");
+  const chatLog = $("chat-log");
+  const chatText = $("chatText");
+
+  const appendMsg = (role, text) => {
+    const div = document.createElement("div");
+    div.className = "msg " + (role === "user" ? "me" : "bot");
+    div.textContent = text;
+    chatLog.appendChild(div);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  };
+
+  const isLoggedIn = () => $("logoutBtn").style.display !== "none";
+
+  $("openChat").onclick = () => {
+    if (!isLoggedIn()) {
+      setStatus("Veuillez vous connecter pour utiliser le chat", "err");
       openLogin();
       return;
     }
+    chatBox.style.display = "block";
+    chatText.focus();
+  };
 
-    const d = await r.json();
-    if (!r.ok) throw new Error(d?.detail || "Erreur API");
+  $("closeChat").onclick = () => {
+    chatBox.style.display = "none";
+  };
 
-    appendMsg("assistant", d.reply || "(réponse vide)");
-    setStatus("Prêt");
-  } catch(e) {
-    appendMsg("assistant", "Erreur: " + (e.message || e));
-    setStatus("Erreur chat","err");
-  }
-}
-
-
-/* ===============================
-   UPLOAD FILES (BANK + INVOICES)
-================================*/
-async function uploadFile(inputId, endpoint, statusId){
-  const file = $(inputId).files?.[0];
-  const status = $(statusId);
-
-  if (!file) {
-    status.textContent = "Veuillez choisir un fichier";
-    status.className = "status err";
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append("file", file);
-
-  try {
-    spin(true);
-    status.textContent = "Importation en cours…";
-    status.className = "status";
-
-    const r = await fetch(getApiBase() + endpoint, {
-      method:"POST",
-      body:fd,
-      credentials:"include"
-    });
-
-    if (r.ok) {
-      status.textContent = "✅ Importation réussie";
-      status.className = "status ok";
-      await loadDashboard();
-    } else {
-      const err = await r.text();
-      status.textContent = "❌ Erreur : " + err.slice(0,150);
-      status.className = "status err";
+  $("sendChat").onclick = sendChat;
+  chatText.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendChat();
     }
-  } catch(e) {
-    status.textContent = "❌ " + (e.message || "Erreur réseau");
-    status.className = "status err";
-  } finally {
-    spin(false);
+  });
+
+  async function sendChat() {
+    const base = getApiBase();
+    const text = chatText.value.trim();
+    if (!text) return;
+
+    appendMsg("user", text);
+    chatText.value = "";
+    setStatus("Albert réfléchit…");
+
+    try {
+      const r = await fetch(base + "/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ messages: [{ role: "user", content: text }] })
+      });
+
+      if (r.status === 401) {
+        setStatus("Session expirée. Veuillez vous reconnecter.", "err");
+        openLogin();
+        return;
+      }
+
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.detail || "Erreur API");
+
+      appendMsg("assistant", d.reply || "(réponse vide)");
+      setStatus("Prêt");
+    } catch (e) {
+      appendMsg("assistant", "Erreur : " + (e.message || e));
+      setStatus("Erreur chat", "err");
+    }
   }
-}
 
-$("uploadBankBtn").onclick =
-  () => uploadFile("bankFile", "/bank/upload", "bankUploadStatus");
-$("uploadSalesBtn").onclick =
-  () => uploadFile("salesFile", "/invoices/sales", "salesUploadStatus");
-$("uploadPurchasesBtn").onclick =
-  () => uploadFile("purchasesFile", "/invoices/purchases", "purchasesUploadStatus");
+  /* ===============================
+     UPLOAD FILES (BANK + INVOICES)
+  =================================*/
+  async function uploadFile(inputId, endpoint, statusId) {
+    const file = $(inputId).files?.[0];
+    const status = $(statusId);
+    if (!file) {
+      status.textContent = "Veuillez choisir un fichier";
+      status.className = "status err";
+      return;
+    }
 
+    const fd = new FormData();
+    fd.append("file", file);
 
-/* ===============================
-   DASHBOARD: SUMMARY + TABLES
-================================*/
-let cashSummaryChart = null;
-let cashDailyChart = null;
-let cashForecastChart = null;
+    try {
+      spin(true);
+      status.textContent = "Importation en cours…";
+      status.className = "status";
 
-async function loadDashboard(){
-  const apiBase = getApiBase();
+      const r = await fetch(getApiBase() + endpoint, {
+        method: "POST",
+        body: fd,
+        credentials: "include"
+      });
 
-  try {
-    const [bank, sales, purchases, alerts] = await Promise.all([
-      fetch(apiBase + "/bank/summary").then(r => r.json()),
-      fetch(apiBase + "/invoices/sales").then(r => r.json()),
-      fetch(apiBase + "/invoices/purchases").then(r => r.json()),
-      fetch(apiBase + "/alerts").then(r => r.json())
-    ]);
+      if (r.ok) {
+        status.textContent = "✅ Importation réussie";
+        status.className = "status ok";
+        await loadDashboard();
+      } else {
+        const err = await r.text();
+        status.textContent = "❌ Erreur : " + err.slice(0, 150);
+        status.className = "status err";
+      }
+    } catch (e) {
+      status.textContent = "❌ " + (e.message || "Erreur réseau");
+      status.className = "status err";
+    } finally {
+      spin(false);
+    }
+  }
 
-    $("bankBalance").textContent = euro(bank.balance ?? 0);
-    $("bankInflows").textContent = euro(bank.inflows ?? 0);
-    $("bankOutflows").textContent = euro(bank.outflows ?? 0);
+  $("uploadBankBtn").onclick =
+    () => uploadFile("bankFile", "/bank/upload", "bankUploadStatus");
+  $("uploadSalesBtn").onclick =
+    () => uploadFile("salesFile", "/invoices/sales", "salesUploadStatus");
+  $("uploadPurchasesBtn").onclick =
+    () => uploadFile("purchasesFile", "/invoices/purchases", "purchasesUploadStatus");
 
-    // SUMMARY CHART (Entrées / Sorties / Solde)
-    const ctxSum = $("cashChart").getContext("2d");
-    if (cashSummaryChart) cashSummaryChart.destroy();
-    cashSummaryChart = new Chart(ctxSum, {
-      type:"line",
-      data:{
-        labels:["Entrées","Sorties","Solde"],
-        datasets:[{
-          data:[
-            bank.inflows || 0,
-            Math.abs(bank.outflows || 0),
-            bank.balance || 0
-          ],
-          borderColor:"#3a71ff",
-          backgroundColor:"rgba(58,113,255,0.2)",
-          tension:0.3,
-          fill:true
+  /* ===============================
+     DASHBOARD: SUMMARY + TABLES
+  =================================*/
+  let cashSummaryChart = null;
+  let cashDailyChart = null;
+  let cashForecastChart = null;
+
+  async function loadDashboard() {
+    const apiBase = getApiBase();
+    try {
+      const [bankRes, salesRes, purchasesRes, alertsRes] = await Promise.allSettled([
+        fetch(apiBase + "/bank/summary", { credentials: "include" }),
+        fetch(apiBase + "/invoices/sales", { credentials: "include" }),
+        fetch(apiBase + "/invoices/purchases", { credentials: "include" }),
+        fetch(apiBase + "/alerts", { credentials: "include" })
+      ]);
+
+      const bank = bankRes.status === "fulfilled" && bankRes.value.ok
+        ? await bankRes.value.json()
+        : {};
+      const sales = salesRes.status === "fulfilled" && salesRes.value.ok
+        ? await salesRes.value.json()
+        : [];
+      const purchases = purchasesRes.status === "fulfilled" && purchasesRes.value.ok
+        ? await purchasesRes.value.json()
+        : [];
+      const alerts = alertsRes.status === "fulfilled" && alertsRes.value.ok
+        ? await alertsRes.value.json()
+        : [];
+
+      $("bankBalance").textContent = euro(bank.balance ?? 0);
+      $("bankInflows").textContent = euro(bank.inflows ?? 0);
+      $("bankOutflows").textContent = euro(bank.outflows ?? 0);
+
+      // SUMMARY CHART (Entrées / Sorties / Solde)
+      const ctxSum = $("cashChart").getContext("2d");
+      if (cashSummaryChart) cashSummaryChart.destroy();
+      cashSummaryChart = new Chart(ctxSum, {
+        type: "line",
+        data: {
+          labels: ["Entrées", "Sorties", "Solde"],
+          datasets: [{
+            data: [
+              bank.inflows || 0,
+              Math.abs(bank.outflows || 0),
+              bank.balance || 0
+            ],
+            borderColor: "#3a71ff",
+            backgroundColor: "rgba(58,113,255,0.2)",
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: "#a3adbf" } },
+            y: { ticks: { color: "#a3adbf" } }
+          }
+        }
+      });
+
+      // SALES
+      $("salesTable").querySelector("tbody").innerHTML =
+        Array.isArray(sales) && sales.length
+          ? sales.map(x => `
+              <tr>
+                <td>${x.number}</td>
+                <td>${x.issue_date}</td>
+                <td>${x.due_date}</td>
+                <td>${euro(+x.amount || 0)}</td>
+                <td>${x.status}</td>
+              </tr>
+            `).join("")
+          : `<tr><td colspan="5">Aucune facture</td></tr>`;
+
+      // PURCHASES
+      $("purchasesTable").querySelector("tbody").innerHTML =
+        Array.isArray(purchases) && purchases.length
+          ? purchases.map(x => `
+              <tr>
+                <td>${x.number}</td>
+                <td>${x.issue_date}</td>
+                <td>${x.due_date}</td>
+                <td>${euro(+x.amount || 0)}</td>
+                <td>${x.status}</td>
+              </tr>
+            `).join("")
+          : `<tr><td colspan="5">Aucune facture</td></tr>`;
+
+      // ALERTS
+      $("alertsList").innerHTML =
+        Array.isArray(alerts) && alerts.length
+          ? alerts.map(a =>
+              `<li>${a.message} — <span style="color:#a3adbf">${a.due_date}</span></li>`
+            ).join("")
+          : "<li>Aucune alerte active</li>";
+
+      // DAILY + FORECAST CASHFLOW (from backend)
+      await Promise.all([
+        loadDailyCashflow(),
+        loadForecastCashflow()
+      ]);
+    } catch (e) {
+      console.error(e);
+      $("alertsList").innerHTML = "<li>Erreur de chargement des données</li>";
+    }
+  }
+
+  /* ===============================
+     DAILY & FORECAST CASHFLOW
+     GET /cashflow/daily
+     GET /cashflow/forecast
+  =================================*/
+  async function loadDailyCashflow() {
+    const apiBase = getApiBase();
+    try {
+      const r = await fetch(apiBase + "/cashflow/daily", { credentials: "include" });
+      if (!r.ok) {
+        console.warn("cashflow/daily HTTP", r.status);
+        return;
+      }
+      const data = await r.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        console.warn("No daily cashflow yet");
+        return;
+      }
+      renderDailyChart(data);
+    } catch (e) {
+      console.error("Daily cashflow error", e);
+    }
+  }
+
+  async function loadForecastCashflow() {
+    const apiBase = getApiBase();
+    try {
+      const r = await fetch(apiBase + "/cashflow/forecast", { credentials: "include" });
+      if (!r.ok) {
+        console.warn("cashflow/forecast HTTP", r.status);
+        return;
+      }
+      const data = await r.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        console.warn("No forecast cashflow yet");
+        return;
+      }
+      renderForecastChart(data);
+    } catch (e) {
+      console.error("Forecast cashflow error", e);
+    }
+  }
+
+  function renderDailyChart(data) {
+    const labels = data.map(x => x.date);
+    const balances = data.map(x => x.balance);
+    const ctx = $("dailyCashChart").getContext("2d");
+    if (cashDailyChart) cashDailyChart.destroy();
+    cashDailyChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Solde quotidien",
+          data: balances,
+          borderColor: "#2ecc71",
+          backgroundColor: "rgba(46,204,113,0.2)",
+          tension: 0.3,
+          fill: true
         }]
       },
-      options:{
-        plugins:{legend:{display:false}},
-        scales:{
-          x:{ticks:{color:"#a3adbf"}},
-          y:{ticks:{color:"#a3adbf"}}
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: "#a3adbf" } },
+          y: { ticks: { color: "#a3adbf" } }
         }
       }
     });
-
-    // SALES
-    $("salesTable").querySelector("tbody").innerHTML =
-      Array.isArray(sales) && sales.length
-        ? sales.map(x => `
-            <tr>
-              <td>${x.number}</td>
-              <td>${x.issue_date}</td>
-              <td>${x.due_date}</td>
-              <td>${euro(x.amount)}</td>
-              <td>${x.status}</td>
-            </tr>
-          `).join("")
-        : `<tr><td colspan="5">Aucune facture</td></tr>`;
-
-    // PURCHASES
-    $("purchasesTable").querySelector("tbody").innerHTML =
-      Array.isArray(purchases) && purchases.length
-        ? purchases.map(x => `
-            <tr>
-              <td>${x.number}</td>
-              <td>${x.issue_date}</td>
-              <td>${x.due_date}</td>
-              <td>${euro(x.amount)}</td>
-              <td>${x.status}</td>
-            </tr>
-          `).join("")
-        : `<tr><td colspan="5">Aucune facture</td></tr>`;
-
-    // ALERTS
-    $("alertsList").innerHTML =
-      Array.isArray(alerts) && alerts.length
-        ? alerts.map(a =>
-            `<li>${a.message} — <span style="color:#a3adbf">${a.due_date}</span></li>`
-          ).join("")
-        : `<li>Aucune alerte active</li>`;
-
-    // DAILY + FORECAST CASHFLOW (from backend)
-    await Promise.all([
-      loadDailyCashflow(),
-      loadForecastCashflow()
-    ]);
-  } catch(e) {
-    console.error(e);
-    $("alertsList").innerHTML = "<li>Erreur de chargement des données</li>";
   }
-}
 
-
-/* ===============================
-   DAILY & FORECAST CASHFLOW
-   Uses backend routes:
-   - GET /cashflow/daily
-   - GET /cashflow/forecast
-================================*/
-async function loadDailyCashflow(){
-  const apiBase = getApiBase();
-  try {
-    const r = await fetch(apiBase + "/cashflow/daily");
-    if (!r.ok) {
-      console.warn("cashflow/daily HTTP", r.status);
-      return;
-    }
-    const data = await r.json();
-    if (!Array.isArray(data) || data.length === 0) {
-      console.warn("No daily cashflow yet");
-      return;
-    }
-    renderDailyChart(data);
-  } catch(e) {
-    console.error("Daily cashflow error", e);
-  }
-}
-
-async function loadForecastCashflow(){
-  const apiBase = getApiBase();
-  try {
-    const r = await fetch(apiBase + "/cashflow/forecast");
-    if (!r.ok) {
-      console.warn("cashflow/forecast HTTP", r.status);
-      return;
-    }
-    const data = await r.json();
-    if (!Array.isArray(data) || data.length === 0) {
-      console.warn("No forecast cashflow yet");
-      return;
-    }
-    renderForecastChart(data);
-  } catch(e) {
-    console.error("Forecast cashflow error", e);
-  }
-}
-
-function renderDailyChart(data){
-  const labels = data.map(x => x.date);
-  const balances = data.map(x => x.balance);
-
-  const ctx = $("dailyCashChart").getContext("2d");
-  if (cashDailyChart) cashDailyChart.destroy();
-
-  cashDailyChart = new Chart(ctx, {
-    type:"line",
-    data:{
-      labels,
-      datasets:[{
-        label:"Solde quotidien",
-        data:balances,
-        borderColor:"#2ecc71",
-        backgroundColor:"rgba(46,204,113,0.2)",
-        tension:0.3,
-        fill:true
-      }]
-    },
-    options:{
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{ticks:{color:"#a3adbf"}},
-        y:{ticks:{color:"#a3adbf"}}
+  function renderForecastChart(data) {
+    const labels = data.map(x => x.date);
+    const balances = data.map(x => x.balance);
+    const ctx = $("forecastCashChart").getContext("2d");
+    if (cashForecastChart) cashForecastChart.destroy();
+    cashForecastChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Prévisionnel de trésorerie",
+          data: balances,
+          borderColor: "#f1c40f",
+          backgroundColor: "rgba(241,196,15,0.15)",
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: "#a3adbf" } },
+          y: { ticks: { color: "#a3adbf" } }
+        }
       }
+    });
+  }
+
+  /* ===============================
+     INIT
+  =================================*/
+  document.addEventListener("DOMContentLoaded", () => {
+    // Optionnel : un futur bouton "openSettings" peut ouvrir un panneau API.
+    if ($("openSettings")) {
+      $("openSettings").addEventListener("click", () => {
+        alert("Paramètres API actuellement fixes : " + getApiBase());
+      });
     }
+    loadDashboard().catch(() => {});
   });
-}
-
-function renderForecastChart(data){
-  const labels = data.map(x => x.date);
-  const balances = data.map(x => x.balance);
-
-  const ctx = $("forecastCashChart").getContext("2d");
-  if (cashForecastChart) cashForecastChart.destroy();
-
-  cashForecastChart = new Chart(ctx, {
-    type:"line",
-    data:{
-      labels,
-      datasets:[{
-        label:"Prévisionnel de trésorerie",
-        data:balances,
-        borderColor:"#f1c40f",
-        backgroundColor:"rgba(241,196,15,0.15)",
-        tension:0.3,
-        fill:true
-      }]
-    },
-    options:{
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{ticks:{color:"#a3adbf"}},
-        y:{ticks:{color:"#a3adbf"}}
-      }
-    }
-  });
-}
-
-
-/* ===============================
-   INIT
-================================*/
-document.addEventListener("DOMContentLoaded", () => {
-  loadDashboard();
-});
+})();
 </script>
-
 </body>
 </html>
