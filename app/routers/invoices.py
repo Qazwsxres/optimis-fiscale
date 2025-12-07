@@ -1,32 +1,50 @@
-from datetime import date
-
-from fastapi import APIRouter
+import os
+import csv
+from datetime import date, datetime
+from io import StringIO, TextIOWrapper
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from ..database import SessionLocal
 from ..models_extended import InvoiceSale, InvoicePurchase
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
-CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "https://qazwsxres.github.io",
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Methods": "*",
-    "Access-Control-Allow-Headers": "*",
-}
+# Get CORS origin from environment
+FRONTEND_URL = os.getenv("ALLOWED_ORIGIN", "https://qazwsxres.github.io").split(",")[0]
+
+def get_cors_headers():
+    """Standard CORS headers for all responses"""
+    return {
+        "Access-Control-Allow-Origin": FRONTEND_URL,
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*"
+    }
 
 
-# ---------- COMMON INPUT MODEL (CSV IMPORT) ----------
-
-class InvoiceIn(BaseModel):
-    number: str
-    issue_date: date
-    due_date: date
-    amount: float
-    vat: float | None = 0
-    status: str = "draft"
+def parse_date(date_str: str) -> date:
+    """Parse date from various formats"""
+    if not date_str or not date_str.strip():
+        return None
+    
+    date_str = date_str.strip().split(" ")[0]  # Remove time if present
+    
+    # Try ISO format first (YYYY-MM-DD)
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    except:
+        pass
+    
+    # Try other formats
+    for fmt in ["%d/%m/%Y", "%m/%d/%Y", "%d-%m-%Y"]:
+        try:
+            return datetime.strptime(date_str, fmt).date()
+        except:
+            continue
+    
+    return None
 
 
 # ---------- FULL SALES INVOICE CREATION (UI / API) ----------
@@ -45,138 +63,247 @@ class InvoiceCreate(BaseModel):
 @router.post("/sales/create")
 def create_sale_invoice(inv: InvoiceCreate):
     """Create a detailed sales invoice (for your future UI form)."""
-    with SessionLocal() as db:
-        ttc = round(inv.amount_ht * (1 + inv.vat_rate), 2)
+    try:
+        with SessionLocal() as db:
+            ttc = round(inv.amount_ht * (1 + inv.vat_rate), 2)
 
-        obj = InvoiceSale(
-            client_name=inv.client_name,
-            client_email=inv.client_email,
-            number=inv.number,
-            issue_date=inv.issue_date,
-            due_date=inv.due_date,
-            amount_ht=inv.amount_ht,
-            vat_rate=inv.vat_rate,
-            amount_ttc=ttc,
-            description=inv.description,
-            status="unpaid",
-        )
+            obj = InvoiceSale(
+                client_name=inv.client_name,
+                client_email=inv.client_email,
+                number=inv.number,
+                issue_date=inv.issue_date,
+                due_date=inv.due_date,
+                amount_ht=inv.amount_ht,
+                vat_rate=inv.vat_rate,
+                amount_ttc=ttc,
+                description=inv.description,
+                status="unpaid",
+            )
 
-        db.add(obj)
-        db.commit()
-        db.refresh(obj)
+            db.add(obj)
+            db.commit()
+            db.refresh(obj)
 
+            return JSONResponse(
+                content={
+                    "id": obj.id,
+                    "number": obj.number,
+                    "client_name": obj.client_name,
+                    "amount_ttc": float(obj.amount_ttc or 0),
+                    "status": obj.status,
+                },
+                headers=get_cors_headers(),
+            )
+    except Exception as e:
         return JSONResponse(
-            content={
-                "id": obj.id,
-                "number": obj.number,
-                "client_name": obj.client_name,
-                "amount_ttc": float(obj.amount_ttc or 0),
-                "status": obj.status,
-            },
-            headers=CORS_HEADERS,
+            status_code=500,
+            content={"error": str(e)},
+            headers=get_cors_headers()
         )
 
 
-# ---------- SALES IMPORT (CSV) ----------
+# ---------- SALES CSV IMPORT ----------
 
 @router.post("/sales")
-def create_sale(inv: InvoiceIn):
+async def upload_sales_csv(file: UploadFile = File(...)):
     """
-    Import a sales invoice from CSV.
-
-    We map the simple CSV model (amount, vat) to the new InvoiceSale schema
-    and store amount as TTC. This keeps the DB consistent AND preserves
-    the old frontend contract (loadDashboard still reads `.amount`).
+    Import sales invoices from CSV file.
+    
+    Expected columns: number, issue_date, due_date, amount, status
     """
-    with SessionLocal() as db:
-        obj = InvoiceSale(
-            client_name="Import CSV",
-            client_email=None,
-            number=inv.number,
-            issue_date=inv.issue_date,
-            due_date=inv.due_date,
-            amount_ht=None,          # unknown from CSV
-            vat_rate=None,           # unknown from CSV
-            amount_ttc=inv.amount,   # store TTC
-            description=None,
-            status=inv.status or "unpaid",
-        )
-
-        db.add(obj)
-        db.commit()
-        db.refresh(obj)
-
+    try:
+        # Read file content
+        content = await file.read()
+        text = content.decode('utf-8')
+        
+        # Parse CSV
+        csv_file = StringIO(text)
+        reader = csv.DictReader(csv_file)
+        
+        created_count = 0
+        errors = []
+        
+        with SessionLocal() as db:
+            for idx, row in enumerate(reader, start=2):  # Start at 2 (header is line 1)
+                try:
+                    # Get invoice number
+                    number = (row.get("number") or row.get("invoice_number") or "").strip()
+                    if not number:
+                        continue
+                    
+                    # Parse dates
+                    issue_date = parse_date(row.get("issue_date") or row.get("date") or "")
+                    due_date = parse_date(row.get("due_date") or "")
+                    
+                    if not issue_date or not due_date:
+                        errors.append(f"Line {idx}: Invalid date format")
+                        continue
+                    
+                    # Parse amount
+                    amount_str = str(row.get("amount") or row.get("total") or "0")
+                    amount_str = amount_str.replace(",", ".").strip()
+                    
+                    try:
+                        amount = float(amount_str)
+                    except:
+                        errors.append(f"Line {idx}: Invalid amount '{amount_str}'")
+                        continue
+                    
+                    # Get status
+                    status = (row.get("status") or "unpaid").strip().lower()
+                    
+                    # Create invoice
+                    obj = InvoiceSale(
+                        client_name="Import CSV",
+                        client_email=None,
+                        number=number,
+                        issue_date=issue_date,
+                        due_date=due_date,
+                        amount_ht=None,
+                        vat_rate=None,
+                        amount_ttc=amount,
+                        description=None,
+                        status=status,
+                    )
+                    
+                    db.add(obj)
+                    created_count += 1
+                    
+                except Exception as e:
+                    errors.append(f"Line {idx}: {str(e)}")
+                    continue
+            
+            db.commit()
+        
         return JSONResponse(
             content={
-                "id": obj.id,
-                "number": obj.number,
-                "issue_date": str(obj.issue_date),
-                "due_date": str(obj.due_date),
-                # FRONTEND EXPECTS `amount` → we send TTC here
-                "amount": float(obj.amount_ttc or 0),
-                "vat": float(inv.vat or 0),
-                "status": obj.status,
+                "ok": True,
+                "count": created_count,
+                "message": f"{created_count} invoices imported",
+                "errors": errors if errors else None
             },
-            headers=CORS_HEADERS,
+            headers=get_cors_headers()
+        )
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error parsing CSV: {str(e)}"},
+            headers=get_cors_headers()
         )
 
 
 @router.get("/sales")
 def list_sales():
-    """
-    List all sales invoices.
+    """List all sales invoices."""
+    try:
+        with SessionLocal() as db:
+            items = db.query(InvoiceSale).order_by(InvoiceSale.issue_date.desc()).all()
 
-    We keep the `amount` field name for backward compatibility with index.html,
-    and fill it with amount_ttc.
-    """
-    with SessionLocal() as db:
-        items = db.query(InvoiceSale).order_by(InvoiceSale.issue_date.desc()).all()
+            data = [
+                {
+                    "id": i.id,
+                    "number": i.number,
+                    "issue_date": str(i.issue_date),
+                    "due_date": str(i.due_date),
+                    "client_name": i.client_name,
+                    "amount": float(i.amount_ttc or 0),
+                    "vat": float(i.vat_rate or 0) if hasattr(i, "vat_rate") else 0.0,
+                    "status": i.status,
+                }
+                for i in items
+            ]
 
-        data = [
-            {
-                "id": i.id,
-                "number": i.number,
-                "issue_date": str(i.issue_date),
-                "due_date": str(i.due_date),
-                "client_name": i.client_name,
-                "amount": float(i.amount_ttc or 0),  # <= important
-                "vat": float(i.vat_rate or 0) if hasattr(i, "vat_rate") else 0.0,
-                "status": i.status,
-            }
-            for i in items
-        ]
-
-        return JSONResponse(content=data, headers=CORS_HEADERS)
+            return JSONResponse(
+                content=data,
+                headers=get_cors_headers()
+            )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)},
+            headers=get_cors_headers()
+        )
 
 
-# ---------- PURCHASES CREATE ----------
+# ---------- PURCHASES CSV IMPORT ----------
 
 @router.post("/purchases")
-def create_purchase(inv: InvoiceIn):
-    with SessionLocal() as db:
-        obj = InvoicePurchase(
-            number=inv.number,
-            issue_date=inv.issue_date,
-            due_date=inv.due_date,
-            amount=inv.amount,
-            vat=inv.vat or 0,
-            status=inv.status,
-        )
-        db.add(obj)
-        db.commit()
-        db.refresh(obj)
-
+async def upload_purchases_csv(file: UploadFile = File(...)):
+    """Import purchase invoices from CSV file."""
+    try:
+        # Read file content
+        content = await file.read()
+        text = content.decode('utf-8')
+        
+        # Parse CSV
+        csv_file = StringIO(text)
+        reader = csv.DictReader(csv_file)
+        
+        created_count = 0
+        errors = []
+        
+        with SessionLocal() as db:
+            for idx, row in enumerate(reader, start=2):
+                try:
+                    number = (row.get("number") or row.get("invoice_number") or "").strip()
+                    if not number:
+                        continue
+                    
+                    # Parse dates
+                    issue_date = parse_date(row.get("issue_date") or row.get("date") or "")
+                    due_date = parse_date(row.get("due_date") or "")
+                    
+                    if not issue_date or not due_date:
+                        errors.append(f"Line {idx}: Invalid date format")
+                        continue
+                    
+                    # Parse amount
+                    amount_str = str(row.get("amount") or row.get("total") or "0")
+                    amount_str = amount_str.replace(",", ".").strip()
+                    
+                    try:
+                        amount = float(amount_str)
+                    except:
+                        errors.append(f"Line {idx}: Invalid amount")
+                        continue
+                    
+                    status = (row.get("status") or "pending").strip().lower()
+                    
+                    # Create invoice
+                    obj = InvoicePurchase(
+                        number=number,
+                        issue_date=issue_date,
+                        due_date=due_date,
+                        amount=amount,
+                        vat=0,
+                        status=status,
+                    )
+                    
+                    db.add(obj)
+                    created_count += 1
+                    
+                except Exception as e:
+                    errors.append(f"Line {idx}: {str(e)}")
+                    continue
+            
+            db.commit()
+        
         return JSONResponse(
             content={
-                "id": obj.id,
-                "number": obj.number,
-                "issue_date": str(obj.issue_date),
-                "due_date": str(obj.due_date),
-                "amount": float(obj.amount),
-                "vat": float(obj.vat or 0),
-                "status": obj.status,
+                "ok": True,
+                "count": created_count,
+                "message": f"{created_count} purchase invoices imported",
+                "errors": errors if errors else None
             },
-            headers=CORS_HEADERS,
+            headers=get_cors_headers()
+        )
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error parsing CSV: {str(e)}"},
+            headers=get_cors_headers()
         )
 
 
@@ -184,27 +311,30 @@ def create_purchase(inv: InvoiceIn):
 
 @router.get("/purchases")
 def list_purchases():
-    with SessionLocal() as db:
-        items = db.query(InvoicePurchase).order_by(InvoicePurchase.issue_date.desc()).all()
+    try:
+        with SessionLocal() as db:
+            items = db.query(InvoicePurchase).order_by(InvoicePurchase.issue_date.desc()).all()
 
-        data = [
-            {
-                "id": i.id,
-                "number": i.number,
-                "issue_date": str(i.issue_date),
-                "due_date": str(i.due_date),
-                "amount": float(i.amount or 0),
-                "vat": float(i.vat or 0),
-                "status": i.status,
-            }
-            for i in items
-        ]
+            data = [
+                {
+                    "id": i.id,
+                    "number": i.number,
+                    "issue_date": str(i.issue_date),
+                    "due_date": str(i.due_date),
+                    "amount": float(i.amount or 0),
+                    "vat": float(i.vat or 0),
+                    "status": i.status,
+                }
+                for i in items
+            ]
 
-        return JSONResponse(content=data, headers=CORS_HEADERS)
-
-
-# ---------- CORS PREFLIGHT ----------
-
-@router.options("/{path:path}")
-def invoice_preflight(path: str):
-    return JSONResponse(content={"ok": True}, headers=CORS_HEADERS)
+            return JSONResponse(
+                content=data,
+                headers=get_cors_headers()
+            )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)},
+            headers=get_cors_headers()
+        )
