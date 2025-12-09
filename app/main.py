@@ -199,6 +199,53 @@ def health():
     )
 
 
+# =====================================================
+# DATABASE RESET ENDPOINT (TEMPORARY - REMOVE AFTER USE)
+# =====================================================
+@app.post("/admin/reset-database")
+def reset_database(secret_key: str):
+    """
+    ⚠️ DANGER: Drops and recreates all database tables
+    
+    Usage: POST /admin/reset-database?secret_key=YOUR_SECRET_KEY
+    
+    This endpoint should be REMOVED after fixing the database!
+    """
+    # Simple protection - use your actual SECRET_KEY
+    expected_secret = os.getenv("SECRET_KEY", "")
+    
+    if secret_key != expected_secret:
+        raise HTTPException(403, "Invalid secret key")
+    
+    try:
+        print("🗑️  Dropping all tables...")
+        Base.metadata.drop_all(bind=engine)
+        
+        print("🔨 Creating new tables with updated schema...")
+        Base.metadata.create_all(bind=engine)
+        
+        print("✅ Database reset complete!")
+        
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": "Database tables dropped and recreated successfully",
+                "warning": "All data has been deleted. Remove this endpoint now!"
+            },
+            headers=get_cors_headers()
+        )
+    except Exception as e:
+        print(f"❌ Database reset failed: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e)
+            },
+            headers=get_cors_headers()
+        )
+
+
 # ---------------------------------------------------------------------
 # ANALYSIS
 # ---------------------------------------------------------------------
