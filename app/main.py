@@ -73,6 +73,7 @@ if _env_origins:
 else:
     ALLOWED_ORIGINS = [
         "https://qazwsxres.github.io",
+        "https://gestion-227fe8d8.base44.app",  # Base44 landing page
         "http://localhost:8000",
         "http://127.0.0.1:8000",
         "http://localhost:5500",
@@ -94,9 +95,29 @@ app.add_middleware(
 @app.on_event("startup")
 def create_tables():
     """Create all database tables on startup"""
-    print("🚀 Creating database tables if missing…")
-    Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created successfully")
+    print("🚀 Checking database schema...")
+    
+    # Check if we need to reset (look for old schema)
+    try:
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        
+        # Check if invoices_sales table exists and has old schema
+        if 'invoices_sales' in inspector.get_table_names():
+            columns = [col['name'] for col in inspector.get_columns('invoices_sales')]
+            
+            # If missing new columns, drop and recreate
+            if 'client_name' not in columns or 'amount_ttc' not in columns:
+                print("⚠️  Old schema detected! Resetting database...")
+                Base.metadata.drop_all(bind=engine)
+                print("🗑️  Old tables dropped")
+        
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables ready")
+        
+    except Exception as e:
+        print(f"⚠️  Database check failed, creating tables anyway: {e}")
+        Base.metadata.create_all(bind=engine)
 
 # =====================================================
 # CORS HEADERS HELPER
