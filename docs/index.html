@@ -1,1456 +1,1990 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Optimis Fiscale</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPTIMIS FISCALE - Votre assistant de gestion intelligent</title>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <!-- Favicon -->
-  <link rel="icon" href="https://placehold.co/32x32/3a71ff/ffffff?text=O" />
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
 
-  <style>
-    :root {
-      --bg: #0b1020;
-      --card: #11172c;
-      --muted: #a3adbf;
-      --line: #243155;
-      --accent: #3a71ff;
-      --text: #e6e9ef;
-      --ok: #2ecc71;
-      --err: #e74c3c;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
 
-    * {
-      box-sizing: border-box;
-    }
+        /* Header */
+        .header {
+            background: var(--bg-white);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
-    }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    .wrap {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 20px;
-    }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
 
-    h1 {
-      font-size: 22px;
-      margin: 0;
-    }
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
 
-    h2 {
-      margin-top: 0;
-    }
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
 
-    h3 {
-      margin-top: 0;
-      font-size: 16px;
-    }
+        .nav-link {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
 
-    .sub {
-      color: var(--muted);
-      font-size: 14px;
-      margin-top: 4px;
-    }
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+        }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
-    }
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-    .controls {
-      display: grid;
-      gap: 12px;
-    }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
 
-    .grid2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
 
-    .field {
-      background: #0e1428;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dark);
+        }
 
-    .field label {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
+        .btn-outline:hover {
+            background: var(--bg-light);
+        }
 
-    .btn,
-    .btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid transparent;
-      font-size: 14px;
-    }
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 4rem 2rem;
+            color: white;
+            text-align: center;
+        }
 
-    .btn {
-      background: var(--accent);
-      color: #fff;
-    }
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
 
-    .btn-secondary {
-      background: #0e1428;
-      color: var(--text);
-      border-color: var(--line);
-    }
+        .hero p {
+            font-size: 1.125rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
 
-    .row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
 
-    .status {
-      font-size: 13px;
-      color: var(--muted);
-    }
+        /* Section */
+        .section {
+            margin-bottom: 4rem;
+        }
 
-    .status.ok {
-      color: var(--ok);
-    }
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
 
-    .status.err {
-      color: var(--err);
-    }
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-dark);
+        }
 
-    .tiles {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-gray);
+        }
 
-    .tile {
-      background: #0e1428;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
-    }
+        /* Cards */
+        .card {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
 
-    .kv {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px 16px;
-      font-size: 14px;
-    }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
 
-    .kv > div {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-    }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
 
-    .kv span {
-      color: var(--muted);
-    }
+        /* Grid */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
 
-    .kv strong {
-      font-weight: 600;
-    }
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #1a2340;
-      color: var(--muted);
-      font-size: 12px;
-    }
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
 
-    .hint {
-      font-size: 12px;
-      color: var(--muted);
-    }
+        /* Feature Cards */
+        .feature-card {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.2s;
+        }
 
-    footer {
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 13px;
-      text-align: left;
-    }
+        .feature-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
 
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      place-items: center;
-      z-index: 100;
-    }
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+        }
 
-    .modal {
-      width: min(560px, 92vw);
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-    }
+        .icon-blue { background: #dbeafe; color: #2563eb; }
+        .icon-purple { background: #f3e8ff; color: #9333ea; }
+        .icon-green { background: #d1fae5; color: #059669; }
+        .icon-orange { background: #fed7aa; color: #ea580c; }
+        .icon-red { background: #fee2e2; color: #dc2626; }
+        .icon-yellow { background: #fef3c7; color: #d97706; }
 
-    .gear {
-      background: #0e1428;
-      border: 1px solid var(--line);
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 18px;
-    }
+        .feature-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
 
-    .gear:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
+        .feature-text {
+            font-size: 0.9375rem;
+            color: var(--text-gray);
+            line-height: 1.5;
+        }
 
-    /* CHAT */
-    #chat-btn {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 30;
-    }
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-    #chat-btn button {
-      background: #3a71ff;
-      color: #fff;
-      border: 0;
-      padding: 14px 16px;
-      border-radius: 999px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-    }
+        .stat-card {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
 
-    #chat-box {
-      position: fixed;
-      right: 20px;
-      bottom: 80px;
-      width: min(380px, 92vw);
-      background: #11172c;
-      border: 1px solid #243155;
-      border-radius: 16px;
-      overflow: hidden;
-      display: none;
-      z-index: 30;
-    }
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
 
-    #chat-head {
-      padding: 12px 14px;
-      font-weight: 700;
-      border-bottom: 1px solid #243155;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
 
-    #chat-head img {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 1px solid #243155;
-    }
+        .stat-change {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
 
-    #chat-log {
-      height: 280px;
-      overflow: auto;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+        .stat-positive { color: var(--success); }
+        .stat-negative { color: var(--danger); }
 
-    .msg {
-      padding: 10px 12px;
-      border-radius: 12px;
-      max-width: 85%;
-      font-size: 14px;
-      line-height: 1.35;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-    }
+        /* Step Cards */
+        .step-card {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            position: relative;
+        }
 
-    .msg.me {
-      background: #3a71ff;
-      color: #fff;
-      align-self: flex-end;
-    }
+        .step-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 1rem;
+        }
 
-    .msg.bot {
-      background: #0e1428;
-      border: 1px solid #243155;
-      color: #e6e9ef;
-      align-self: flex-start;
-    }
+        .step-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-dark);
+        }
 
-    #chat-input {
-      display: flex;
-      gap: 8px;
-      padding: 10px;
-      border-top: 1px solid #243155;
-      background: #0e1428;
-    }
+        .step-text {
+            font-size: 0.9375rem;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
 
-    #chat-input input {
-      flex: 1;
-      background: #0e1428;
-      border: 1px solid #33416d;
-      color: #e6e9ef;
-      border-radius: 10px;
-      padding: 10px;
-    }
+        /* Form */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
 
-    #chat-input button {
-      background: #3a71ff;
-      color: #fff;
-      border: 0;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-size: 0.9375rem;
+        }
 
-    .spinner {
-      display: none;
-      gap: 8px;
-      align-items: center;
-    }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            transition: border-color 0.2s;
+        }
 
-    .spinner.active {
-      display: inline-flex;
-    }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
 
-    .spinner .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #3a71ff;
-      animation: b 1s infinite;
-    }
+        .form-hint {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
 
-    .spinner .dot:nth-child(2) {
-      animation-delay: 0.15s;
-    }
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-    .spinner .dot:nth-child(3) {
-      animation-delay: 0.3s;
-    }
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: var(--bg-light);
+        }
 
-    @keyframes b {
-      0%,
-      80%,
-      100% {
-        opacity: 0.2;
-        transform: scale(0.9);
-      }
-      40% {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
+        .file-upload input {
+            display: none;
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
+        .file-upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
 
-    th,
-    td {
-      padding: 4px 6px;
-      border-bottom: 1px solid #1a2340;
-      text-align: left;
-    }
+        .file-upload-text {
+            color: var(--text-gray);
+            font-weight: 500;
+        }
 
-    th {
-      font-weight: 600;
-      color: var(--muted);
-    }
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
 
-    @media print {
-      #chat-btn,
-      #chat-box,
-      header,
-      .controls,
-      .modal-backdrop {
-        display: none !important;
-      }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-      body {
-        background: #fff;
-        color: #000;
-      }
+        .table thead {
+            background: var(--bg-light);
+        }
 
-      .card {
-        border: 0;
-        box-shadow: none;
-      }
-    }
+        .table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-gray);
+            border-bottom: 1px solid var(--border);
+        }
 
-    @media (max-width: 960px) {
-      .grid2 {
-        grid-template-columns: 1fr;
-      }
+        .table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9375rem;
+        }
 
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-  </style>
+        .table tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+
+        /* Alert */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+        .alert-danger { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .alert-info { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-gray);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-gray);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--primary);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .cta-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .cta-text {
+            font-size: 1.125rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-gray);
+        }
+
+        .spinner {
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
 </head>
-
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <h1>Optimis Fiscale</h1>
-      <div class="sub">Analyse de balance &amp; estimation fiscale (FR)</div>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <div class="logo-icon">O</div>
+                <div class="logo-text">OPTIMIS FISCALE</div>
+            </div>
+            <nav class="nav-menu">
+                <a class="nav-link active" data-page="accueil">Accueil</a>
+                <a class="nav-link" data-page="fonctionnalites">Fonctionnalités</a>
+                <a class="nav-link" data-page="dashboard">Dashboard</a>
+                <a class="nav-link" data-page="contact">Contact</a>
+            </nav>
+            <div>
+                <button class="btn btn-primary" id="loginBtn">Accès anticipé →</button>
+                <button class="btn btn-outline hidden" id="logoutBtn">Déconnexion</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page: Accueil -->
+    <div id="pageAccueil" class="page">
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-content">
+                <div style="display: inline-block; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; margin-bottom: 1.5rem;">
+                    ✨ Bêta privée disponible
+                </div>
+                <h1>Votre assistant de gestion intelligent</h1>
+                <p>Trésorerie, factures, échéances fiscales... tout au même endroit. Simplifiez votre quotidien et concentrez-vous sur votre croissance.</p>
+                <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showLogin()">
+                    Commencer gratuitement →
+                </button>
+            </div>
+        </section>
+
+        <!-- Dashboard Preview -->
+        <div class="container">
+            <div class="card" style="margin-bottom: 4rem;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="display: inline-block; background: #dbeafe; padding: 0.5rem 1rem; border-radius: 9999px; color: #2563eb; font-weight: 600; font-size: 0.875rem; margin-bottom: 1rem;">
+                        Tableau de bord
+                    </div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-dark);">Analyse de mise à jour tous les 2 heures</h2>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Trésorerie</div>
+                        <div class="stat-value">48 250 €</div>
+                        <div class="stat-change stat-positive">+12%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">À recevoir</div>
+                        <div class="stat-value">12 500 €</div>
+                        <div class="stat-change">3 factures</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Prochaine échéance TVA</div>
+                        <div class="stat-value">Gare 12 avril</div>
+                        <div class="stat-change">Dans 12 jours</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Les défis des TPE -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Les défis des TPE et indépendants</h2>
+                    <p class="section-subtitle">La gestion administrative peut vite devenir un cauchemar. Nous avons la solution.</p>
+                </div>
+
+                <div class="grid grid-3">
+                    <div class="feature-card" style="background: #fef2f2; border-color: #fecaca;">
+                        <div class="feature-icon icon-red">⚠️</div>
+                        <div class="feature-title">Gestion dispersée</div>
+                        <div class="feature-text">Vos données sont éparpillées entre plusieurs outils, difficulté à suivre l'activité d'un seul coup d'œil.</div>
+                    </div>
+                    <div class="feature-card" style="background: #fef2f2; border-color: #fecaca;">
+                        <div class="feature-icon icon-red">⏰</div>
+                        <div class="feature-title">Perte de temps</div>
+                        <div class="feature-text">Des heures perdues chaque semaine sur la saisie manuelle et le suivi administratif.</div>
+                    </div>
+                    <div class="feature-card" style="background: #fef2f2; border-color: #fecaca;">
+                        <div class="feature-icon icon-red">📋</div>
+                        <div class="feature-title">Oublis fréquents</div>
+                        <div class="feature-text">Retards sur les échéances et factures oubliées qui impactent votre trésorerie.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Comment OPTIMIS simplifie tout -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Comment OPTIMIS FISCALE simplifie tout</h2>
+                    <p class="section-subtitle">3 étapes pour reprendre le contrôle de votre entreprise</p>
+                </div>
+
+                <div class="grid grid-3">
+                    <div class="step-card">
+                        <div class="step-number">01</div>
+                        <div class="step-title">Connectez vos comptes</div>
+                        <div class="step-text">Liez votre compte bancaire et importez vos factures en quelques clics. Notre IA se charge du reste.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">02</div>
+                        <div class="step-title">L'IA analyse automatiquement</div>
+                        <div class="step-text">Notre intelligence artificielle détecte et classe tous vos flux financiers en temps réel.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">03</div>
+                        <div class="step-title">Pilotez en temps réel</div>
+                        <div class="step-text">Visualisez votre situation complète, anticipez vos échéances et prenez les bonnes décisions.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pourquoi choisir OPTIMIS -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Pourquoi choisir OPTIMIS FISCALE ?</h2>
+                    <p class="section-subtitle">Une solution complète pensée pour les dirigeants d'aujourd'hui</p>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="feature-card">
+                        <div class="feature-icon icon-orange">🤖</div>
+                        <div class="feature-title">Automatisation totale</div>
+                        <div class="feature-text">Connexion bancaire, détection des factures, classification automatique.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon icon-blue">👁️</div>
+                        <div class="feature-title">Vision claire</div>
+                        <div class="feature-text">Tableau de bord en temps réel de votre trésorerie et rentabilité.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon icon-purple">💡</div>
+                        <div class="feature-title">Optimisation fiscale</div>
+                        <div class="feature-text">Stratégies personnalisées pour réduire légalement votre charge fiscale.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon icon-green">✅</div>
+                        <div class="feature-title">Audit fiscal</div>
+                        <div class="feature-text">Analyse complète de votre situation pour identifier risques et opportunités.</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-title">Prêt à simplifier votre gestion ?</div>
+            <div class="cta-text">Rejoignez les entrepreneurs qui ont déjà pris de leur temps en adoptant OPTIMIS FISCALE. Plus d'oublis, plus de stress, plus de panique à la TVA.</div>
+            <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showLogin()">
+                Rejoignez la bêta privée →
+            </button>
+        </section>
     </div>
 
-    <div class="row" id="authbar">
-      <button class="gear" id="openSettings" type="button" title="Paramètres (API)">⚙️</button>
-      <a class="btn-secondary" href="https://optimis-fiscale-production.up.railway.app/docs" target="_blank" rel="noreferrer">
-        API Docs
-      </a>
-      <button id="loginBtn" class="btn-secondary" type="button">Se connecter</button>
-      <span id="who" class="badge" style="display:none"></span>
-      <button id="logoutBtn" class="btn-secondary" type="button" style="display:none">Se déconnecter</button>
-    </div>
-  </header>
-
-  <div class="row" style="margin:8px 0;gap:8px">
-    <button class="btn-secondary" id="exportBtn" type="button">Exporter (PDF)</button>
-    <button class="btn-secondary" id="privacyBtn" type="button">Confidentialité</button>
-    <span class="spinner" id="globalSpin" aria-hidden="true">
-      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-    </span>
-    <span class="status" id="status" aria-live="polite">Prêt</span>
-  </div>
-
-  <!-- ================= ANALYSE COMPTABLE ================= -->
-  <div class="card" aria-label="Analyse comptable">
-    <div class="controls">
-      <div class="grid2">
-        <div class="field">
-          <div>
-            <strong>Fichier CSV</strong><br>
-            <span class="hint">Colonnes : <code>account,label,debit,credit</code></span>
-          </div>
-          <div class="row">
-            <input id="csvInput" type="file" accept=".csv" style="display:none" />
-            <label class="btn-secondary" for="csvInput" style="cursor:pointer;">Choisir un fichier</label>
-            <span id="fileName" class="badge" style="display:none"></span>
-          </div>
+    <!-- Page: Fonctionnalités -->
+    <div id="pageFonctionnalites" class="page hidden">
+        <div class="hero" style="padding: 3rem 2rem;">
+            <h1 style="font-size: 2rem;">Toutes les fonctionnalités dont vous avez besoin</h1>
+            <p>Notre IA analyse vos factures, vos flux bancaires et vos échéances fiscales pour vous offrir une vision claire et en temps réel de votre entreprise.</p>
         </div>
 
-        <div class="field">
-          <div>
-            <strong>Chiffre d'affaires (optionnel)</strong><br>
-            <span class="hint">Pour affiner les ratios</span>
-          </div>
-          <input id="turnover" type="number" step="0.01" placeholder="Ex : 100000"
-                 aria-label="Chiffre d'affaires estimé">
+        <div class="container">
+            <!-- Section 1: Core Features -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title" style="font-size: 1.75rem;">Fonctionnalités principales</h2>
+                    <p class="section-subtitle">Les outils essentiels pour gérer votre entreprise au quotidien</p>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="feature-icon icon-blue" style="margin: 0 0 1rem 0;">📊</div>
+                        <h3 style="margin-bottom: 0.75rem;">Suivi bancaire automatisé</h3>
+                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Connectez votre compte bancaire et laissez notre IA catégoriser automatiquement toutes vos transactions. Synchronisation quotidienne pour une vue en temps réel de vos finances.</p>
+                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
+                            <li>Synchronisation bancaire quotidienne</li>
+                            <li>Catégorisation intelligente des transactions</li>
+                            <li>Détection des anomalies de caisse</li>
+                            <li>Rapprochement bancaire automatique</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="feature-icon icon-purple" style="margin: 0 0 1rem 0;">📄</div>
+                        <h3 style="margin-bottom: 0.75rem;">Facturation simplifiée</h3>
+                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Créez, envoyez et suivez toutes vos factures clients et fournisseurs en quelques clics. Relances automatiques pour ne plus jamais oublier un impayé.</p>
+                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
+                            <li>Modèles de factures personnalisables</li>
+                            <li>Relances automatiques pour les impayés</li>
+                            <li>Suivi des règlements en temps réel</li>
+                            <li>Export vers votre comptabilité</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Dashboard & Analytics -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title" style="font-size: 1.75rem;">Pilotage et analyse</h2>
+                    <p class="section-subtitle">Visualisez et anticipez l'évolution de votre activité</p>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="feature-icon icon-green" style="margin: 0 0 1rem 0;">💰</div>
+                        <h3 style="margin-bottom: 0.75rem;">Tableau de bord intelligent</h3>
+                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Un tableau de bord complet pour visualiser votre activité en temps réel. Graphiques d'évolution, indicateurs de performance et prévisions de trésorerie pour prendre les bonnes décisions.</p>
+                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
+                            <li>Indicateurs de performance en temps réel</li>
+                            <li>Graphiques d'évolution de trésorerie</li>
+                            <li>Prévisions sur 7-30 jours</li>
+                            <li>Analyse des marges et rentabilité</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="feature-icon icon-orange" style="margin: 0 0 1rem 0;">🔔</div>
+                        <h3 style="margin-bottom: 0.75rem;">Alertes et conseils personnalisés</h3>
+                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Ne manquez plus aucune échéance importante. Notre système vous alerte automatiquement pour la TVA, l'IS, les charges sociales et vous recommande des actions d'optimisation.</p>
+                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
+                            <li>Alertes TVA, IS, charges sociales</li>
+                            <li>Notifications de factures impayées</li>
+                            <li>Recommandations d'optimisation</li>
+                            <li>Calendrier fiscal personnalisé</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Tax Optimization -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title" style="font-size: 1.75rem;">Optimisation fiscale</h2>
+                    <p class="section-subtitle">Réduisez légalement votre charge fiscale grâce à l'IA</p>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="feature-icon icon-blue" style="margin: 0 0 1rem 0;">📈</div>
+                        <h3 style="margin-bottom: 0.75rem;">Optimisation fiscale intelligente</h3>
+                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Notre intelligence artificielle analyse votre situation en profondeur et vous guide vers la meilleure stratégie fiscale. Identifiez les leviers d'optimisation et les dispositifs dont vous pouvez bénéficier.</p>
+                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
+                            <li>Analyse de déductibilité optimale</li>
+                            <li>Simulation des amortissements et provisions</li>
+                            <li>Proposition de structure juridique adaptée</li>
+                            <li>Identification des crédits d'impôt (CIR, CII...)</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="feature-icon icon-purple" style="margin: 0 0 1rem 0;">🔐</div>
+                        <h3 style="margin-bottom: 0.75rem;">Audit fiscal complet</h3>
+                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Un diagnostic complet et détaillé de votre situation fiscale. Notre système identifie les zones de risque, les opportunités d'économies et vous fournit un rapport actionnable.</p>
+                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
+                            <li>Identification des zones de risque fiscal</li>
+                            <li>Détection des crédits d'impôt non exploités</li>
+                            <li>Rapport d'audit complet et actionnable</li>
+                            <li>Recommandations personnalisées</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Additional Features -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title" style="font-size: 1.75rem;">Et bien plus encore...</h2>
+                    <p class="section-subtitle">Une solution complète pour gérer votre activité sans stress</p>
+                </div>
+
+                <div class="grid grid-3">
+                    <div class="card">
+                        <div class="feature-icon icon-yellow" style="margin: 0 0 1rem 0;">🔗</div>
+                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Intégrations comptables</h3>
+                        <p style="color: var(--text-gray); line-height: 1.6;">Compatible avec votre expert-comptable et les principaux logiciels de comptabilité. Export automatique de vos données.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon icon-green" style="margin: 0 0 1rem 0;">🔒</div>
+                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Sécurité bancaire</h3>
+                        <p style="color: var(--text-gray); line-height: 1.6;">Chiffrement de niveau bancaire pour toutes vos données. Conformité RGPD et hébergement sécurisé en Europe.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon icon-blue" style="margin: 0 0 1rem 0;">📱</div>
+                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Multi-utilisateurs</h3>
+                        <p style="color: var(--text-gray); line-height: 1.6;">Partagez l'accès avec votre équipe et votre comptable. Gestion des droits et des permissions.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon icon-orange" style="margin: 0 0 1rem 0;">⚡</div>
+                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Automatisation totale</h3>
+                        <p style="color: var(--text-gray); line-height: 1.6;">Gagnez 10h par semaine minimum grâce à l'automatisation de vos tâches administratives répétitives.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon icon-purple" style="margin: 0 0 1rem 0;">💳</div>
+                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Paiement intégré</h3>
+                        <p style="color: var(--text-gray); line-height: 1.6;">Liens de paiement en 1 clic dans vos factures. Vos clients paient plus rapidement et facilement.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="feature-icon icon-red" style="margin: 0 0 1rem 0;">📊</div>
+                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Reporting avancé</h3>
+                        <p style="color: var(--text-gray); line-height: 1.6;">Export comptable automatique et rapports personnalisés pour piloter efficacement votre activité.</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="field">
-          <div>
-            <strong>Référentiel d'audit</strong><br>
-            <span class="hint">Choisir IFRS ou US GAAP</span>
-          </div>
-          <select id="framework"
-                  style="background:#0e1428;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 10px;">
-            <option value="IFRS" selected>IFRS</option>
-            <option value="USGAAP">US GAAP</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row" style="justify-content:space-between">
-        <div class="row">
-          <button id="analyzeBtn" class="btn" type="button">Analyser</button>
-          <button id="auditBtn" class="btn-secondary" type="button">Test Audit</button>
-          <button id="optimizeBtn" class="btn-secondary" type="button">Optimisation fiscale</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="csvPreview" class="tile" style="display:none">
-      <h3>Aperçu CSV (10 premières lignes)</h3>
-      <div id="csvTableWrap"></div>
-    </div>
-
-    <div id="results" style="display:none;margin-top:10px">
-      <div class="tiles">
-        <div class="tile">
-          <h3>KPIs</h3>
-          <div class="kv" id="kpi"></div>
-        </div>
-        <div class="tile">
-          <h3>Fiscalité</h3>
-          <div class="kv" id="tax"></div>
-        </div>
-      </div>
-
-      <div class="tiles" style="margin-top:12px">
-        <div class="tile">
-          <h3>Audit — Résumé</h3>
-          <div class="kv" id="auditSummary"></div>
-        </div>
-        <div class="tile">
-          <h3>Audit — Points relevés</h3>
-          <ul id="auditIssues" style="margin:0;padding-left:18px"></ul>
-        </div>
-      </div>
-
-      <div class="tile" style="margin-top:12px">
-        <h3>Top comptes (par solde absolu)</h3>
-        <div id="auditTop"></div>
-      </div>
-
-      <div class="tile" style="margin-top:12px">
-        <h3>Optimisation fiscale — Recommandations</h3>
-        <div id="optimizeOut" style="white-space:pre-wrap"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= IMPORT + DASHBOARD ================= -->
-  <div class="grid2" style="margin-top:20px;align-items:flex-start;">
-
-    <!-- LEFT: IMPORT -->
-    <div class="card" aria-label="Importation des fichiers">
-      <h2>Importation des fichiers</h2>
-
-      <div class="field" style="display:block;">
-        <strong>Relevé bancaire (.csv)</strong>
-        <div class="hint" style="margin-top:4px;">
-          Doit contenir au minimum : <code>date,label,amount</code>.
-        </div>
-        <input type="file" id="bankFile" accept=".csv"
-               style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
-        <button class="btn" id="uploadBankBtn" style="margin-top:8px;" type="button">Importer relevé</button>
-        <div id="bankUploadStatus" class="status"></div>
-      </div>
-
-      <div class="field" style="display:block;margin-top:12px;">
-        <strong>Factures de ventes (.csv / .xlsx)</strong>
-        <div class="hint" style="margin-top:4px;">
-          Une ligne par facture : numéro, date, échéance, client, montant TTC.
-        </div>
-        <input type="file" id="salesFile" accept=".csv,.xlsx"
-               style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
-        <button class="btn-secondary" id="uploadSalesBtn" style="margin-top:8px;" type="button">Importer ventes</button>
-        <div id="salesUploadStatus" class="status"></div>
-      </div>
-
-      <div class="field" style="display:block;margin-top:12px;">
-        <strong>Factures d'achats (.csv / .xlsx)</strong>
-        <div class="hint" style="margin-top:4px;">
-          Une ligne par facture : numéro, date, échéance, fournisseur, montant TTC.
-        </div>
-        <input type="file" id="purchasesFile" accept=".csv,.xlsx"
-               style="margin-top:8px;width:100%;padding:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;border-radius:10px;">
-        <button class="btn-secondary" id="uploadPurchasesBtn" style="margin-top:8px;" type="button">Importer achats</button>
-        <div id="purchasesUploadStatus" class="status"></div>
-      </div>
-    </div>
-
-    <!-- RIGHT: DASHBOARD -->
-    <div class="card" aria-label="Suivi trésorerie et facturation">
-      <h2>Suivi Trésorerie &amp; Facturation</h2>
-
-      <div id="bankSummary" class="tiles">
-        <div class="tile">
-          <h3>Solde bancaire</h3>
-          <div id="bankBalance">—</div>
-        </div>
-        <div class="tile">
-          <h3>Entrées</h3>
-          <div id="bankInflows">—</div>
-        </div>
-        <div class="tile">
-          <h3>Sorties</h3>
-          <div id="bankOutflows">—</div>
-        </div>
-      </div>
-
-      <div style="margin-top:16px">
-        <h3>Résumé flux (Entrées / Sorties / Solde)</h3>
-        <canvas id="cashChart" height="100" aria-label="Résumé des flux de trésorerie" role="img"></canvas>
-      </div>
-
-      <div style="margin-top:16px">
-        <h3>Trésorerie quotidienne (historique)</h3>
-        <canvas id="dailyCashChart" height="100" aria-label="Trésorerie quotidienne" role="img"></canvas>
-      </div>
-
-      <div style="margin-top:16px">
-        <h3>Prévisionnel de trésorerie (7 jours)</h3>
-        <canvas id="forecastCashChart" height="100" aria-label="Prévisionnel de trésorerie" role="img"></canvas>
-      </div>
-
-      <div class="tiles" style="margin-top:20px">
-        <div class="tile">
-          <h3>Factures ventes</h3>
-          <table id="salesTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Échéance</th>
-                <th>Montant</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div class="tile">
-          <h3>Factures achats</h3>
-          <table id="purchasesTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Échéance</th>
-                <th>Montant</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="tile" style="margin-top:20px">
-        <h3>Alertes fiscales &amp; paiements</h3>
-        <ul id="alertsList" style="margin:0;padding-left:18px"></ul>
-      </div>
-    </div>
-  </div>
-
-  <footer>© 2025 Optimis Fiscale — Les fichiers ne sont jamais stockés.</footer>
-</div>
-
-<!-- PRIVACY MODAL -->
-<div class="modal-backdrop" id="privacyModal">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
-    <h2 id="privacyTitle">Confidentialité</h2>
-    <p>Les fichiers sont traités en mémoire uniquement pendant l'analyse. Aucune donnée n'est stockée.</p>
-    <div class="row" style="justify-content:flex-end">
-      <button class="btn" id="closePrivacy" type="button">Fermer</button>
-    </div>
-  </div>
-</div>
-
-<!-- LOGIN MODAL -->
-<div class="modal-backdrop" id="loginModal">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-    <h2 id="loginTitle">Connexion</h2>
-
-    <div class="field" style="margin-top:8px;display:block;">
-      <label for="companyId"><strong>Identifiant entreprise</strong></label>
-      <input id="companyId" type="text" placeholder="ex: demo"
-             style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;">
+        <section class="cta-section">
+            <div class="cta-title">Simplifiez votre quotidien</div>
+            <div class="cta-text">Zéro temps perdu en saisies manuelles. Réduction de 50% du stress administratif. Interface intuitive pour tous, même sans être comptable.</div>
+            <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showLogin()">
+                Commencer gratuitement →
+            </button>
+        </section>
     </div>
 
-    <div class="field" style="margin-top:8px;display:block;">
-      <label for="companyPwd"><strong>Mot de passe</strong></label>
-      <input id="companyPwd" type="password" placeholder="••••••••"
-             style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#0e1428;border:1px solid var(--line);color:#e6e9ef;">
+    <!-- Page: Dashboard (protected) -->
+    <div id="pageDashboard" class="page hidden">
+        <div class="container">
+            <div style="margin-bottom: 2rem;">
+                <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Tableau de bord</h1>
+                <p style="color: var(--text-gray);">Vue d'ensemble de votre activité</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="vue-ensemble">Vue d'ensemble</button>
+                <button class="tab" data-tab="tresorerie">Trésorerie</button>
+                <button class="tab" data-tab="factures">Factures</button>
+                <button class="tab" data-tab="import">Import</button>
+                <button class="tab" data-tab="alertes">Alertes</button>
+                <button class="tab" data-tab="analyse">Analyse fiscale</button>
+            </div>
+
+            <!-- Tab: Vue d'ensemble -->
+            <div class="tab-content active" id="tabVueEnsemble">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Trésorerie</div>
+                        <div class="stat-value" id="dashCash">€ 0</div>
+                        <div class="stat-change stat-positive" id="dashCashChange">+0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Factures en attente</div>
+                        <div class="stat-value" id="dashPending">0</div>
+                        <div class="stat-change" id="dashPendingInfo">0 en retard</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Revenus du mois</div>
+                        <div class="stat-value" id="dashRevenue">€ 0</div>
+                        <div class="stat-change stat-positive">vs mois dernier</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Prochaine échéance</div>
+                        <div class="stat-value" id="dashNextDue">-</div>
+                        <div class="stat-change" id="dashNextDueInfo">-</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Évolution trésorerie (7j)</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chartCashflow7"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Prévisions (30j)</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chartForecast30"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Alertes récentes</div>
+                        <button class="btn btn-outline" onclick="switchTab('alertes')">Voir tout</button>
+                    </div>
+                    <div id="dashAlerts"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Trésorerie -->
+            <div class="tab-content" id="tabTresorerie">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Trésorerie quotidienne</div>
+                        <button class="btn btn-primary" onclick="refreshCashflow()">Actualiser</button>
+                    </div>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="chartCashflowFull"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Transactions récentes</div>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Catégorie</th>
+                                    <th>Montant</th>
+                                    <th>Solde</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Factures -->
+            <div class="tab-content" id="tabFactures">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Gestion des factures</div>
+                        <button class="btn btn-primary" onclick="showCreateInvoice()">Nouvelle facture</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Filtrer par statut</label>
+                        <select class="form-select" id="invoiceFilter" onchange="loadInvoices()">
+                            <option value="all">Toutes</option>
+                            <option value="draft">Brouillon</option>
+                            <option value="sent">Envoyée</option>
+                            <option value="paid">Payée</option>
+                            <option value="overdue">En retard</option>
+                        </select>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Échéance</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoicesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Import -->
+            <div class="tab-content" id="tabImport">
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Transactions bancaires</h3>
+                        <div class="file-upload" onclick="document.getElementById('bankFile').click()">
+                            <input type="file" id="bankFile" accept=".csv" onchange="uploadBank()">
+                            <div class="file-upload-icon">📁</div>
+                            <div class="file-upload-text">Cliquez ou glissez un fichier CSV</div>
+                            <div class="form-hint" style="margin-top: 0.5rem;">Format: date, description, montant</div>
+                        </div>
+                        <div id="bankUploadStatus" class="alert hidden"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Factures de vente</h3>
+                        <div class="file-upload" onclick="document.getElementById('salesFile').click()">
+                            <input type="file" id="salesFile" accept=".csv,.xlsx" onchange="uploadSales()">
+                            <div class="file-upload-icon">📄</div>
+                            <div class="file-upload-text">Cliquez ou glissez un fichier</div>
+                            <div class="form-hint" style="margin-top: 0.5rem;">CSV ou XLSX acceptés</div>
+                        </div>
+                        <div id="salesUploadStatus" class="alert hidden"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Factures fournisseurs</h3>
+                        <div class="file-upload" onclick="document.getElementById('purchaseFile').click()">
+                            <input type="file" id="purchaseFile" accept=".csv,.xlsx" onchange="uploadPurchase()">
+                            <div class="file-upload-icon">📋</div>
+                            <div class="file-upload-text">Cliquez ou glissez un fichier</div>
+                            <div class="form-hint" style="margin-top: 0.5rem;">CSV ou XLSX acceptés</div>
+                        </div>
+                        <div id="purchaseUploadStatus" class="alert hidden"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Balance comptable</h3>
+                        <div class="file-upload" onclick="document.getElementById('trialBalanceFile').click()">
+                            <input type="file" id="trialBalanceFile" accept=".csv" onchange="uploadTrialBalance()">
+                            <div class="file-upload-icon">📊</div>
+                            <div class="file-upload-text">Cliquez ou glissez un fichier CSV</div>
+                            <div class="form-hint" style="margin-top: 0.5rem;">Format: account, label, debit, credit</div>
+                        </div>
+                        <div id="trialBalanceUploadStatus" class="alert hidden"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Alertes -->
+            <div class="tab-content" id="tabAlertes">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Alertes et notifications</div>
+                        <button class="btn btn-outline" onclick="markAllAlertsRead()">Tout marquer comme lu</button>
+                    </div>
+                    <div id="alertsList"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Analyse fiscale -->
+            <div class="tab-content" id="tabAnalyse">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Analyse fiscale et optimisation</div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <span>ℹ️</span>
+                        <div>
+                            <strong>Importez votre balance comptable</strong>
+                            <p style="margin-top: 0.25rem;">Pour obtenir une analyse complète de votre situation fiscale, importez votre balance dans l'onglet "Import".</p>
+                        </div>
+                    </div>
+
+                    <div id="analysisResults" class="hidden">
+                        <div class="grid grid-2">
+                            <div class="card" style="background: var(--bg-light);">
+                                <h3 style="margin-bottom: 1rem;">Indicateurs clés</h3>
+                                <div id="kpiList"></div>
+                            </div>
+
+                            <div class="card" style="background: var(--bg-light);">
+                                <h3 style="margin-bottom: 1rem;">Estimation fiscale</h3>
+                                <div id="taxEstimate"></div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Recommandations d'optimisation</h3>
+                            <div id="suggestions"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="row" style="margin-top:12px;justify-content:flex-end;">
-      <button class="btn-secondary" id="cancelLogin" type="button">Annuler</button>
-      <button class="btn" id="doLogin" type="button">Connexion</button>
+    <!-- Page: Contact -->
+    <div id="pageContact" class="page hidden">
+        <div class="hero" style="padding: 3rem 2rem;">
+            <h1 style="font-size: 2rem;">Rejoignez la bêta privée</h1>
+            <p>Remplissez le formulaire ci-dessous et découvrez comment OPTIMIS FISCALE peut transformer votre gestion d'entreprise.</p>
+        </div>
+
+        <div class="container" style="max-width: 600px;">
+            <div class="card">
+                <h2 style="margin-bottom: 2rem;">Demandez votre accès</h2>
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label class="form-label">Nom complet *</label>
+                        <input type="text" class="form-input" placeholder="Jean Dupont" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email professionnel *</label>
+                        <input type="email" class="form-input" placeholder="jean@entreprise.fr" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Nom de votre entreprise</label>
+                        <input type="text" class="form-input" placeholder="Mon Entreprise SARL">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Téléphone (optionnel)</label>
+                        <input type="tel" class="form-input" placeholder="06 12 34 56 78">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Message (optionnel)</label>
+                        <textarea class="form-input" rows="4" placeholder="Parlez-nous de vos besoins, de votre activité..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        Envoyer ma demande →
+                    </button>
+                </form>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Pourquoi nous rejoindre maintenant ?</h3>
+                    <div class="grid" style="gap: 1rem;">
+                        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                            <div class="feature-icon icon-blue" style="flex-shrink: 0; margin: 0;">🚀</div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 0.25rem;">Accès anticipé</div>
+                                <div style="font-size: 0.9375rem; color: var(--text-gray);">Soyez parmi les premiers à utiliser OPTIMIS FISCALE en version bêta</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                            <div class="feature-icon icon-green" style="flex-shrink: 0; margin: 0;">⚡</div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 0.25rem;">Réponse rapide</div>
+                                <div style="font-size: 0.9375rem; color: var(--text-gray);">Notre équipe vous contacte sous 24h</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                            <div class="feature-icon icon-purple" style="flex-shrink: 0; margin: 0;">🎁</div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 0.25rem;">Sans engagement</div>
+                                <div style="font-size: 0.9375rem; color: var(--text-gray);">Aucune carte bancaire requise pour tester</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem; text-align: center;">
+                    <h3 style="margin-bottom: 1rem;">Contactez-nous</h3>
+                    <div style="color: var(--text-gray);">
+                        <p><strong>Email:</strong> contact@optimisfiscale.fr</p>
+                        <p><strong>Téléphone:</strong> +33 1 23 45 67 89</p>
+                        <p style="margin-top: 1rem;">
+                            <strong>Adresse:</strong><br>
+                            Paris, France<br>
+                            Hébergement européen (RGPD)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- CHAT BUTTON -->
-<div id="chat-btn">
-  <button id="openChat" type="button" aria-haspopup="dialog" aria-controls="chat-box">Chat</button>
-</div>
+    <!-- Modal: Login -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Connexion</div>
+                <button class="modal-close" onclick="hideLogin()">×</button>
+            </div>
 
-<!-- CHAT BOX -->
-<div id="chat-box" role="dialog" aria-modal="false" aria-labelledby="chatTitle">
-  <div id="chat-head">
-    <div class="name" style="display:flex;gap:8px;align-items:center">
-      <img src="https://placehold.co/56x56/3a71ff/ffffff?text=A" alt="Avatar Albert">
-      <span id="chatTitle">Albert — Assistant Fiscal</span>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Identifiant entreprise</label>
+                    <input type="text" class="form-input" id="loginCompanyId" placeholder="demo" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Se connecter →
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; text-align: center; color: var(--text-gray);">
+                <p>Pas encore de compte ? <a href="#" style="color: var(--primary); font-weight: 600;" onclick="switchPage('contact'); hideLogin(); return false;">Demandez un accès</a></p>
+            </div>
+        </div>
     </div>
-    <button id="closeChat" class="btn-secondary" style="padding:6px 10px;border-radius:10px" type="button">Fermer</button>
-  </div>
-  <div id="chat-log"></div>
-  <div id="chat-input">
-    <input id="chatText" type="text" placeholder="Posez votre question…" aria-label="Message pour le chat">
-    <button id="sendChat" type="button">Envoyer</button>
-  </div>
-</div>
 
-<!-- CHART.JS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-/* ===============================
-   BASIC HELPERS
-================================*/
-(function () {
-  const $ = id => document.getElementById(id);
-
-  const euro = v =>
-    (typeof v === "number" && isFinite(v))
-      ? v.toLocaleString(undefined, { style: "currency", currency: "EUR" })
-      : "—";
-
-  const pct = v =>
-    (v ?? v === 0)
-      ? Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%"
-      : "—";
-
-  const DEFAULT_API = "https://optimis-fiscale-production.up.railway.app";
-  const getApiBase = () => DEFAULT_API;
-
-  const setStatus = (msg, cls) => {
-    const el = $("status");
-    if (!el) return;
-    el.textContent = msg;
-    el.className = "status" + (cls ? " " + cls : "");
-  };
-
-  const spin = s => $("globalSpin")?.classList.toggle("active", !!s);
-
-  /* ===============================
-     PRIVACY MODAL
-  =================================*/
-  $("exportBtn").onclick = () => window.print();
-  $("privacyBtn").onclick = () => $("privacyModal").style.display = "grid";
-  $("closePrivacy").onclick = () => $("privacyModal").style.display = "none";
-  $("privacyModal").addEventListener("click", e => {
-    if (e.target === e.currentTarget) e.currentTarget.style.display = "none";
-  });
-
-  /* ===============================
-     CSV PREVIEW (TRIAL BALANCE)
-  =================================*/
-  $("csvInput").addEventListener("change", () => {
-    const f = $("csvInput").files?.[0];
-    if (!f) {
-      $("csvPreview").style.display = "none";
-      $("fileName").style.display = "none";
-      $("fileName").textContent = "";
-      return;
-    }
-
-    $("fileName").style.display = "inline-block";
-    $("fileName").textContent = f.name;
-
-    const r = new FileReader();
-    r.onload = () => {
-      const text = String(r.result || "");
-      const rows = text.trim().split(/\r?\n/).slice(0, 11)
-        .map(line => line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/));
-
-      if (!rows.length) {
-        $("csvPreview").style.display = "none";
-        return;
-      }
-
-      $("csvPreview").style.display = "block";
-      $("csvTableWrap").innerHTML =
-        `<table>
-          <thead>${rows[0].map(h => `<th>${h}</th>`).join("")}</thead>
-          <tbody>${
-            rows.slice(1)
-              .map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`)
-              .join("")
-          }</tbody>
-        </table>`;
-    };
-    r.readAsText(f);
-  });
-
-  /* ===============================
-     ANALYZE CSV
-  =================================*/
-  async function runAnalyze() {
-    const base = getApiBase();
-    const file = $("csvInput").files?.[0];
-    const t = $("turnover").value;
-
-    if (!file) {
-      setStatus("Veuillez choisir un CSV", "err");
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append("file", file);
-    if (t) fd.append("turnover", t);
-
-    spin(true);
-    setStatus("Analyse en cours…");
-    $("analyzeBtn").disabled = true;
-
-    try {
-      const r = await fetch(base + "/analyze/trial-balance", {
-        method: "POST",
-        body: fd,
-        credentials: "include"
-      });
-
-      const d = await r.json().catch(() => ({}));
-
-      if (!r.ok) throw new Error(d?.detail || "Erreur API");
-
-      $("results").style.display = "block";
-      const k = d.kpi || {};
-      const tx = d.tax || {};
-
-      $("kpi").innerHTML = `
-        <div><span>CA</span><strong>${euro(k.revenue)}</strong></div>
-        <div><span>Marge brute</span><strong>${euro(k.gross_margin)}</strong></div>
-        <div><span>EBITDA</span><strong>${euro(k.ebitda_approx)} (${pct(k.ebitda_margin_pct)})</strong></div>
-        <div><span>Résultat net</span><strong>${euro(k.net_result)}</strong></div>
-      `;
-
-      $("tax").innerHTML = `
-        <div><span>IS estimé</span><strong>${euro(tx.corporate_income_tax)}</strong></div>
-        <div><span>TVA nette</span><strong>${euro(tx.vat_balance)}</strong></div>
-      `;
-
-      setStatus("Analyse terminée", "ok");
-    } catch (e) {
-      setStatus(e.message || "Erreur", "err");
-    } finally {
-      spin(false);
-      $("analyzeBtn").disabled = false;
-    }
-  }
-  $("analyzeBtn").onclick = runAnalyze;
-
-  /* ===============================
-     AUDIT
-  =================================*/
-  async function runAudit() {
-    const base = getApiBase();
-    const f = $("csvInput").files?.[0];
-    const fw = $("framework").value;
-
-    if (!f) {
-      setStatus("Veuillez choisir un CSV", "err");
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append("file", f);
-    fd.append("standard", fw);
-
-    spin(true);
-    setStatus("Audit en cours…");
-    $("auditBtn").disabled = true;
-
-    try {
-      const r = await fetch(base + "/audit/test", {
-        method: "POST",
-        body: fd,
-        credentials: "include"
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d?.detail || "Erreur API");
-
-      $("results").style.display = "block";
-      const s = d.summary || {};
-      const issues = d.issues || [];
-      const top = d.top_accounts || [];
-
-      $("auditSummary").innerHTML = `
-        <div><span>Total lignes</span><strong>${s.total_rows ?? "—"}</strong></div>
-        <div><span>Débits</span><strong>${euro(s.total_debit)}</strong></div>
-        <div><span>Crédits</span><strong>${euro(s.total_credit)}</strong></div>
-        <div><span>Écart</span><strong>${euro(s.imbalance)}</strong></div>
-        <div><span>Référentiel</span><strong>${s.framework || fw}</strong></div>
-      `;
-
-      $("auditIssues").innerHTML =
-        issues.length
-          ? issues.map(i =>
-              `<li><strong>[${(i.severity || "").toString().toUpperCase()}]</strong> ${i.message || ""}${
-                i.count ? " (" + i.count + ")" : ""
-              }</li>`
-            ).join("")
-          : "<li>Aucun point d'audit majeur relevé</li>";
-
-      $("auditTop").innerHTML = `
-        <table>
-          <thead><tr><th>Compte</th><th>Libellé</th><th>Solde</th><th>Absolu</th></tr></thead>
-          <tbody>${
-            top.map(t =>
-              `<tr>
-                <td>${t.account}</td>
-                <td>${t.label}</td>
-                <td>${euro(t.balance)}</td>
-                <td>${euro(t.abs_balance)}</td>
-              </tr>`
-            ).join("")
-          }</tbody>
-        </table>
-      `;
-
-      setStatus("Audit terminé", "ok");
-    } catch (e) {
-      setStatus(e.message || "Erreur", "err");
-    } finally {
-      spin(false);
-      $("auditBtn").disabled = false;
-    }
-  }
-  $("auditBtn").onclick = runAudit;
-
-  /* ===============================
-     LOCAL FISCAL OPTIMIZATION
-  =================================*/
-  function localOptimizeFromKPIs(kpi, tax) {
-    const out = [];
-    const rev = +kpi.revenue || 0;
-    const gm = +kpi.gross_margin || 0;
-    const ebitdaPct = +kpi.ebitda_margin_pct || 0;
-    const net = +kpi.net_result || 0;
-    const vat = +(tax?.vat_balance ?? 0);
-
-    if (rev > 0 && gm / (rev || 1) < 0.30) {
-      out.push("Marge brute faible : renégocier les achats, optimiser les coûts logistiques (transport, stockage) et revoir la gestion des stocks.");
-    }
-    if (ebitdaPct < 10) {
-      out.push("EBITDA faible : analyser les charges récurrentes (abonnements, logiciels, loyers, assurances) et les rationaliser.");
-    }
-    if (net < 0) {
-      out.push("Résultat net déficitaire : vérifier les possibilités de report des déficits (en avant / en arrière) et l'impact sur l'IS.");
-    }
-
-    out.push("Analyser l'éligibilité aux dispositifs de type CIR/CII en cas de projets R&D ou d'innovation.");
-    out.push("Vérifier les régimes JEI/JEU et autres exonérations ou réductions possibles au niveau local (ZFU, ZRR, etc.).");
-
-    if (vat > 0) {
-      out.push("TVA collectée significativement supérieure à la TVA déductible : revoir le régime de TVA et les possibilités d'optimisation (périodicité, acomptes, etc.).");
-    }
-    if (vat < 0) {
-      out.push("Crédit de TVA récurrent : envisager un remboursement de crédit de TVA plutôt qu'un simple report.");
-    }
-
-    if (net > 0) {
-      out.push("Arbitrer entre rémunération, dividendes, intéressement et participation pour optimiser la fiscalité globale dirigeant / société.");
-    }
-
-    out.push("Revoir les provisions (clients douteux, stocks) et s'assurer qu'elles sont correctement documentées pour limiter le risque fiscal.");
-    return out;
-  }
-
-  async function runOptimize() {
-    const base = getApiBase();
-    const file = $("csvInput").files?.[0];
-    const t = $("turnover")?.value;
-
-    if (!file) {
-      setStatus("Veuillez choisir un CSV", "err");
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append("file", file);
-    if (t) fd.append("turnover", t);
-
-    spin(true);
-    setStatus("Analyse pour optimisation…");
-    $("optimizeBtn").disabled = true;
-
-    try {
-      const r = await fetch(base + "/analyze/trial-balance", {
-        method: "POST",
-        body: fd,
-        credentials: "include"
-      });
-      const analysis = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(analysis?.detail || "Erreur analyse");
-
-      $("results").style.display = "block";
-
-      const k = analysis.kpi || {};
-      const tx = analysis.tax || {};
-
-      const items = localOptimizeFromKPIs(k, tx);
-
-      $("optimizeOut").innerHTML =
-        `<ul>${items.map(x => `<li>${x}</li>`).join("")}</ul>
-         <div style="margin-top:8px;font-size:12px;color:#a3adbf">
-           Note : recommandations indicatives, à valider avec votre conseil fiscal habituel.
-         </div>`;
-
-      setStatus("Optimisation (locale) prête", "ok");
-    } catch (e) {
-      setStatus(e.message || "Erreur", "err");
-      $("optimizeOut").textContent = "Erreur : " + (e.message || e);
-    } finally {
-      $("optimizeBtn").disabled = false;
-      spin(false);
-    }
-  }
-  $("optimizeBtn").onclick = runOptimize;
-
-  /* ===============================
-     LOGIN / LOGOUT
-  =================================*/
-  function openLogin() {
-    $("loginModal").style.display = "grid";
-  }
-  function closeLogin() {
-    $("loginModal").style.display = "none";
-  }
-
-  $("loginBtn").onclick = openLogin;
-  $("cancelLogin").onclick = closeLogin;
-
-  $("doLogin").onclick = async () => {
-    const base = getApiBase();
-    const id = $("companyId").value.trim();
-    const pwd = $("companyPwd").value;
-
-    if (!id || !pwd) {
-      setStatus("Identifiant et mot de passe requis", "err");
-      return;
-    }
-
-    spin(true);
-    setStatus("Connexion…");
-    try {
-      const r = await fetch(base + "/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ company_id: id, password: pwd })
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d?.detail || "Échec connexion");
-
-      closeLogin();
-      $("who").style.display = "inline-block";
-      $("who").textContent = "Connecté : " + (d.company_id || id);
-
-      $("loginBtn").style.display = "none";
-      $("logoutBtn").style.display = "inline-flex";
-      setStatus("Connecté", "ok");
-
-      // Rafraîchit le dashboard après connexion
-      await loadDashboard();
-    } catch (e) {
-      setStatus(e.message || "Erreur connexion", "err");
-    } finally {
-      spin(false);
-    }
-  };
-
-  $("logoutBtn").onclick = async () => {
-    const base = getApiBase();
-    try {
-      spin(true);
-      await fetch(base + "/auth/logout", {
-        method: "POST",
-        credentials: "include"
-      });
-    } finally {
-      $("who").style.display = "none";
-      $("who").textContent = "";
-      $("loginBtn").style.display = "inline-flex";
-      $("logoutBtn").style.display = "none";
-      setStatus("Déconnecté", "ok");
-      spin(false);
-    }
-  };
-
-  /* ===============================
-     CHAT
-  =================================*/
-  const chatBox = $("chat-box");
-  const chatLog = $("chat-log");
-  const chatText = $("chatText");
-
-  const appendMsg = (role, text) => {
-    const div = document.createElement("div");
-    div.className = "msg " + (role === "user" ? "me" : "bot");
-    div.textContent = text;
-    chatLog.appendChild(div);
-    chatLog.scrollTop = chatLog.scrollHeight;
-  };
-
-  const isLoggedIn = () => $("logoutBtn").style.display !== "none";
-
-  $("openChat").onclick = () => {
-    if (!isLoggedIn()) {
-      setStatus("Veuillez vous connecter pour utiliser le chat", "err");
-      openLogin();
-      return;
-    }
-    chatBox.style.display = "block";
-    chatText.focus();
-  };
-
-  $("closeChat").onclick = () => {
-    chatBox.style.display = "none";
-  };
-
-  $("sendChat").onclick = sendChat;
-  chatText.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendChat();
-    }
-  });
-
-  async function sendChat() {
-    const base = getApiBase();
-    const text = chatText.value.trim();
-    if (!text) return;
-
-    appendMsg("user", text);
-    chatText.value = "";
-    setStatus("Albert réfléchit…");
-
-    try {
-      const r = await fetch(base + "/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ messages: [{ role: "user", content: text }] })
-      });
-
-      if (r.status === 401) {
-        setStatus("Session expirée. Veuillez vous reconnecter.", "err");
-        openLogin();
-        return;
-      }
-
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d?.detail || "Erreur API");
-
-      appendMsg("assistant", d.reply || "(réponse vide)");
-      setStatus("Prêt");
-    } catch (e) {
-      appendMsg("assistant", "Erreur : " + (e.message || e));
-      setStatus("Erreur chat", "err");
-    }
-  }
-
-  /* ===============================
-     UPLOAD FILES (BANK + INVOICES)
-  =================================*/
-  async function uploadFile(inputId, endpoint, statusId) {
-    const file = $(inputId).files?.[0];
-    const status = $(statusId);
-    if (!file) {
-      status.textContent = "Veuillez choisir un fichier";
-      status.className = "status err";
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append("file", file);
-
-    try {
-      spin(true);
-      status.textContent = "Importation en cours…";
-      status.className = "status";
-
-      const r = await fetch(getApiBase() + endpoint, {
-        method: "POST",
-        body: fd,
-        credentials: "include"
-      });
-
-      if (r.ok) {
-        status.textContent = "✅ Importation réussie";
-        status.className = "status ok";
-        await loadDashboard();
-      } else {
-        const err = await r.text();
-        status.textContent = "❌ Erreur : " + err.slice(0, 150);
-        status.className = "status err";
-      }
-    } catch (e) {
-      status.textContent = "❌ " + (e.message || "Erreur réseau");
-      status.className = "status err";
-    } finally {
-      spin(false);
-    }
-  }
-
-  $("uploadBankBtn").onclick =
-    () => uploadFile("bankFile", "/bank/upload", "bankUploadStatus");
-  $("uploadSalesBtn").onclick =
-    () => uploadFile("salesFile", "/invoices/sales", "salesUploadStatus");
-  $("uploadPurchasesBtn").onclick =
-    () => uploadFile("purchasesFile", "/invoices/purchases", "purchasesUploadStatus");
-
-  /* ===============================
-     DASHBOARD: SUMMARY + TABLES
-  =================================*/
-  let cashSummaryChart = null;
-  let cashDailyChart = null;
-  let cashForecastChart = null;
-
-  async function loadDashboard() {
-    const apiBase = getApiBase();
-    try {
-      const [bankRes, salesRes, purchasesRes, alertsRes] = await Promise.allSettled([
-        fetch(apiBase + "/bank/summary", { credentials: "include" }),
-        fetch(apiBase + "/invoices/sales", { credentials: "include" }),
-        fetch(apiBase + "/invoices/purchases", { credentials: "include" }),
-        fetch(apiBase + "/alerts", { credentials: "include" })
-      ]);
-
-      const bank = bankRes.status === "fulfilled" && bankRes.value.ok
-        ? await bankRes.value.json()
-        : {};
-      const sales = salesRes.status === "fulfilled" && salesRes.value.ok
-        ? await salesRes.value.json()
-        : [];
-      const purchases = purchasesRes.status === "fulfilled" && purchasesRes.value.ok
-        ? await purchasesRes.value.json()
-        : [];
-      const alerts = alertsRes.status === "fulfilled" && alertsRes.value.ok
-        ? await alertsRes.value.json()
-        : [];
-
-      $("bankBalance").textContent = euro(bank.balance ?? 0);
-      $("bankInflows").textContent = euro(bank.inflows ?? 0);
-      $("bankOutflows").textContent = euro(bank.outflows ?? 0);
-
-      // SUMMARY CHART (Entrées / Sorties / Solde)
-      const ctxSum = $("cashChart").getContext("2d");
-      if (cashSummaryChart) cashSummaryChart.destroy();
-      cashSummaryChart = new Chart(ctxSum, {
-        type: "line",
-        data: {
-          labels: ["Entrées", "Sorties", "Solde"],
-          datasets: [{
-            data: [
-              bank.inflows || 0,
-              Math.abs(bank.outflows || 0),
-              bank.balance || 0
-            ],
-            borderColor: "#3a71ff",
-            backgroundColor: "rgba(58,113,255,0.2)",
-            tension: 0.3,
-            fill: true
-          }]
-        },
-        options: {
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: "#a3adbf" } },
-            y: { ticks: { color: "#a3adbf" } }
-          }
+    <!-- Modal: Create Invoice -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Créer une facture</div>
+                <button class="modal-close" onclick="hideCreateInvoice()">×</button>
+            </div>
+
+            <form id="invoiceForm" onsubmit="handleCreateInvoice(event)">
+                <div class="form-group">
+                    <label class="form-label">N° de facture</label>
+                    <input type="text" class="form-input" id="invoiceNumber" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Client</label>
+                    <input type="text" class="form-input" id="invoiceClient" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email client</label>
+                    <input type="email" class="form-input" id="invoiceClientEmail">
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Date d'émission</label>
+                        <input type="date" class="form-input" id="invoiceDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Date d'échéance</label>
+                        <input type="date" class="form-input" id="invoiceDue" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Montant HT</label>
+                        <input type="number" class="form-input" id="invoiceAmount" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">TVA (%)</label>
+                        <input type="number" class="form-input" id="invoiceTax" value="20" step="0.01">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" id="invoiceDescription" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Créer la facture →
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
+        let authToken = null;
+        let currentUser = null;
+        let charts = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupNavigation();
+            setupTabs();
+            
+            // Check if logged in
+            authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                verifyAuth();
+            }
+        });
+
+        // Navigation
+        function setupNavigation() {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    const page = link.dataset.page;
+                    switchPage(page);
+                });
+            });
         }
-      });
 
-      // SALES
-      $("salesTable").querySelector("tbody").innerHTML =
-        Array.isArray(sales) && sales.length
-          ? sales.map(x => `
-              <tr>
-                <td>${x.number}</td>
-                <td>${x.issue_date}</td>
-                <td>${x.due_date}</td>
-                <td>${euro(+x.amount || 0)}</td>
-                <td>${x.status}</td>
-              </tr>
-            `).join("")
-          : `<tr><td colspan="5">Aucune facture</td></tr>`;
+        function switchPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            
+            // Show selected page
+            const pageMap = {
+                'accueil': 'pageAccueil',
+                'fonctionnalites': 'pageFonctionnalites',
+                'dashboard': 'pageDashboard',
+                'contact': 'pageContact'
+            };
+            
+            const pageId = pageMap[page];
+            if (pageId) {
+                document.getElementById(pageId).classList.remove('hidden');
+            }
 
-      // PURCHASES
-      $("purchasesTable").querySelector("tbody").innerHTML =
-        Array.isArray(purchases) && purchases.length
-          ? purchases.map(x => `
-              <tr>
-                <td>${x.number}</td>
-                <td>${x.issue_date}</td>
-                <td>${x.due_date}</td>
-                <td>${euro(+x.amount || 0)}</td>
-                <td>${x.status}</td>
-              </tr>
-            `).join("")
-          : `<tr><td colspan="5">Aucune facture</td></tr>`;
+            // Update nav
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.page === page) {
+                    link.classList.add('active');
+                }
+            });
 
-      // ALERTS
-      $("alertsList").innerHTML =
-        Array.isArray(alerts) && alerts.length
-          ? alerts.map(a =>
-              `<li>${a.message} — <span style="color:#a3adbf">${a.due_date}</span></li>`
-            ).join("")
-          : "<li>Aucune alerte active</li>";
-
-      // DAILY + FORECAST CASHFLOW (from backend)
-      await Promise.all([
-        loadDailyCashflow(),
-        loadForecastCashflow()
-      ]);
-    } catch (e) {
-      console.error(e);
-      $("alertsList").innerHTML = "<li>Erreur de chargement des données</li>";
-    }
-  }
-
-  /* ===============================
-     DAILY & FORECAST CASHFLOW
-     GET /cashflow/daily
-     GET /cashflow/forecast
-  =================================*/
-  async function loadDailyCashflow() {
-    const apiBase = getApiBase();
-    try {
-      const r = await fetch(apiBase + "/cashflow/daily", { credentials: "include" });
-      if (!r.ok) {
-        console.warn("cashflow/daily HTTP", r.status);
-        return;
-      }
-      const data = await r.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        console.warn("No daily cashflow yet");
-        return;
-      }
-      renderDailyChart(data);
-    } catch (e) {
-      console.error("Daily cashflow error", e);
-    }
-  }
-
-  async function loadForecastCashflow() {
-    const apiBase = getApiBase();
-    try {
-      const r = await fetch(apiBase + "/cashflow/forecast", { credentials: "include" });
-      if (!r.ok) {
-        console.warn("cashflow/forecast HTTP", r.status);
-        return;
-      }
-      const data = await r.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        console.warn("No forecast cashflow yet");
-        return;
-      }
-      renderForecastChart(data);
-    } catch (e) {
-      console.error("Forecast cashflow error", e);
-    }
-  }
-
-  function renderDailyChart(data) {
-    const labels = data.map(x => x.date);
-    const balances = data.map(x => x.balance);
-    const ctx = $("dailyCashChart").getContext("2d");
-    if (cashDailyChart) cashDailyChart.destroy();
-    cashDailyChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Solde quotidien",
-          data: balances,
-          borderColor: "#2ecc71",
-          backgroundColor: "rgba(46,204,113,0.2)",
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: "#a3adbf" } },
-          y: { ticks: { color: "#a3adbf" } }
+            // Load data if dashboard
+            if (page === 'dashboard' && authToken) {
+                loadDashboard();
+            }
         }
-      }
-    });
-  }
 
-  function renderForecastChart(data) {
-    const labels = data.map(x => x.date);
-    const balances = data.map(x => x.balance);
-    const ctx = $("forecastCashChart").getContext("2d");
-    if (cashForecastChart) cashForecastChart.destroy();
-    cashForecastChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Prévisionnel de trésorerie",
-          data: balances,
-          borderColor: "#f1c40f",
-          backgroundColor: "rgba(241,196,15,0.15)",
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: "#a3adbf" } },
-          y: { ticks: { color: "#a3adbf" } }
+        // Tabs
+        function setupTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
         }
-      }
-    });
-  }
 
-  /* ===============================
-     INIT
-  =================================*/
-  document.addEventListener("DOMContentLoaded", () => {
-    // Optionnel : un futur bouton "openSettings" peut ouvrir un panneau API.
-    if ($("openSettings")) {
-      $("openSettings").addEventListener("click", () => {
-        alert("Paramètres API actuellement fixes : " + getApiBase());
-      });
-    }
-    loadDashboard().catch(() => {});
-  });
-})();
-</script>
+        function switchTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab' + tabName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')).classList.add('active');
+
+            // Load data
+            if (tabName === 'factures') loadInvoices();
+            if (tabName === 'alertes') loadAlerts();
+            if (tabName === 'tresorerie') refreshCashflow();
+        }
+
+        // Auth
+        function showLogin() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function hideLogin() {
+            document.getElementById('loginModal').classList.remove('active');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const companyId = document.getElementById('loginCompanyId').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ company_id: companyId, password: password })
+                });
+
+                if (!response.ok) throw new Error('Login failed');
+
+                const data = await response.json();
+                authToken = data.token || 'logged-in'; // Simplified
+                localStorage.setItem('authToken', authToken);
+                currentUser = { company_id: companyId };
+
+                hideLogin();
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                
+                switchPage('dashboard');
+                loadDashboard();
+            } catch (error) {
+                alert('Erreur de connexion. Vérifiez vos identifiants.');
+            }
+        }
+
+        async function verifyAuth() {
+            // Simplified - in production, verify with backend
+            currentUser = { company_id: 'user' };
+            document.getElementById('loginBtn').classList.add('hidden');
+            document.getElementById('logoutBtn').classList.remove('hidden');
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            document.getElementById('loginBtn').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+            switchPage('accueil');
+        });
+
+        // Dashboard
+        async function loadDashboard() {
+            try {
+                await Promise.all([
+                    loadDashboardStats(),
+                    loadDashboardCharts(),
+                    loadDashboardAlerts()
+                ]);
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+            }
+        }
+
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(`${API_BASE}/bank/summary`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                document.getElementById('dashCash').textContent = `€ ${(data.balance || 0).toFixed(2)}`;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadDashboardCharts() {
+            try {
+                const [cashflowRes, forecastRes] = await Promise.all([
+                    fetch(`${API_BASE}/cashflow/daily`, { credentials: 'include' }),
+                    fetch(`${API_BASE}/cashflow/forecast?days=30`, { credentials: 'include' })
+                ]);
+
+                const cashflowData = await cashflowRes.json();
+                const forecastData = await forecastRes.json();
+
+                // Cashflow 7 days
+                const ctx7 = document.getElementById('chartCashflow7').getContext('2d');
+                if (charts.cashflow7) charts.cashflow7.destroy();
+                charts.cashflow7 = new Chart(ctx7, {
+                    type: 'line',
+                    data: {
+                        labels: cashflowData.slice(-7).map(d => new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })),
+                        datasets: [{
+                            label: 'Trésorerie',
+                            data: cashflowData.slice(-7).map(d => d.balance),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                // Forecast 30 days
+                const ctx30 = document.getElementById('chartForecast30').getContext('2d');
+                if (charts.forecast30) charts.forecast30.destroy();
+                charts.forecast30 = new Chart(ctx30, {
+                    type: 'line',
+                    data: {
+                        labels: forecastData.map(d => new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })),
+                        datasets: [{
+                            label: 'Prévisions',
+                            data: forecastData.map(d => d.projected_balance || d.balance),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading charts:', error);
+            }
+        }
+
+        async function loadDashboardAlerts() {
+            try {
+                const response = await fetch(`${API_BASE}/alerts/?skip=0&limit=3`, {
+                    credentials: 'include'
+                });
+                const alerts = await response.json();
+                
+                const container = document.getElementById('dashAlerts');
+                if (alerts.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-gray);">Aucune alerte récente</p>';
+                    return;
+                }
+                
+                container.innerHTML = alerts.map(alert => {
+                    const type = alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'warning' : 'info';
+                    return `
+                        <div class="alert alert-${type}">
+                            <span>${alert.severity === 'high' ? '🔴' : alert.severity === 'medium' ? '🟡' : 'ℹ️'}</span>
+                            <div>
+                                <strong>${alert.title || alert.message}</strong>
+                                ${alert.title ? `<p style="margin-top: 0.25rem;">${alert.message}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+            }
+        }
+
+        // Invoices
+        async function loadInvoices() {
+            try {
+                const filter = document.getElementById('invoiceFilter').value;
+                const response = await fetch(`${API_BASE}/invoices/sales`, {
+                    credentials: 'include'
+                });
+                let invoices = await response.json();
+                
+                if (filter !== 'all') {
+                    invoices = invoices.filter(inv => inv.status === filter);
+                }
+                
+                const tbody = document.getElementById('invoicesTable');
+                if (invoices.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-gray);">Aucune facture trouvée</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = invoices.map(inv => {
+                    const statusBadges = {
+                        'draft': '<span class="badge badge-warning">Brouillon</span>',
+                        'sent': '<span class="badge badge-info">Envoyée</span>',
+                        'paid': '<span class="badge badge-success">Payée</span>',
+                        'overdue': '<span class="badge badge-danger">En retard</span>'
+                    };
+                    
+                    return `
+                        <tr>
+                            <td>${inv.number}</td>
+                            <td>${inv.client_name}</td>
+                            <td>${new Date(inv.issue_date).toLocaleDateString('fr-FR')}</td>
+                            <td>${new Date(inv.due_date).toLocaleDateString('fr-FR')}</td>
+                            <td>€ ${(inv.amount || 0).toFixed(2)}</td>
+                            <td>${statusBadges[inv.status] || inv.status}</td>
+                            <td><button class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Voir</button></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+            }
+        }
+
+        function showCreateInvoice() {
+            document.getElementById('invoiceModal').classList.add('active');
+            document.getElementById('invoiceDate').valueAsDate = new Date();
+            const due = new Date();
+            due.setDate(due.getDate() + 30);
+            document.getElementById('invoiceDue').valueAsDate = due;
+        }
+
+        function hideCreateInvoice() {
+            document.getElementById('invoiceModal').classList.remove('active');
+        }
+
+        async function handleCreateInvoice(e) {
+            e.preventDefault();
+            
+            const invoiceData = {
+                client_name: document.getElementById('invoiceClient').value,
+                client_email: document.getElementById('invoiceClientEmail').value,
+                number: document.getElementById('invoiceNumber').value,
+                issue_date: document.getElementById('invoiceDate').value,
+                due_date: document.getElementById('invoiceDue').value,
+                amount_ht: parseFloat(document.getElementById('invoiceAmount').value),
+                vat_rate: parseFloat(document.getElementById('invoiceTax').value) / 100,
+                description: document.getElementById('invoiceDescription').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/invoices/sales/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(invoiceData)
+                });
+
+                if (!response.ok) throw new Error('Failed to create invoice');
+
+                hideCreateInvoice();
+                loadInvoices();
+                alert('Facture créée avec succès !');
+            } catch (error) {
+                alert('Erreur lors de la création de la facture');
+                console.error(error);
+            }
+        }
+
+        // File Uploads
+        async function uploadBank() {
+            const file = document.getElementById('bankFile').files[0];
+            if (!file) return;
+            
+            await uploadFile(file, '/bank/upload', 'bankUploadStatus');
+        }
+
+        async function uploadSales() {
+            const file = document.getElementById('salesFile').files[0];
+            if (!file) return;
+            
+            await uploadFile(file, '/invoices/sales', 'salesUploadStatus');
+        }
+
+        async function uploadPurchase() {
+            const file = document.getElementById('purchaseFile').files[0];
+            if (!file) return;
+            
+            await uploadFile(file, '/invoices/purchases', 'purchaseUploadStatus');
+        }
+
+        async function uploadTrialBalance() {
+            const file = document.getElementById('trialBalanceFile').files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const statusEl = document.getElementById('trialBalanceUploadStatus');
+            statusEl.className = 'alert alert-info';
+            statusEl.textContent = 'Analyse en cours...';
+            statusEl.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE}/analyze/trial-balance`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) throw new Error('Upload failed');
+                
+                const data = await response.json();
+                
+                statusEl.className = 'alert alert-success';
+                statusEl.innerHTML = '<span>✓</span><div>Analyse terminée ! <a href="#" onclick="switchTab(\'analyse\'); return false;" style="color: inherit; text-decoration: underline;">Voir les résultats</a></div>';
+                
+                displayAnalysisResults(data);
+            } catch (error) {
+                statusEl.className = 'alert alert-danger';
+                statusEl.innerHTML = `<span>✗</span><div>Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function uploadFile(file, endpoint, statusId) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const statusEl = document.getElementById(statusId);
+            statusEl.className = 'alert alert-info';
+            statusEl.textContent = 'Import en cours...';
+            statusEl.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) throw new Error('Upload failed');
+                
+                const data = await response.json();
+                
+                statusEl.className = 'alert alert-success';
+                statusEl.innerHTML = `<span>✓</span><div>${data.count || 0} enregistrements importés</div>`;
+                
+                loadDashboard();
+            } catch (error) {
+                statusEl.className = 'alert alert-danger';
+                statusEl.innerHTML = `<span>✗</span><div>Erreur: ${error.message}</div>`;
+            }
+        }
+
+        // Analysis
+        function displayAnalysisResults(data) {
+            document.getElementById('analysisResults').classList.remove('hidden');
+            
+            const kpi = data.kpi || {};
+            const tax = data.tax || {};
+            const suggestions = data.suggestions || [];
+            
+            // KPIs
+            document.getElementById('kpiList').innerHTML = `
+                <div style="display: grid; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-gray);">Chiffre d'affaires</span>
+                        <strong>€ ${(kpi.revenue || 0).toFixed(2)}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-gray);">Marge brute</span>
+                        <strong>€ ${(kpi.gross_margin || 0).toFixed(2)}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-gray);">EBITDA</span>
+                        <strong>€ ${(kpi.ebitda_approx || 0).toFixed(2)}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-gray);">Résultat net</span>
+                        <strong>€ ${(kpi.net_result || 0).toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+            
+            // Tax
+            document.getElementById('taxEstimate').innerHTML = `
+                <div style="display: grid; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-gray);">IS estimé</span>
+                        <strong>€ ${(tax.corporate_income_tax || 0).toFixed(2)}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-gray);">Contribution sociale</span>
+                        <strong>€ ${(tax.social_contribution_on_cit || 0).toFixed(2)}</strong>
+                    </div>
+                    ${tax.vat_balance !== undefined && tax.vat_balance !== null ? `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-gray);">TVA nette</span>
+                        <strong>€ ${(tax.vat_balance || 0).toFixed(2)}</strong>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Suggestions
+            if (suggestions.length > 0) {
+                document.getElementById('suggestions').innerHTML = suggestions.map(s => `
+                    <div class="alert alert-info" style="margin-bottom: 1rem;">
+                        <span>💡</span>
+                        <div>
+                            <strong>${s.title}</strong>
+                            <p style="margin-top: 0.5rem;">${s.rationale}</p>
+                            ${s.impact ? `<p style="margin-top: 0.5rem; font-size: 0.875rem;"><strong>Impact:</strong> ${s.impact}</p>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('suggestions').innerHTML = '<p style="color: var(--text-gray);">Aucune recommandation spécifique pour le moment.</p>';
+            }
+        }
+
+        // Alerts
+        async function loadAlerts() {
+            try {
+                const response = await fetch(`${API_BASE}/alerts/?skip=0&limit=50`, {
+                    credentials: 'include'
+                });
+                const alerts = await response.json();
+                
+                const container = document.getElementById('alertsList');
+                if (alerts.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-gray); text-align: center; padding: 2rem;">Aucune alerte</p>';
+                    return;
+                }
+                
+                container.innerHTML = alerts.map(alert => {
+                    const type = alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'warning' : 'info';
+                    return `
+                        <div class="alert alert-${type}">
+                            <span>${alert.severity === 'high' ? '🔴' : alert.severity === 'medium' ? '🟡' : 'ℹ️'}</span>
+                            <div style="flex: 1;">
+                                <strong>${alert.title || alert.message}</strong>
+                                ${alert.title && alert.message ? `<p style="margin-top: 0.25rem;">${alert.message}</p>` : ''}
+                                <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-light);">
+                                    ${new Date(alert.created_at || alert.due_date).toLocaleDateString('fr-FR')}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+            }
+        }
+
+        async function markAllAlertsRead() {
+            // Implementation here
+            alert('Fonctionnalité à venir');
+        }
+
+        // Cashflow
+        async function refreshCashflow() {
+            try {
+                const [cashflowRes, transactionsRes] = await Promise.all([
+                    fetch(`${API_BASE}/cashflow/daily`, { credentials: 'include' }),
+                    fetch(`${API_BASE}/bank/transactions`, { credentials: 'include' })
+                ]);
+
+                const cashflowData = await cashflowRes.json();
+                const transactions = await transactionsRes.json();
+
+                // Full cashflow chart
+                const ctxFull = document.getElementById('chartCashflowFull').getContext('2d');
+                if (charts.cashflowFull) charts.cashflowFull.destroy();
+                charts.cashflowFull = new Chart(ctxFull, {
+                    type: 'line',
+                    data: {
+                        labels: cashflowData.map(d => new Date(d.date).toLocaleDateString('fr-FR')),
+                        datasets: [{
+                            label: 'Solde',
+                            data: cashflowData.map(d => d.balance),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                // Transactions table
+                const tbody = document.getElementById('transactionsTable');
+                tbody.innerHTML = transactions.slice(0, 50).map(trans => `
+                    <tr>
+                        <td>${new Date(trans.date).toLocaleDateString('fr-FR')}</td>
+                        <td>${trans.description || trans.label}</td>
+                        <td>${trans.category || 'Non catégorisé'}</td>
+                        <td style="color: ${trans.amount >= 0 ? 'var(--success)' : 'var(--danger)'}">
+                            ${trans.amount >= 0 ? '+' : ''}€ ${trans.amount.toFixed(2)}
+                        </td>
+                        <td>€ ${trans.balance.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading cashflow:', error);
+            }
+        }
+
+        // Contact Form
+        document.getElementById('contactForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Merci ! Votre demande a été envoyée. Nous vous contacterons sous 24h.');
+            e.target.reset();
+        });
+    </script>
 </body>
 </html>
