@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OPTIMIS FISCALE - Votre assistant de gestion intelligent</title>
+    <title>SUMMA - Votre assistant de gestion intelligent</title>
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -648,8 +648,8 @@
     <header class="header">
         <div class="header-content">
             <div class="logo-container">
-                <div class="logo-icon">O</div>
-                <div class="logo-text">OPTIMIS FISCALE</div>
+                <div class="logo-icon">S</div>
+                <div class="logo-text">SUMMA</div>
             </div>
             <nav class="nav-menu">
                 <a class="nav-link active" data-page="accueil">Accueil</a>
@@ -658,7 +658,7 @@
                 <a class="nav-link" data-page="contact">Contact</a>
             </nav>
             <div>
-                <button class="btn btn-primary" id="loginBtn">Accès anticipé →</button>
+                <button class="btn btn-primary" id="loginBtn">Se connecter</button>
                 <button class="btn btn-outline hidden" id="logoutBtn">Déconnexion</button>
             </div>
         </div>
@@ -735,10 +735,10 @@
                 </div>
             </section>
 
-            <!-- Comment OPTIMIS simplifie tout -->
+            <!-- Comment SUMMA simplifie tout -->
             <section class="section">
                 <div class="section-header">
-                    <h2 class="section-title">Comment OPTIMIS FISCALE simplifie tout</h2>
+                    <h2 class="section-title">Comment SUMMA simplifie tout</h2>
                     <p class="section-subtitle">3 étapes pour reprendre le contrôle de votre entreprise</p>
                 </div>
 
@@ -761,10 +761,10 @@
                 </div>
             </section>
 
-            <!-- Pourquoi choisir OPTIMIS -->
+            <!-- Pourquoi choisir SUMMA -->
             <section class="section">
                 <div class="section-header">
-                    <h2 class="section-title">Pourquoi choisir OPTIMIS FISCALE ?</h2>
+                    <h2 class="section-title">Pourquoi choisir SUMMA ?</h2>
                     <p class="section-subtitle">Une solution complète pensée pour les dirigeants d'aujourd'hui</p>
                 </div>
 
@@ -796,7 +796,7 @@
         <!-- CTA Section -->
         <section class="cta-section">
             <div class="cta-title">Prêt à simplifier votre gestion ?</div>
-            <div class="cta-text">Rejoignez les entrepreneurs qui ont déjà pris de leur temps en adoptant OPTIMIS FISCALE. Plus d'oublis, plus de stress, plus de panique à la TVA.</div>
+            <div class="cta-text">Rejoignez les entrepreneurs qui ont déjà gagné du temps en adoptant SUMMA. Plus d'oublis, plus de stress, plus de panique à la TVA.</div>
             <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showLogin()">
                 Rejoignez la bêta privée →
             </button>
@@ -972,9 +972,238 @@
     <!-- Page: Dashboard (protected) -->
     <div id="pageDashboard" class="page hidden">
         <div class="container">
+            <!-- Welcome Tutorial (shown on first login) -->
+            <div id="welcomeTutorial" class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <h2 style="color: white; margin-bottom: 1rem;">👋 Bienvenue sur SUMMA !</h2>
+                        <p style="opacity: 0.95; margin-bottom: 1.5rem; line-height: 1.6;">
+                            Découvrez comment utiliser votre tableau de bord en 3 étapes simples.
+                        </p>
+                        <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showTutorial()">
+                            Démarrer le guide →
+                        </button>
+                        <button class="btn btn-outline" style="margin-left: 0.5rem; border-color: white; color: white;" onclick="dismissTutorial()">
+                            Plus tard
+                        </button>
+                    </div>
+                    <button onclick="dismissTutorial()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; flex-shrink: 0;">×</button>
+                </div>
+            </div>
+
+            <!-- Tutorial Modal -->
+            <div id="tutorialModal" class="modal">
+                <div class="modal-content" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <div class="modal-title">Guide d'utilisation</div>
+                        <button class="modal-close" onclick="closeTutorial()">×</button>
+                    </div>
+
+                    <!-- Tutorial Steps -->
+                    <div id="tutorialStep1" class="tutorial-step">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">1</div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Importez vos données</h3>
+                        </div>
+
+                        <div class="card" style="background: var(--bg-light); margin-bottom: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem;">📁 Allez dans l'onglet "Import"</h4>
+                            <p style="color: var(--text-gray); line-height: 1.6; margin-bottom: 1rem;">
+                                Cliquez sur l'onglet <strong>"Import"</strong> en haut de la page pour commencer à importer vos données.
+                            </p>
+                            
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📊 Transactions bancaires :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray);">Téléchargez vos relevés bancaires au format CSV avec les colonnes : date, description, montant</p>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📄 Factures de vente :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray);">Importez vos factures clients (CSV/XLSX) avec : numéro, client, date, échéance, montant</p>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📋 Factures fournisseurs :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray);">Importez vos factures d'achats (CSV/XLSX) avec les mêmes colonnes</p>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📈 Balance comptable :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray);">Pour l'analyse fiscale, importez votre balance avec : account, label, debit, credit</p>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <span>💡</span>
+                            <div>
+                                <strong>Astuce :</strong> Commencez par importer vos transactions bancaires, c'est le plus important pour visualiser votre trésorerie.
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 2rem;">
+                            <button class="btn btn-outline" onclick="closeTutorial()">Fermer</button>
+                            <button class="btn btn-primary" onclick="nextTutorialStep(2)">Suivant →</button>
+                        </div>
+                    </div>
+
+                    <div id="tutorialStep2" class="tutorial-step hidden">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">2</div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Visualisez votre activité</h3>
+                        </div>
+
+                        <div class="card" style="background: var(--bg-light); margin-bottom: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem;">📊 Explorez les onglets</h4>
+                            
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">🏠 Vue d'ensemble :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray); margin-bottom: 0.5rem;">
+                                    Votre tableau de bord principal avec les indicateurs clés : trésorerie actuelle, factures en attente, revenus du mois.
+                                </p>
+                                <p style="font-size: 0.875rem; color: var(--text-light);">
+                                    Les graphiques montrent l'évolution sur 7 jours et les prévisions sur 30 jours.
+                                </p>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">💰 Trésorerie :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray); margin-bottom: 0.5rem;">
+                                    Analyse détaillée de votre trésorerie avec un graphique complet et la liste de toutes vos transactions.
+                                </p>
+                                <p style="font-size: 0.875rem; color: var(--text-light);">
+                                    Utilisez le bouton "Actualiser" pour mettre à jour les données.
+                                </p>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📄 Factures :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray); margin-bottom: 0.5rem;">
+                                    Gérez toutes vos factures : créez de nouvelles factures, filtrez par statut (brouillon, envoyée, payée, en retard).
+                                </p>
+                                <p style="font-size: 0.875rem; color: var(--text-light);">
+                                    Cliquez sur "Nouvelle facture" pour créer une facture directement depuis l'interface.
+                                </p>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">🔔 Alertes :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray);">
+                                    Consultez toutes vos notifications : échéances fiscales, factures en retard, recommandations.
+                                </p>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px;">
+                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📈 Analyse fiscale :</p>
+                                <p style="font-size: 0.9375rem; color: var(--text-gray);">
+                                    Après avoir importé votre balance comptable, obtenez une analyse complète avec recommandations d'optimisation fiscale.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                            <button class="btn btn-outline" onclick="prevTutorialStep(1)">← Précédent</button>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-outline" onclick="closeTutorial()">Fermer</button>
+                                <button class="btn btn-primary" onclick="nextTutorialStep(3)">Suivant →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tutorialStep3" class="tutorial-step hidden">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">3</div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Conseils pour bien démarrer</h3>
+                        </div>
+
+                        <div class="card" style="background: var(--bg-light); margin-bottom: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem;">🎯 Bonnes pratiques</h4>
+                            
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                    <div style="font-size: 2rem;">📅</div>
+                                    <div>
+                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Importez régulièrement</p>
+                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
+                                            Mettez à jour vos données chaque semaine pour avoir une vision précise de votre trésorerie.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                    <div style="font-size: 2rem;">✅</div>
+                                    <div>
+                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Suivez vos factures</p>
+                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
+                                            Consultez l'onglet Factures régulièrement pour identifier les impayés et relancer vos clients.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                    <div style="font-size: 2rem;">🔔</div>
+                                    <div>
+                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Vérifiez les alertes</p>
+                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
+                                            Les alertes vous signalent les échéances importantes (TVA, IS) et les opportunités d'optimisation.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
+                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                    <div style="font-size: 2rem;">📊</div>
+                                    <div>
+                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Analysez les prévisions</p>
+                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
+                                            Les graphiques de prévisions vous aident à anticiper votre trésorerie sur les 30 prochains jours.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="padding: 1rem; background: white; border-radius: 8px;">
+                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                    <div style="font-size: 2rem;">💡</div>
+                                    <div>
+                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Utilisez l'analyse fiscale</p>
+                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
+                                            Importez votre balance comptable pour obtenir des recommandations personnalisées et identifier des opportunités d'économies.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <span>🎓</span>
+                            <div>
+                                <strong>Besoin d'aide ?</strong> Vous pouvez toujours réafficher ce guide depuis le menu en haut à droite.
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                            <button class="btn btn-outline" onclick="prevTutorialStep(2)">← Précédent</button>
+                            <button class="btn btn-primary" onclick="finishTutorial()">Commencer →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div style="margin-bottom: 2rem;">
-                <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Tableau de bord</h1>
-                <p style="color: var(--text-gray);">Vue d'ensemble de votre activité</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Tableau de bord</h1>
+                        <p style="color: var(--text-gray);">Vue d'ensemble de votre activité</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="showTutorial()">
+                        📖 Guide d'utilisation
+                    </button>
+                </div>
             </div>
 
             <!-- Tabs -->
@@ -1214,7 +1443,7 @@
     <div id="pageContact" class="page hidden">
         <div class="hero" style="padding: 3rem 2rem;">
             <h1 style="font-size: 2rem;">Rejoignez la bêta privée</h1>
-            <p>Remplissez le formulaire ci-dessous et découvrez comment OPTIMIS FISCALE peut transformer votre gestion d'entreprise.</p>
+            <p>Remplissez le formulaire ci-dessous et découvrez comment SUMMA peut transformer votre gestion d'entreprise.</p>
         </div>
 
         <div class="container" style="max-width: 600px;">
@@ -1260,7 +1489,7 @@
                             <div class="feature-icon icon-blue" style="flex-shrink: 0; margin: 0;">🚀</div>
                             <div>
                                 <div style="font-weight: 600; margin-bottom: 0.25rem;">Accès anticipé</div>
-                                <div style="font-size: 0.9375rem; color: var(--text-gray);">Soyez parmi les premiers à utiliser OPTIMIS FISCALE en version bêta</div>
+                                <div style="font-size: 0.9375rem; color: var(--text-gray);">Soyez parmi les premiers à utiliser SUMMA en version bêta</div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 1rem; align-items: flex-start;">
@@ -1283,7 +1512,7 @@
                 <div class="card" style="margin-top: 1.5rem; text-align: center;">
                     <h3 style="margin-bottom: 1rem;">Contactez-nous</h3>
                     <div style="color: var(--text-gray);">
-                        <p><strong>Email:</strong> contact@optimisfiscale.fr</p>
+                        <p><strong>Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d9bab6b7adb8baad99b6a9adb0b4b0aabfb0aabab8b5bcf7bfab">[email&#160;protected]</a></p>
                         <p><strong>Téléphone:</strong> +33 1 23 45 67 89</p>
                         <p style="margin-top: 1rem;">
                             <strong>Adresse:</strong><br>
@@ -1386,7 +1615,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // Configuration
         const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
         let authToken = null;
@@ -1546,26 +1775,55 @@
                 const response = await fetch(`${API_BASE}/bank/summary`, {
                     credentials: 'include'
                 });
+                
+                if (!response.ok) {
+                    console.log('Bank summary not available yet');
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 document.getElementById('dashCash').textContent = `€ ${(data.balance || 0).toFixed(2)}`;
             } catch (error) {
-                console.error('Error loading stats:', error);
+                console.log('Stats will be available after data import');
             }
         }
 
         async function loadDashboardCharts() {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded');
+                return;
+            }
+
             try {
                 const [cashflowRes, forecastRes] = await Promise.all([
                     fetch(`${API_BASE}/cashflow/daily`, { credentials: 'include' }),
                     fetch(`${API_BASE}/cashflow/forecast?days=30`, { credentials: 'include' })
                 ]);
 
+                if (!cashflowRes.ok || !forecastRes.ok) {
+                    console.log('Charts will be available after data import');
+                    return;
+                }
+
                 const cashflowData = await cashflowRes.json();
                 const forecastData = await forecastRes.json();
 
+                if (!Array.isArray(cashflowData) || cashflowData.length === 0) {
+                    console.log('No cashflow data available yet');
+                    return;
+                }
+
+                if (!Array.isArray(forecastData) || forecastData.length === 0) {
+                    console.log('No forecast data available yet');
+                    return;
+                }
+
                 // Cashflow 7 days
-                const ctx7 = document.getElementById('chartCashflow7').getContext('2d');
+                const ctx7 = document.getElementById('chartCashflow7')?.getContext('2d');
+                if (!ctx7) return;
+                
                 if (charts.cashflow7) charts.cashflow7.destroy();
                 charts.cashflow7 = new Chart(ctx7, {
                     type: 'line',
@@ -1588,7 +1846,9 @@
                 });
 
                 // Forecast 30 days
-                const ctx30 = document.getElementById('chartForecast30').getContext('2d');
+                const ctx30 = document.getElementById('chartForecast30')?.getContext('2d');
+                if (!ctx30) return;
+                
                 if (charts.forecast30) charts.forecast30.destroy();
                 charts.forecast30 = new Chart(ctx30, {
                     type: 'line',
@@ -1611,7 +1871,7 @@
                     }
                 });
             } catch (error) {
-                console.error('Error loading charts:', error);
+                console.log('Charts will be available after data import');
             }
         }
 
@@ -1620,10 +1880,21 @@
                 const response = await fetch(`${API_BASE}/alerts/?skip=0&limit=3`, {
                     credentials: 'include'
                 });
+                
+                if (!response.ok) {
+                    const container = document.getElementById('dashAlerts');
+                    if (container) {
+                        container.innerHTML = '<p style="color: var(--text-gray);">Aucune alerte pour le moment</p>';
+                    }
+                    return;
+                }
+                
                 const alerts = await response.json();
                 
                 const container = document.getElementById('dashAlerts');
-                if (alerts.length === 0) {
+                if (!container) return;
+                
+                if (!Array.isArray(alerts) || alerts.length === 0) {
                     container.innerHTML = '<p style="color: var(--text-gray);">Aucune alerte récente</p>';
                     return;
                 }
@@ -1641,7 +1912,7 @@
                     `;
                 }).join('');
             } catch (error) {
-                console.error('Error loading alerts:', error);
+                console.log('Alerts will be available after configuration');
             }
         }
 
@@ -1929,6 +2200,11 @@
 
         // Cashflow
         async function refreshCashflow() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded');
+                return;
+            }
+
             try {
                 const [cashflowRes, transactionsRes] = await Promise.all([
                     fetch(`${API_BASE}/cashflow/daily`, { credentials: 'include' }),
@@ -1939,7 +2215,9 @@
                 const transactions = await transactionsRes.json();
 
                 // Full cashflow chart
-                const ctxFull = document.getElementById('chartCashflowFull').getContext('2d');
+                const ctxFull = document.getElementById('chartCashflowFull')?.getContext('2d');
+                if (!ctxFull) return;
+                
                 if (charts.cashflowFull) charts.cashflowFull.destroy();
                 charts.cashflowFull = new Chart(ctxFull, {
                     type: 'line',
@@ -1963,17 +2241,19 @@
 
                 // Transactions table
                 const tbody = document.getElementById('transactionsTable');
-                tbody.innerHTML = transactions.slice(0, 50).map(trans => `
-                    <tr>
-                        <td>${new Date(trans.date).toLocaleDateString('fr-FR')}</td>
-                        <td>${trans.description || trans.label}</td>
-                        <td>${trans.category || 'Non catégorisé'}</td>
-                        <td style="color: ${trans.amount >= 0 ? 'var(--success)' : 'var(--danger)'}">
-                            ${trans.amount >= 0 ? '+' : ''}€ ${trans.amount.toFixed(2)}
-                        </td>
-                        <td>€ ${trans.balance.toFixed(2)}</td>
-                    </tr>
-                `).join('');
+                if (tbody) {
+                    tbody.innerHTML = transactions.slice(0, 50).map(trans => `
+                        <tr>
+                            <td>${new Date(trans.date).toLocaleDateString('fr-FR')}</td>
+                            <td>${trans.description || trans.label}</td>
+                            <td>${trans.category || 'Non catégorisé'}</td>
+                            <td style="color: ${trans.amount >= 0 ? 'var(--success)' : 'var(--danger)'}">
+                                ${trans.amount >= 0 ? '+' : ''}€ ${trans.amount.toFixed(2)}
+                            </td>
+                            <td>€ ${trans.balance.toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+                }
             } catch (error) {
                 console.error('Error loading cashflow:', error);
             }
@@ -1985,6 +2265,61 @@
             alert('Merci ! Votre demande a été envoyée. Nous vous contacterons sous 24h.');
             e.target.reset();
         });
+
+        // Tutorial Functions
+        function showTutorial() {
+            document.getElementById('tutorialModal').classList.add('active');
+            showTutorialStep(1);
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorialModal').classList.remove('active');
+        }
+
+        function dismissTutorial() {
+            document.getElementById('welcomeTutorial').style.display = 'none';
+            localStorage.setItem('tutorialDismissed', 'true');
+        }
+
+        function showTutorialStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.tutorial-step').forEach(s => s.classList.add('hidden'));
+            // Show selected step
+            document.getElementById('tutorialStep' + step).classList.remove('hidden');
+        }
+
+        function nextTutorialStep(step) {
+            showTutorialStep(step);
+        }
+
+        function prevTutorialStep(step) {
+            showTutorialStep(step);
+        }
+
+        function finishTutorial() {
+            closeTutorial();
+            dismissTutorial();
+            // Switch to Import tab to start
+            switchTab('import');
+        }
+
+        // Check if tutorial should be shown
+        function checkTutorialStatus() {
+            const dismissed = localStorage.getItem('tutorialDismissed');
+            if (dismissed === 'true') {
+                document.getElementById('welcomeTutorial').style.display = 'none';
+            }
+        }
+
+        // Show tutorial on first dashboard load
+        if (currentUser && !localStorage.getItem('tutorialDismissed')) {
+            setTimeout(() => {
+                const welcomeBanner = document.getElementById('welcomeTutorial');
+                if (welcomeBanner && !welcomeBanner.classList.contains('hidden')) {
+                    // Tutorial banner is visible
+                }
+            }, 1000);
+        }
     </script>
 </body>
 </html>
