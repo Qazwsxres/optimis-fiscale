@@ -658,7 +658,7 @@
                 <a class="nav-link" data-page="contact">Contact</a>
             </nav>
             <div>
-                <button class="btn btn-primary" id="loginBtn">Se connecter</button>
+                <button class="btn btn-primary" id="loginBtn" onclick="showLogin()">Se connecter</button>
                 <button class="btn btn-outline hidden" id="logoutBtn">Déconnexion</button>
             </div>
         </div>
@@ -674,7 +674,7 @@
                 </div>
                 <h1>Votre assistant de gestion intelligent</h1>
                 <p>Trésorerie, factures, échéances fiscales... tout au même endroit. Simplifiez votre quotidien et concentrez-vous sur votre croissance.</p>
-                <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showLogin()">
+                <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="switchPage('contact')">
                     Commencer gratuitement →
                 </button>
             </div>
@@ -797,7 +797,7 @@
         <section class="cta-section">
             <div class="cta-title">Prêt à simplifier votre gestion ?</div>
             <div class="cta-text">Rejoignez les entrepreneurs qui ont déjà gagné du temps en adoptant SUMMA. Plus d'oublis, plus de stress, plus de panique à la TVA.</div>
-            <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showLogin()">
+            <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="switchPage('contact')">
                 Rejoignez la bêta privée →
             </button>
         </section>
@@ -963,7 +963,7 @@
         <section class="cta-section">
             <div class="cta-title">Simplifiez votre quotidien</div>
             <div class="cta-text">Zéro temps perdu en saisies manuelles. Réduction de 50% du stress administratif. Interface intuitive pour tous, même sans être comptable.</div>
-            <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showLogin()">
+            <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="switchPage('contact')">
                 Commencer gratuitement →
             </button>
         </section>
@@ -1379,11 +1379,22 @@
 
                     <div class="card">
                         <h3 style="margin-bottom: 1rem;">Balance comptable</h3>
+                        <div class="alert alert-info" style="margin-bottom: 1rem;">
+                            <span>ℹ️</span>
+                            <div>
+                                <strong>Format requis :</strong> Fichier CSV avec les colonnes suivantes :<br>
+                                <code style="background: white; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-block; margin-top: 0.5rem;">account, label, debit, credit</code>
+                                <br>
+                                <a href="#" onclick="downloadSampleCSV(); return false;" style="color: var(--primary); text-decoration: underline; font-size: 0.875rem; margin-top: 0.5rem; display: inline-block;">
+                                    📥 Télécharger un exemple de fichier
+                                </a>
+                            </div>
+                        </div>
                         <div class="file-upload" onclick="document.getElementById('trialBalanceFile').click()">
                             <input type="file" id="trialBalanceFile" accept=".csv" onchange="uploadTrialBalance()">
                             <div class="file-upload-icon">📊</div>
                             <div class="file-upload-text">Cliquez ou glissez un fichier CSV</div>
-                            <div class="form-hint" style="margin-top: 0.5rem;">Format: account, label, debit, credit</div>
+                            <div class="form-hint" style="margin-top: 0.5rem;">Analyse fiscale et optimisation automatique</div>
                         </div>
                         <div id="trialBalanceUploadStatus" class="alert hidden"></div>
                     </div>
@@ -2048,7 +2059,10 @@
                     credentials: 'include'
                 });
                 
-                if (!response.ok) throw new Error('Upload failed');
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Upload failed');
+                }
                 
                 const data = await response.json();
                 
@@ -2056,9 +2070,15 @@
                 statusEl.innerHTML = '<span>✓</span><div>Analyse terminée ! <a href="#" onclick="switchTab(\'analyse\'); return false;" style="color: inherit; text-decoration: underline;">Voir les résultats</a></div>';
                 
                 displayAnalysisResults(data);
+                
+                // Switch to analysis tab after 1 second
+                setTimeout(() => {
+                    switchTab('analyse');
+                }, 1000);
             } catch (error) {
                 statusEl.className = 'alert alert-danger';
-                statusEl.innerHTML = `<span>✗</span><div>Erreur: ${error.message}</div>`;
+                statusEl.innerHTML = `<span>✗</span><div><strong>Erreur d'upload</strong><br>Vérifiez que votre fichier CSV contient les colonnes : account, label, debit, credit</div>`;
+                console.error('Upload error:', error);
             }
         }
 
@@ -2319,6 +2339,30 @@
                     // Tutorial banner is visible
                 }
             }, 1000);
+        }
+
+        // Download sample CSV for trial balance
+        function downloadSampleCSV() {
+            const csvContent = `account,label,debit,credit
+701,VENTES DE PRODUITS FINIS,0,100000
+6061,ACHATS MATIERES,40000,0
+611,SOUS-TRAITANCE GENERALE,10000,0
+623,PUBLICITE,5000,0
+635,IMPOTS ET TAXES,3000,0
+641,REMUNERATIONS DU PERSONNEL,25000,0
+645,CHARGES SOCIALES,12000,0
+681,DOTATIONS AUX AMORTISSEMENTS,5000,0
+44571,TVA COLLECTEE,0,20000
+44566,TVA DEDUCTIBLE,15000,0
+512,BANQUES,50000,0
+411,CLIENTS,30000,0
+401,FOURNISSEURS,0,20000`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'exemple_balance_comptable.csv';
+            link.click();
         }
     </script>
 </body>
