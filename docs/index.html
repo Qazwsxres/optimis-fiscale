@@ -1343,6 +1343,37 @@
 
             <!-- Tab: Import -->
             <div class="tab-content" id="tabImport">
+                <!-- What's Next Guide -->
+                <div class="card" style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">🎯 Que faire après l'import ?</h3>
+                    <div class="grid grid-3">
+                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; cursor: pointer; transition: all 0.2s;" 
+                             onclick="switchTab('vue-ensemble')"
+                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'"
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Vue d'ensemble</div>
+                            <div style="font-size: 0.875rem; color: var(--text-gray);">Consultez vos indicateurs clés et graphiques</div>
+                        </div>
+                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; cursor: pointer; transition: all 0.2s;" 
+                             onclick="switchTab('tresorerie')"
+                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'"
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💰</div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Trésorerie</div>
+                            <div style="font-size: 0.875rem; color: var(--text-gray);">Analysez vos transactions bancaires</div>
+                        </div>
+                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; cursor: pointer; transition: all 0.2s;" 
+                             onclick="switchTab('factures')"
+                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'"
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📄</div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Factures</div>
+                            <div style="font-size: 0.875rem; color: var(--text-gray);">Suivez vos factures clients et fournisseurs</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-2">
                     <div class="card">
                         <h3 style="margin-bottom: 1rem;">Transactions bancaires</h3>
@@ -2103,14 +2134,99 @@
                 const data = await response.json();
                 
                 statusEl.className = 'alert alert-success';
-                statusEl.innerHTML = `<span>✓</span><div>${data.count || 0} enregistrements importés</div>`;
+                statusEl.innerHTML = `
+                    <span>✓</span>
+                    <div>
+                        <strong>${data.count || 0} enregistrements importés avec succès !</strong>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+                            ${getPostImportMessage(endpoint)}
+                        </p>
+                    </div>
+                `;
                 
-                loadDashboard();
+                // Reload dashboard to show new data
+                await loadDashboard();
+                
+                // Show success notification
+                showImportSuccess(endpoint, data.count || 0);
+                
             } catch (error) {
                 statusEl.className = 'alert alert-danger';
                 statusEl.innerHTML = `<span>✗</span><div>Erreur: ${error.message}</div>`;
             }
         }
+
+        function getPostImportMessage(endpoint) {
+            const messages = {
+                '/bank/upload': 'Consultez l\'onglet <strong>Trésorerie</strong> pour voir vos transactions et graphiques.',
+                '/invoices/sales': 'Consultez l\'onglet <strong>Factures</strong> pour gérer vos factures clients.',
+                '/invoices/purchases': 'Consultez l\'onglet <strong>Factures</strong> pour voir vos factures fournisseurs.'
+            };
+            return messages[endpoint] || 'Données importées avec succès.';
+        }
+
+        function showImportSuccess(endpoint, count) {
+            // Create floating notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+                padding: 1rem 1.5rem;
+                z-index: 1001;
+                max-width: 400px;
+                border-left: 4px solid var(--success);
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            const targetTab = endpoint === '/bank/upload' ? 'tresorerie' : 'factures';
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                    <div style="font-size: 1.5rem;">✓</div>
+                    <div style="flex: 1;">
+                        <strong style="display: block; margin-bottom: 0.25rem;">${count} enregistrements importés</strong>
+                        <button onclick="switchTab('${targetTab}'); this.parentElement.parentElement.parentElement.remove();" 
+                                class="btn btn-primary" 
+                                style="margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            Voir les données →
+                        </button>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text-gray);">
+                        ×
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 10000);
+        }
+
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
 
         // Analysis
         function displayAnalysisResults(data) {
@@ -2341,8 +2457,6 @@
             }, 1000);
         }
 
-        // Download sample CSV for trial balance
-        function downloadSampleCSV() {
             const csvContent = `account,label,debit,credit
 701,VENTES DE PRODUITS FINIS,0,100000
 6061,ACHATS MATIERES,40000,0
