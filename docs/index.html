@@ -12,6 +12,18 @@
     <script>
         // Define core functions immediately so onclick handlers work
         function switchPage(page) {
+            console.log('Switching to page:', page);
+            
+            // Check if trying to access dashboard without login
+            if (page === 'dashboard') {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.log('Not logged in, showing login modal');
+                    showLogin();
+                    return;
+                }
+            }
+            
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             const pageMap = {
                 'accueil': 'pageAccueil',
@@ -22,7 +34,12 @@
             const pageId = pageMap[page];
             if (pageId) {
                 const element = document.getElementById(pageId);
-                if (element) element.classList.remove('hidden');
+                if (element) {
+                    element.classList.remove('hidden');
+                    console.log('Showed page:', pageId);
+                } else {
+                    console.error('Page element not found:', pageId);
+                }
             }
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
@@ -30,6 +47,11 @@
                     link.classList.add('active');
                 }
             });
+            
+            // Load dashboard data if needed
+            if (page === 'dashboard' && typeof loadDashboard === 'function') {
+                loadDashboard();
+            }
         }
         
         function showLogin() {
@@ -40,6 +62,21 @@
         function hideLogin() {
             const modal = document.getElementById('loginModal');
             if (modal) modal.classList.remove('active');
+        }
+        
+        // Demo login for testing
+        function demoLogin() {
+            console.log('Demo login activated');
+            localStorage.setItem('authToken', 'demo-token-12345');
+            hideLogin();
+            
+            // Update UI
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (loginBtn) loginBtn.classList.add('hidden');
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            
+            switchPage('dashboard');
         }
         
         function showCreateInvoice() {
@@ -766,10 +803,10 @@
                 <div class="logo-text">SUMMA</div>
             </div>
             <nav class="nav-menu">
-                <a class="nav-link active" data-page="accueil">Accueil</a>
-                <a class="nav-link" data-page="fonctionnalites">Fonctionnalités</a>
-                <a class="nav-link" data-page="dashboard">Dashboard</a>
-                <a class="nav-link" data-page="contact">Contact</a>
+                <a class="nav-link active" data-page="accueil" onclick="switchPage('accueil'); return false;">Accueil</a>
+                <a class="nav-link" data-page="fonctionnalites" onclick="switchPage('fonctionnalites'); return false;">Fonctionnalités</a>
+                <a class="nav-link" data-page="dashboard" onclick="switchPage('dashboard'); return false;">Dashboard</a>
+                <a class="nav-link" data-page="contact" onclick="switchPage('contact'); return false;">Contact</a>
             </nav>
             <div>
                 <button class="btn btn-primary" id="loginBtn" onclick="showLogin()">Se connecter</button>
@@ -1702,6 +1739,10 @@
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     Se connecter →
+                </button>
+                
+                <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;" onclick="demoLogin()">
+                    🚀 Connexion démo (test)
                 </button>
             </form>
 
