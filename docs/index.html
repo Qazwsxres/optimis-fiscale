@@ -64,19 +64,66 @@
             if (modal) modal.classList.remove('active');
         }
         
-        // Demo login for testing
-        function demoLogin() {
-            console.log('Demo login activated');
-            localStorage.setItem('authToken', 'demo-token-12345');
-            hideLogin();
+        // Handle login form submission
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const companyId = document.getElementById('loginCompanyId').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            console.log('Login attempt:', companyId);
+
+            try {
+                const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ company_id: companyId, password: password })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Login failed');
+                }
+
+                const data = await response.json();
+                const token = data.token || data.access_token || 'logged-in';
+                localStorage.setItem('authToken', token);
+                localStorage.setItem('currentUser', JSON.stringify({ company_id: companyId }));
+
+                hideLogin();
+                
+                // Update UI
+                const loginBtn = document.getElementById('loginBtn');
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+                
+                // Go to dashboard
+                switchPage('dashboard');
+                
+                console.log('✅ Login successful');
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Erreur de connexion. Vérifiez vos identifiants.\n\n' + error.message);
+            }
+        }
+        
+        // Logout function
+        function handleLogout() {
+            console.log('Logging out');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
             
             // Update UI
             const loginBtn = document.getElementById('loginBtn');
             const logoutBtn = document.getElementById('logoutBtn');
-            if (loginBtn) loginBtn.classList.add('hidden');
-            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            if (loginBtn) loginBtn.classList.remove('hidden');
+            if (logoutBtn) logoutBtn.classList.add('hidden');
             
-            switchPage('dashboard');
+            // Go to home
+            switchPage('accueil');
         }
         
         function showCreateInvoice() {
@@ -153,9 +200,50 @@
         }
         
         // Placeholder functions (will be fully defined later)
-        function switchTab(tab) { console.log('Switch tab:', tab); }
+        function switchTab(tab) { 
+            console.log('Switch tab:', tab);
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const activeTab = document.querySelector(`[data-tab="${tab}"]`);
+            if (activeTab) activeTab.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Map tab names to content IDs
+            const tabMap = {
+                'vue-ensemble': 'tabVueEnsemble',
+                'tresorerie': 'tabTresorerie',
+                'factures': 'tabFactures',
+                'import': 'tabImport',
+                'alertes': 'tabAlertes',
+                'analyse': 'tabAnalyse'
+            };
+            
+            const contentId = tabMap[tab];
+            const content = document.getElementById(contentId);
+            if (content) {
+                content.classList.add('active');
+                console.log('Activated tab content:', contentId);
+            } else {
+                console.error('Tab content not found:', contentId);
+            }
+            
+            // Load data for specific tabs
+            if (tab === 'factures' && typeof loadInvoices === 'function') {
+                loadInvoices();
+            }
+            if (tab === 'alertes' && typeof loadAlerts === 'function') {
+                loadAlerts();
+            }
+            if (tab === 'tresorerie' && typeof refreshCashflow === 'function') {
+                refreshCashflow();
+            }
+        }
         function loadInvoices() { console.log('Load invoices'); }
         function refreshCashflow() { console.log('Refresh cashflow'); }
+        function loadAlerts() { console.log('Load alerts'); }
         function markAllAlertsRead() { console.log('Mark alerts read'); }
     </script>
     
@@ -810,7 +898,7 @@
             </nav>
             <div>
                 <button class="btn btn-primary" id="loginBtn" onclick="showLogin()">Se connecter</button>
-                <button class="btn btn-outline hidden" id="logoutBtn">Déconnexion</button>
+                <button class="btn btn-outline hidden" id="logoutBtn" onclick="handleLogout()">Déconnexion</button>
             </div>
         </div>
     </header>
@@ -1359,12 +1447,12 @@
 
             <!-- Tabs -->
             <div class="tabs">
-                <button class="tab active" data-tab="vue-ensemble">Vue d'ensemble</button>
-                <button class="tab" data-tab="tresorerie">Trésorerie</button>
-                <button class="tab" data-tab="factures">Factures</button>
-                <button class="tab" data-tab="import">Import</button>
-                <button class="tab" data-tab="alertes">Alertes</button>
-                <button class="tab" data-tab="analyse">Analyse fiscale</button>
+                <button class="tab active" data-tab="vue-ensemble" onclick="switchTab('vue-ensemble')">Vue d'ensemble</button>
+                <button class="tab" data-tab="tresorerie" onclick="switchTab('tresorerie')">Trésorerie</button>
+                <button class="tab" data-tab="factures" onclick="switchTab('factures')">Factures</button>
+                <button class="tab" data-tab="import" onclick="switchTab('import')">Import</button>
+                <button class="tab" data-tab="alertes" onclick="switchTab('alertes')">Alertes</button>
+                <button class="tab" data-tab="analyse" onclick="switchTab('analyse')">Analyse fiscale</button>
             </div>
 
             <!-- Tab: Vue d'ensemble -->
@@ -1739,10 +1827,6 @@
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     Se connecter →
-                </button>
-                
-                <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;" onclick="demoLogin()">
-                    🚀 Connexion démo (test)
                 </button>
             </form>
 
