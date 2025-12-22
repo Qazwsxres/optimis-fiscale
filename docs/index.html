@@ -815,40 +815,879 @@
                 </div>
 
                 <!-- Other views will be added here -->
+                <!-- Trésorerie View -->
                 <div id="viewTresorerie" class="view hidden">
-                    <div class="card">
-                        <div class="card-title">Trésorerie détaillée</div>
-                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue trésorerie...</p>
+                    <!-- Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-label">Solde actuel</div>
+                            <div class="stat-value">€ 48,250</div>
+                            <div class="stat-change positive">+12% ce mois</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Entrées (30j)</div>
+                            <div class="stat-value" style="color: var(--success);">€ 35,600</div>
+                            <div class="stat-change">18 transactions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Sorties (30j)</div>
+                            <div class="stat-value" style="color: var(--danger);">€ 28,400</div>
+                            <div class="stat-change">24 transactions</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-left">
+                            <!-- Full Cashflow Chart -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Évolution de la trésorerie</div>
+                                    <div style="display: flex; gap: 1rem;">
+                                        <select id="cashflowPeriod" onchange="updateCashflowChart()" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                                            <option value="7">7 jours</option>
+                                            <option value="30" selected>30 jours</option>
+                                            <option value="90">90 jours</option>
+                                            <option value="365">1 an</option>
+                                        </select>
+                                        <button class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="refreshCashflow()">🔄 Actualiser</button>
+                                    </div>
+                                </div>
+                                <div class="chart-container" style="height: 400px;">
+                                    <canvas id="cashflowFullChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- All Transactions -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Toutes les transactions</div>
+                                    <div style="display: flex; gap: 1rem;">
+                                        <select id="filterCategory" onchange="filterTransactions()" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                                            <option value="all">Toutes catégories</option>
+                                            <option value="vente">Ventes</option>
+                                            <option value="achat">Achats</option>
+                                            <option value="charge">Charges</option>
+                                            <option value="salaire">Salaires</option>
+                                            <option value="taxe">Taxes</option>
+                                        </select>
+                                        <input type="text" id="searchTransaction" placeholder="Rechercher..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border); min-width: 200px;">
+                                    </div>
+                                </div>
+                                <div style="max-height: 500px; overflow-y: auto;">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                                <th>Catégorie</th>
+                                                <th>Montant</th>
+                                                <th>Solde</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="allTransactionsBody">
+                                            <tr>
+                                                <td>20 Déc 2024</td>
+                                                <td>Virement client ABC - Facture F-2024-001</td>
+                                                <td><span class="badge">Vente</span></td>
+                                                <td style="color: var(--success); font-weight: 600;">+€ 2,500.00</td>
+                                                <td>€ 48,250.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>19 Déc 2024</td>
+                                                <td>Loyer bureau - Décembre</td>
+                                                <td><span class="badge">Charge</span></td>
+                                                <td style="color: var(--danger); font-weight: 600;">-€ 1,200.00</td>
+                                                <td>€ 45,750.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>18 Déc 2024</td>
+                                                <td>Facture fournisseur XYZ - Matériel</td>
+                                                <td><span class="badge">Achat</span></td>
+                                                <td style="color: var(--danger); font-weight: 600;">-€ 850.00</td>
+                                                <td>€ 46,950.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>17 Déc 2024</td>
+                                                <td>Virement client DEF - Facture F-2024-002</td>
+                                                <td><span class="badge">Vente</span></td>
+                                                <td style="color: var(--success); font-weight: 600;">+€ 3,200.00</td>
+                                                <td>€ 47,800.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>15 Déc 2024</td>
+                                                <td>Salaires - Équipe</td>
+                                                <td><span class="badge">Salaire</span></td>
+                                                <td style="color: var(--danger); font-weight: 600;">-€ 8,500.00</td>
+                                                <td>€ 44,600.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>14 Déc 2024</td>
+                                                <td>TVA T3 - Paiement</td>
+                                                <td><span class="badge">Taxe</span></td>
+                                                <td style="color: var(--danger); font-weight: 600;">-€ 4,200.00</td>
+                                                <td>€ 53,100.00</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-right">
+                            <!-- Forecast -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Prévisions 30 jours</div>
+                                <div class="chart-container" style="height: 250px;">
+                                    <canvas id="forecastChart"></canvas>
+                                </div>
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <span style="color: var(--text-gray);">Solde estimé (30j)</span>
+                                        <span style="font-weight: 600;">€ 52,100</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: var(--text-gray);">Variation</span>
+                                        <span style="font-weight: 600; color: var(--success);">+€ 3,850 (+8%)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Categories Breakdown -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Répartition par catégorie</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                            <span style="font-size: 0.875rem;">Ventes</span>
+                                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--success);">€ 15,800</span>
+                                        </div>
+                                        <div style="width: 100%; height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 55%; height: 100%; background: var(--success);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                            <span style="font-size: 0.875rem;">Salaires</span>
+                                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--danger);">€ 8,500</span>
+                                        </div>
+                                        <div style="width: 100%; height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 30%; height: 100%; background: var(--danger);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                            <span style="font-size: 0.875rem;">Achats</span>
+                                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--danger);">€ 4,200</span>
+                                        </div>
+                                        <div style="width: 100%; height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 15%; height: 100%; background: var(--warning);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                            <span style="font-size: 0.875rem;">Charges</span>
+                                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--danger);">€ 3,100</span>
+                                        </div>
+                                        <div style="width: 100%; height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 11%; height: 100%; background: var(--primary);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                            <span style="font-size: 0.875rem;">Taxes</span>
+                                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--danger);">€ 4,200</span>
+                                        </div>
+                                        <div style="width: 100%; height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 15%; height: 100%; background: #8b5cf6;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Export -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Export des données</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <button class="btn btn-outline" onclick="exportCSV()">📊 Export CSV</button>
+                                    <button class="btn btn-outline" onclick="exportPDF()">📄 Export PDF</button>
+                                    <button class="btn btn-outline" onclick="exportExcel()">📗 Export Excel</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Factures View -->
                 <div id="viewFactures" class="view hidden">
-                    <div class="card">
-                        <div class="card-title">Gestion des factures</div>
-                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue factures...</p>
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="card-header">
+                            <div class="card-title">Gestion des factures</div>
+                            <button class="btn btn-primary" onclick="showCreateInvoiceModal()">+ Nouvelle facture</button>
+                        </div>
+                        
+                        <!-- Filters -->
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                            <select id="filterStatus" onchange="filterInvoices()" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                                <option value="all">Tous les statuts</option>
+                                <option value="draft">Brouillon</option>
+                                <option value="sent">Envoyée</option>
+                                <option value="paid">Payée</option>
+                                <option value="overdue">En retard</option>
+                            </select>
+                            <input type="text" id="searchInvoice" placeholder="Rechercher..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border); flex: 1; min-width: 200px;">
+                        </div>
+
+                        <!-- Invoices Table -->
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>N° Facture</th>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Échéance</th>
+                                    <th>Montant HT</th>
+                                    <th>Montant TTC</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoicesTableBody">
+                                <tr>
+                                    <td><strong>F-2024-001</strong></td>
+                                    <td>Client ABC</td>
+                                    <td>15 Déc 2024</td>
+                                    <td>15 Jan 2025</td>
+                                    <td>€ 2,000.00</td>
+                                    <td>€ 2,400.00</td>
+                                    <td><span class="badge badge-success">Payée</span></td>
+                                    <td>
+                                        <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewInvoice(1)">Voir</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>F-2024-002</strong></td>
+                                    <td>Client XYZ</td>
+                                    <td>18 Déc 2024</td>
+                                    <td>18 Jan 2025</td>
+                                    <td>€ 1,500.00</td>
+                                    <td>€ 1,800.00</td>
+                                    <td><span class="badge badge-warning">Envoyée</span></td>
+                                    <td>
+                                        <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewInvoice(2)">Voir</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>F-2024-003</strong></td>
+                                    <td>Entreprise DEF</td>
+                                    <td>10 Déc 2024</td>
+                                    <td>10 Jan 2025</td>
+                                    <td>€ 850.00</td>
+                                    <td>€ 1,020.00</td>
+                                    <td><span class="badge badge-danger">En retard</span></td>
+                                    <td>
+                                        <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewInvoice(3)">Voir</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Invoice Statistics -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                        <div class="card">
+                            <div class="stat-label">Total facturé</div>
+                            <div class="stat-value" style="font-size: 1.5rem;">€ 25,380</div>
+                        </div>
+                        <div class="card">
+                            <div class="stat-label">En attente</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--warning);">€ 12,500</div>
+                        </div>
+                        <div class="card">
+                            <div class="stat-label">Payées</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--success);">€ 10,200</div>
+                        </div>
+                        <div class="card">
+                            <div class="stat-label">En retard</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--danger);">€ 2,680</div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Import View -->
                 <div id="viewImport" class="view hidden">
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="card-title" style="margin-bottom: 0.5rem;">Import de données</div>
+                        <p style="color: var(--text-gray); margin-bottom: 2rem;">Importez vos données bancaires, factures et balances comptables pour une analyse complète.</p>
+
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                            <!-- Bank Transactions -->
+                            <div class="card" style="background: var(--bg-light);">
+                                <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📊 Transactions bancaires</h3>
+                                <div class="file-upload-zone" onclick="document.getElementById('bankFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <input type="file" id="bankFile" accept=".csv" style="display: none;" onchange="handleBankUpload(event)">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier CSV</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">Format: date, description, montant</div>
+                                </div>
+                                <div id="bankUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
+                                <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; font-size: 0.875rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Dernière importation:</div>
+                                    <div style="color: var(--text-gray);">18 Déc 2024 - 30 transactions</div>
+                                </div>
+                            </div>
+
+                            <!-- Sales Invoices -->
+                            <div class="card" style="background: var(--bg-light);">
+                                <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📄 Factures de vente</h3>
+                                <div class="file-upload-zone" onclick="document.getElementById('salesFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <input type="file" id="salesFile" accept=".csv,.xlsx" style="display: none;" onchange="handleSalesUpload(event)">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">CSV ou XLSX acceptés</div>
+                                </div>
+                                <div id="salesUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
+                                <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; font-size: 0.875rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Dernière importation:</div>
+                                    <div style="color: var(--text-gray);">15 Déc 2024 - 25 factures</div>
+                                </div>
+                            </div>
+
+                            <!-- Purchase Invoices -->
+                            <div class="card" style="background: var(--bg-light);">
+                                <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📋 Factures fournisseurs</h3>
+                                <div class="file-upload-zone" onclick="document.getElementById('purchaseFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <input type="file" id="purchaseFile" accept=".csv,.xlsx" style="display: none;" onchange="handlePurchaseUpload(event)">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">CSV ou XLSX acceptés</div>
+                                </div>
+                                <div id="purchaseUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
+                                <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; font-size: 0.875rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Dernière importation:</div>
+                                    <div style="color: var(--text-gray);">16 Déc 2024 - 18 factures</div>
+                                </div>
+                            </div>
+
+                            <!-- Trial Balance -->
+                            <div class="card" style="background: var(--bg-light);">
+                                <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📈 Balance comptable</h3>
+                                <div class="file-upload-zone" onclick="document.getElementById('trialBalanceFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <input type="file" id="trialBalanceFile" accept=".csv" style="display: none;" onchange="handleTrialBalanceUpload(event)">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier CSV</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">Format: account, label, debit, credit</div>
+                                </div>
+                                <div id="trialBalanceUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
+                                <div style="margin-top: 1rem;">
+                                    <a href="#" onclick="downloadSampleBalance(); return false;" style="color: var(--primary); text-decoration: underline; font-size: 0.875rem;">
+                                        📥 Télécharger un exemple de fichier
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Import History -->
                     <div class="card">
-                        <div class="card-title">Import de données</div>
-                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue import...</p>
+                        <div class="card-title" style="margin-bottom: 1.5rem;">Historique des imports</div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Fichier</th>
+                                    <th>Enregistrements</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>18 Déc 2024 14:30</td>
+                                    <td>Transactions bancaires</td>
+                                    <td>relevé_decembre.csv</td>
+                                    <td>30</td>
+                                    <td><span class="badge badge-success">Réussi</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Voir</button></td>
+                                </tr>
+                                <tr>
+                                    <td>16 Déc 2024 09:15</td>
+                                    <td>Factures fournisseurs</td>
+                                    <td>achats_T4.xlsx</td>
+                                    <td>18</td>
+                                    <td><span class="badge badge-success">Réussi</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Voir</button></td>
+                                </tr>
+                                <tr>
+                                    <td>15 Déc 2024 16:45</td>
+                                    <td>Factures de vente</td>
+                                    <td>ventes_decembre.csv</td>
+                                    <td>25</td>
+                                    <td><span class="badge badge-success">Réussi</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Voir</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Help Section -->
+                    <div class="card" style="background: #eff6ff; border: 1px solid var(--primary);">
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="font-size: 2rem;">💡</div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 0.5rem; color: var(--primary);">Besoin d'aide pour l'import ?</div>
+                                <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 1rem;">
+                                    Consultez notre guide d'importation pour savoir comment formater vos fichiers correctement.
+                                </div>
+                                <button class="btn btn-primary" style="padding: 0.5rem 1rem;">📖 Voir le guide</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Alertes View -->
                 <div id="viewAlertes" class="view hidden">
-                    <div class="card">
-                        <div class="card-title">Alertes et notifications</div>
-                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue alertes...</p>
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="card-header">
+                            <div class="card-title">Alertes et notifications</div>
+                            <button class="btn btn-outline" onclick="markAllAlertsRead()">✓ Tout marquer comme lu</button>
+                        </div>
+
+                        <!-- Filter -->
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                            <select id="filterAlertType" onchange="filterAlerts()" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                                <option value="all">Tous les types</option>
+                                <option value="fiscal">Fiscal</option>
+                                <option value="invoice">Factures</option>
+                                <option value="cash">Trésorerie</option>
+                                <option value="advice">Conseils</option>
+                            </select>
+                            <select id="filterAlertPriority" onchange="filterAlerts()" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                                <option value="all">Toutes priorités</option>
+                                <option value="high">Urgente</option>
+                                <option value="medium">Moyenne</option>
+                                <option value="low">Faible</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Urgent Alerts -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="card-title" style="margin-bottom: 1rem; color: var(--danger);">⚠️ Alertes urgentes</div>
+                        <div id="urgentAlerts">
+                            <div class="notification-item danger" style="margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: between; align-items: start; gap: 1rem;">
+                                    <div style="flex: 1;">
+                                        <div class="notification-title">TVA trimestrielle à déclarer</div>
+                                        <div class="notification-text">La déclaration de TVA du T4 2024 doit être soumise avant le 24 janvier 2025. Montant estimé: € 4,200</div>
+                                        <div class="notification-date">Échéance dans 4 jours</div>
+                                    </div>
+                                    <button class="btn btn-primary" style="padding: 0.5rem 1rem; white-space: nowrap;">Traiter</button>
+                                </div>
+                            </div>
+
+                            <div class="notification-item danger" style="margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
+                                    <div style="flex: 1;">
+                                        <div class="notification-title">Factures en retard de paiement</div>
+                                        <div class="notification-text">3 factures sont en retard de paiement pour un montant total de € 2,680. Relance recommandée.</div>
+                                        <div class="notification-date">Retard moyen: 8 jours</div>
+                                    </div>
+                                    <button class="btn btn-outline" style="padding: 0.5rem 1rem; white-space: nowrap;" onclick="switchView('factures')">Voir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-left">
+                            <!-- Recent Alerts -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Toutes les alertes</div>
+                                <div id="allAlerts">
+                                    <div class="notification-item warning">
+                                        <div class="notification-title">💡 Optimisation fiscale suggérée</div>
+                                        <div class="notification-text">Vous pouvez déduire jusqu'à € 1,500 de charges supplémentaires avant la fin de l'exercice. Consultez l'analyse fiscale pour plus de détails.</div>
+                                        <div class="notification-date">Aujourd'hui à 10:30</div>
+                                    </div>
+
+                                    <div class="notification-item info">
+                                        <div class="notification-title">📊 Rapport mensuel disponible</div>
+                                        <div class="notification-text">Votre rapport de trésorerie pour décembre 2024 est maintenant disponible. Revenus: +8% vs novembre.</div>
+                                        <div class="notification-date">Aujourd'hui à 09:00</div>
+                                    </div>
+
+                                    <div class="notification-item warning">
+                                        <div class="notification-title">💰 Trésorerie prévisionnelle</div>
+                                        <div class="notification-text">Votre solde de trésorerie pourrait descendre sous € 30,000 fin janvier en raison des paiements TVA et salaires.</div>
+                                        <div class="notification-date">Hier à 16:45</div>
+                                    </div>
+
+                                    <div class="notification-item info">
+                                        <div class="notification-title">✅ Import réussi</div>
+                                        <div class="notification-text">30 transactions bancaires ont été importées avec succès depuis votre fichier relevé_decembre.csv</div>
+                                        <div class="notification-date">18 Déc à 14:30</div>
+                                    </div>
+
+                                    <div class="notification-item warning">
+                                        <div class="notification-title">📄 Facture bientôt échue</div>
+                                        <div class="notification-text">La facture F-2024-002 (Client XYZ - € 1,800) arrive à échéance dans 7 jours.</div>
+                                        <div class="notification-date">18 Déc à 09:00</div>
+                                    </div>
+
+                                    <div class="notification-item info">
+                                        <div class="notification-title">🎯 Objectif mensuel atteint</div>
+                                        <div class="notification-text">Félicitations ! Vous avez atteint votre objectif de chiffre d'affaires pour décembre (€ 25,000)</div>
+                                        <div class="notification-date">17 Déc à 18:20</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-right">
+                            <!-- Alert Statistics -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Statistiques</div>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">Alertes non lues</div>
+                                        <div style="font-size: 1.75rem; font-weight: 700; color: var(--danger);">5</div>
+                                    </div>
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">Urgentes</div>
+                                        <div style="font-size: 1.75rem; font-weight: 700; color: var(--warning);">2</div>
+                                    </div>
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">Cette semaine</div>
+                                        <div style="font-size: 1.75rem; font-weight: 700;">12</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alert Types -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Par type</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span>📊</span>
+                                            <span>Fiscal</span>
+                                        </div>
+                                        <span style="font-weight: 600;">3</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span>📄</span>
+                                            <span>Factures</span>
+                                        </div>
+                                        <span style="font-weight: 600;">4</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span>💰</span>
+                                            <span>Trésorerie</span>
+                                        </div>
+                                        <span style="font-weight: 600;">2</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span>💡</span>
+                                            <span>Conseils</span>
+                                        </div>
+                                        <span style="font-weight: 600;">3</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Calendar -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Prochaines échéances</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; gap: 1rem; padding: 0.75rem; background: #fef2f2; border-radius: 8px; border-left: 3px solid var(--danger);">
+                                        <div style="text-align: center; min-width: 50px;">
+                                            <div style="font-size: 1.5rem; font-weight: 700;">24</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-gray);">JAN</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">TVA T4</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-gray);">€ 4,200</div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; padding: 0.75rem; background: #fffbeb; border-radius: 8px; border-left: 3px solid var(--warning);">
+                                        <div style="text-align: center; min-width: 50px;">
+                                            <div style="font-size: 1.5rem; font-weight: 700;">31</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-gray);">JAN</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Clôture exercice</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-gray);">Fiscal 2024</div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; padding: 0.75rem; background: var(--bg-light); border-radius: 8px; border-left: 3px solid var(--primary);">
+                                        <div style="text-align: center; min-width: 50px;">
+                                            <div style="font-size: 1.5rem; font-weight: 700;">15</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-gray);">FÉV</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Paiement salaires</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-gray);">€ 8,500</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Analyse Fiscale View -->
                 <div id="viewAnalyse" class="view hidden">
-                    <div class="card">
-                        <div class="card-title">Analyse fiscale</div>
-                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue analyse...</p>
+                    <!-- Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-label">Impôt estimé 2024</div>
+                            <div class="stat-value" style="font-size: 1.5rem;">€ 18,500</div>
+                            <div class="stat-change">IS à 25%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Économies possibles</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--success);">€ 3,200</div>
+                            <div class="stat-change positive">-17%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Charges déductibles</div>
+                            <div class="stat-value" style="font-size: 1.5rem;">€ 45,600</div>
+                            <div class="stat-change">62% du CA</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Score fiscal</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--warning);">72/100</div>
+                            <div class="stat-change">Optimisable</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-left">
+                            <!-- Recommendations -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1.5rem;">🎯 Recommandations d'optimisation</div>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="padding: 1.5rem; background: #d1fae5; border-radius: 12px; border-left: 4px solid var(--success);">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                                            <div style="font-weight: 600; font-size: 1.125rem;">Augmentez vos charges déductibles</div>
+                                            <span class="badge badge-success">Économie: € 1,200</span>
+                                        </div>
+                                        <div style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">
+                                            Vous pouvez déduire jusqu'à € 4,000 de charges supplémentaires avant la clôture. Investissez dans du matériel professionnel, formation, ou logiciels pour optimiser votre fiscalité.
+                                        </div>
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.5rem;"><strong>Actions suggérées:</strong></div>
+                                        <ul style="margin-left: 1.5rem; color: var(--text-gray); font-size: 0.875rem; line-height: 1.8;">
+                                            <li>Achat de matériel informatique avant le 31/12</li>
+                                            <li>Investissement dans des formations professionnelles</li>
+                                            <li>Abonnements logiciels annuels</li>
+                                        </ul>
+                                        <button class="btn btn-primary" style="margin-top: 1rem;">En savoir plus</button>
+                                    </div>
+
+                                    <div style="padding: 1.5rem; background: #fef3c7; border-radius: 12px; border-left: 4px solid var(--warning);">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                                            <div style="font-weight: 600; font-size: 1.125rem;">Optimisez vos amortissements</div>
+                                            <span class="badge badge-warning">Économie: € 1,400</span>
+                                        </div>
+                                        <div style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">
+                                            Certains de vos actifs peuvent bénéficier d'amortissements accélérés ou dégressifs. Une révision de votre plan d'amortissement pourrait réduire votre base imposable.
+                                        </div>
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.5rem;"><strong>Actifs concernés:</strong></div>
+                                        <ul style="margin-left: 1.5rem; color: var(--text-gray); font-size: 0.875rem; line-height: 1.8;">
+                                            <li>Véhicules professionnels (amortissement dégressif)</li>
+                                            <li>Matériel informatique (durée 3 ans)</li>
+                                            <li>Aménagements bureau (sur 10 ans)</li>
+                                        </ul>
+                                        <button class="btn btn-outline" style="margin-top: 1rem;">Consulter un expert</button>
+                                    </div>
+
+                                    <div style="padding: 1.5rem; background: #eff6ff; border-radius: 12px; border-left: 4px solid var(--primary);">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                                            <div style="font-weight: 600; font-size: 1.125rem;">Crédit d'impôt recherche (CIR)</div>
+                                            <span class="badge" style="background: #dbeafe; color: var(--primary);">Économie: € 600</span>
+                                        </div>
+                                        <div style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">
+                                            Votre activité pourrait être éligible au crédit d'impôt recherche. Si vous développez des produits innovants ou menez des activités de R&D, vous pourriez récupérer 30% des dépenses éligibles.
+                                        </div>
+                                        <button class="btn btn-outline" style="margin-top: 1rem;">Vérifier l'éligibilité</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tax Breakdown -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Répartition fiscale 2024</div>
+                                <div style="height: 300px;">
+                                    <canvas id="taxBreakdownChart"></canvas>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">TVA</div>
+                                        <div style="font-size: 1.25rem; font-weight: 700;">€ 16,800</div>
+                                    </div>
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">IS</div>
+                                        <div style="font-size: 1.25rem; font-weight: 700;">€ 18,500</div>
+                                    </div>
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">Charges sociales</div>
+                                        <div style="font-size: 1.25rem; font-weight: 700;">€ 28,200</div>
+                                    </div>
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">Autres taxes</div>
+                                        <div style="font-size: 1.25rem; font-weight: 700;">€ 2,400</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-right">
+                            <!-- Fiscal Score -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Score d'optimisation fiscale</div>
+                                <div style="text-align: center; padding: 2rem 0;">
+                                    <div style="font-size: 4rem; font-weight: 700; color: var(--warning);">72</div>
+                                    <div style="font-size: 1.125rem; color: var(--text-gray); margin-bottom: 1rem;">sur 100</div>
+                                    <div style="width: 100%; height: 12px; background: var(--bg-light); border-radius: 6px; overflow: hidden;">
+                                        <div style="width: 72%; height: 100%; background: linear-gradient(90deg, var(--warning), var(--success));"></div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.875rem; color: var(--text-gray); line-height: 1.6; margin-top: 1rem;">
+                                    Votre stratégie fiscale est bonne mais optimisable. Suivez nos recommandations pour économiser jusqu'à € 3,200.
+                                </div>
+                            </div>
+
+                            <!-- Deductibility Analysis -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Analyse de déductibilité</div>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 0.875rem;">Charges optimales</span>
+                                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--success);">92%</span>
+                                        </div>
+                                        <div style="width: 100%; height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 92%; height: 100%; background: var(--success);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 0.875rem;">Amortissements</span>
+                                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--warning);">65%</span>
+                                        </div>
+                                        <div style="width: 100%; height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 65%; height: 100%; background: var(--warning);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 0.875rem;">Crédits d'impôt</span>
+                                            <span style="font-size: 0.875rem; font-weight: 600; color: var(--danger);">30%</span>
+                                        </div>
+                                        <div style="width: 100%; height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 30%; height: 100%; background: var(--danger);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Comparison -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Comparaison sectorielle</div>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">Taux d'imposition effectif</div>
+                                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                            <span style="font-size: 1.5rem; font-weight: 700;">18.2%</span>
+                                            <span style="font-size: 0.875rem; color: var(--text-gray);">Moyenne: 21.5%</span>
+                                        </div>
+                                        <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--success); font-weight: 600;">-3.3% vs secteur ✓</div>
+                                    </div>
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">Charges / CA</div>
+                                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                            <span style="font-size: 1.5rem; font-weight: 700;">62%</span>
+                                            <span style="font-size: 0.875rem; color: var(--text-gray);">Moyenne: 58%</span>
+                                        </div>
+                                        <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--warning); font-weight: 600;">+4% vs secteur</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Actions rapides</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <button class="btn btn-primary" style="justify-content: center;">📊 Générer rapport complet</button>
+                                    <button class="btn btn-outline" style="justify-content: center;">👨‍💼 Contacter un expert</button>
+                                    <button class="btn btn-outline" style="justify-content: center;">📅 Planifier optimisation</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Invoice Modal -->
+    <div id="createInvoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Créer une facture</div>
+                <button class="modal-close" onclick="hideCreateInvoiceModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="createInvoiceForm">
+                    <div class="form-group">
+                        <label class="form-label">Client</label>
+                        <select class="form-select" id="invoiceClient" required>
+                            <option value="">Sélectionner un client...</option>
+                            <option value="client1">Client ABC</option>
+                            <option value="client2">Client XYZ</option>
+                            <option value="client3">Entreprise DEF</option>
+                        </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Date de facture</label>
+                            <input type="date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date d'échéance</label>
+                            <input type="date" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-input" placeholder="Prestation de services..." required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Montant HT</label>
+                            <input type="number" class="form-input" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">TVA (%)</label>
+                            <select class="form-select" required>
+                                <option value="20">20%</option>
+                                <option value="10">10%</option>
+                                <option value="5.5">5.5%</option>
+                                <option value="0">0%</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes (optionnel)</label>
+                        <textarea class="form-textarea" placeholder="Conditions de paiement, remarques..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Créer la facture</button>
+                </form>
             </div>
         </div>
     </div>
@@ -1087,6 +1926,220 @@
             alert('Utilisateur ajouté avec succès !');
             hideAddUserModal();
         });
+
+        // Invoice functions
+        function showCreateInvoiceModal() {
+            document.getElementById('createInvoiceModal').classList.add('active');
+        }
+
+        function hideCreateInvoiceModal() {
+            document.getElementById('createInvoiceModal').classList.remove('active');
+        }
+
+        function filterInvoices() {
+            console.log('Filtering invoices...');
+        }
+
+        function viewInvoice(id) {
+            alert('Viewing invoice #' + id);
+        }
+
+        document.getElementById('createInvoiceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const client = document.getElementById('invoiceClient').value;
+            alert('Facture créée pour ' + client);
+            hideCreateInvoiceModal();
+        });
+
+        // Cashflow functions
+        function updateCashflowChart() {
+            console.log('Updating cashflow chart...');
+        }
+
+        function refreshCashflow() {
+            alert('Actualisation de la trésorerie...');
+        }
+
+        function filterTransactions() {
+            console.log('Filtering transactions...');
+        }
+
+        function exportCSV() {
+            alert('Export CSV en cours...');
+        }
+
+        function exportPDF() {
+            alert('Export PDF en cours...');
+        }
+
+        function exportExcel() {
+            alert('Export Excel en cours...');
+        }
+
+        // Initialize forecast chart
+        function initForecastChart() {
+            const ctx = document.getElementById('forecastChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                    datasets: [{
+                        label: 'Prévision',
+                        data: [48250, 49100, 50800, 52100],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Initialize full cashflow chart
+        function initCashflowFullChart() {
+            const ctx = document.getElementById('cashflowFullChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['1 Déc', '5 Déc', '10 Déc', '15 Déc', '20 Déc', '25 Déc', '30 Déc'],
+                    datasets: [{
+                        label: 'Solde',
+                        data: [42000, 44500, 43800, 46200, 47500, 46800, 48250],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Import functions
+        function handleBankUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const status = document.getElementById('bankUploadStatus');
+                status.classList.remove('hidden');
+                status.innerHTML = '<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">30 transactions importées depuis ' + file.name + '</div></div>';
+            }
+        }
+
+        function handleSalesUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const status = document.getElementById('salesUploadStatus');
+                status.classList.remove('hidden');
+                status.innerHTML = '<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">25 factures importées depuis ' + file.name + '</div></div>';
+            }
+        }
+
+        function handlePurchaseUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const status = document.getElementById('purchaseUploadStatus');
+                status.classList.remove('hidden');
+                status.innerHTML = '<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">18 factures importées depuis ' + file.name + '</div></div>';
+            }
+        }
+
+        function handleTrialBalanceUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const status = document.getElementById('trialBalanceUploadStatus');
+                status.classList.remove('hidden');
+                status.innerHTML = '<div class="notification-item info"><div class="notification-title">✓ Analyse en cours</div><div class="notification-text">Balance comptable importée. Analyse fiscale disponible.</div></div>';
+                
+                setTimeout(() => {
+                    switchView('analyse');
+                }, 2000);
+            }
+        }
+
+        function downloadSampleBalance() {
+            const csvContent = `account,label,debit,credit
+701,VENTES DE PRODUITS FINIS,0,100000
+6061,ACHATS MATIERES,40000,0
+611,SOUS-TRAITANCE GENERALE,10000,0
+623,PUBLICITE,5000,0
+635,IMPOTS ET TAXES,3000,0
+641,REMUNERATIONS DU PERSONNEL,25000,0
+645,CHARGES SOCIALES,12000,0
+681,DOTATIONS AUX AMORTISSEMENTS,5000,0
+44571,TVA COLLECTEE,0,20000
+44566,TVA DEDUCTIBLE,15000,0
+512,BANQUES,50000,0
+411,CLIENTS,30000,0
+401,FOURNISSEURS,0,20000`;
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'exemple_balance_comptable.csv';
+            link.click();
+        }
+
+        // Alert functions
+        function filterAlerts() {
+            console.log('Filtering alerts...');
+        }
+
+        function markAllAlertsRead() {
+            if (confirm('Marquer toutes les alertes comme lues ?')) {
+                alert('Toutes les alertes ont été marquées comme lues');
+            }
+        }
+
+        // Tax analysis chart
+        function initTaxBreakdownChart() {
+            const ctx = document.getElementById('taxBreakdownChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['TVA', 'IS', 'Charges sociales', 'Autres'],
+                    datasets: [{
+                        data: [16800, 18500, 28200, 2400],
+                        backgroundColor: ['#2563eb', '#8b5cf6', '#f59e0b', '#64748b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize all charts when views are loaded
+        function initAllCharts() {
+            setTimeout(() => {
+                initForecastChart();
+                initCashflowFullChart();
+                initTaxBreakdownChart();
+            }, 100);
+        }
+
+        // Call on page load
+        initAllCharts();
     </script>
 </body>
 </html>
