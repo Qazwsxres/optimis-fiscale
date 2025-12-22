@@ -3,249 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUMMA - Votre assistant de gestion intelligent</title>
+    <title>SUMMA - Dashboard</title>
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- Core Functions - Load First -->
-    <script>
-        // Define core functions immediately so onclick handlers work
-        function switchPage(page) {
-            console.log('Switching to page:', page);
-            
-            // Check if trying to access dashboard without login
-            if (page === 'dashboard') {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    console.log('Not logged in, showing login modal');
-                    showLogin();
-                    return;
-                }
-            }
-            
-            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-            const pageMap = {
-                'accueil': 'pageAccueil',
-                'fonctionnalites': 'pageFonctionnalites',
-                'dashboard': 'pageDashboard',
-                'contact': 'pageContact'
-            };
-            const pageId = pageMap[page];
-            if (pageId) {
-                const element = document.getElementById(pageId);
-                if (element) {
-                    element.classList.remove('hidden');
-                    console.log('Showed page:', pageId);
-                } else {
-                    console.error('Page element not found:', pageId);
-                }
-            }
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-                if (link.dataset.page === page) {
-                    link.classList.add('active');
-                }
-            });
-            
-            // Load dashboard data if needed
-            if (page === 'dashboard' && typeof loadDashboard === 'function') {
-                loadDashboard();
-            }
-        }
-        
-        function showLogin() {
-            const modal = document.getElementById('loginModal');
-            if (modal) modal.classList.add('active');
-        }
-        
-        function hideLogin() {
-            const modal = document.getElementById('loginModal');
-            if (modal) modal.classList.remove('active');
-        }
-        
-        // Handle login form submission
-        async function handleLogin(e) {
-            e.preventDefault();
-            
-            const companyId = document.getElementById('loginCompanyId').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            console.log('Login attempt:', companyId);
-
-            try {
-                const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
-                const response = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ company_id: companyId, password: password })
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || 'Login failed');
-                }
-
-                const data = await response.json();
-                const token = data.token || data.access_token || 'logged-in';
-                localStorage.setItem('authToken', token);
-                localStorage.setItem('currentUser', JSON.stringify({ company_id: companyId }));
-
-                hideLogin();
-                
-                // Update UI
-                const loginBtn = document.getElementById('loginBtn');
-                const logoutBtn = document.getElementById('logoutBtn');
-                if (loginBtn) loginBtn.classList.add('hidden');
-                if (logoutBtn) logoutBtn.classList.remove('hidden');
-                
-                // Go to dashboard
-                switchPage('dashboard');
-                
-                console.log('✅ Login successful');
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Erreur de connexion. Vérifiez vos identifiants.\n\n' + error.message);
-            }
-        }
-        
-        // Logout function
-        function handleLogout() {
-            console.log('Logging out');
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
-            
-            // Update UI
-            const loginBtn = document.getElementById('loginBtn');
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (loginBtn) loginBtn.classList.remove('hidden');
-            if (logoutBtn) logoutBtn.classList.add('hidden');
-            
-            // Go to home
-            switchPage('accueil');
-        }
-        
-        function showCreateInvoice() {
-            const modal = document.getElementById('invoiceModal');
-            if (modal) modal.classList.add('active');
-        }
-        
-        function hideCreateInvoice() {
-            const modal = document.getElementById('invoiceModal');
-            if (modal) modal.classList.remove('active');
-        }
-        
-        function showTutorial() {
-            const modal = document.getElementById('tutorialModal');
-            if (modal) {
-                modal.classList.add('active');
-                showTutorialStep(1);
-            }
-        }
-        
-        function closeTutorial() {
-            const modal = document.getElementById('tutorialModal');
-            if (modal) modal.classList.remove('active');
-        }
-        
-        function dismissTutorial() {
-            const banner = document.getElementById('welcomeTutorial');
-            if (banner) banner.style.display = 'none';
-            localStorage.setItem('tutorialDismissed', 'true');
-        }
-        
-        function showTutorialStep(step) {
-            document.querySelectorAll('.tutorial-step').forEach(s => s.classList.add('hidden'));
-            const stepEl = document.getElementById('tutorialStep' + step);
-            if (stepEl) stepEl.classList.remove('hidden');
-        }
-        
-        function nextTutorialStep(step) {
-            showTutorialStep(step);
-        }
-        
-        function prevTutorialStep(step) {
-            showTutorialStep(step);
-        }
-        
-        function finishTutorial() {
-            closeTutorial();
-            dismissTutorial();
-            if (typeof switchTab === 'function') {
-                switchTab('import');
-            }
-        }
-        
-        function downloadSampleCSV() {
-            const csvContent = `account,label,debit,credit
-701,VENTES DE PRODUITS FINIS,0,100000
-6061,ACHATS MATIERES,40000,0
-611,SOUS-TRAITANCE GENERALE,10000,0
-623,PUBLICITE,5000,0
-635,IMPOTS ET TAXES,3000,0
-641,REMUNERATIONS DU PERSONNEL,25000,0
-645,CHARGES SOCIALES,12000,0
-681,DOTATIONS AUX AMORTISSEMENTS,5000,0
-44571,TVA COLLECTEE,0,20000
-44566,TVA DEDUCTIBLE,15000,0
-512,BANQUES,50000,0
-411,CLIENTS,30000,0
-401,FOURNISSEURS,0,20000`;
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'exemple_balance_comptable.csv';
-            link.click();
-        }
-        
-        // Placeholder functions (will be fully defined later)
-        function switchTab(tab) { 
-            console.log('Switch tab:', tab);
-            
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            const activeTab = document.querySelector(`[data-tab="${tab}"]`);
-            if (activeTab) activeTab.classList.add('active');
-            
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            // Map tab names to content IDs
-            const tabMap = {
-                'vue-ensemble': 'tabVueEnsemble',
-                'tresorerie': 'tabTresorerie',
-                'factures': 'tabFactures',
-                'import': 'tabImport',
-                'alertes': 'tabAlertes',
-                'analyse': 'tabAnalyse'
-            };
-            
-            const contentId = tabMap[tab];
-            const content = document.getElementById(contentId);
-            if (content) {
-                content.classList.add('active');
-                console.log('Activated tab content:', contentId);
-            } else {
-                console.error('Tab content not found:', contentId);
-            }
-            
-            // Load data for specific tabs
-            if (tab === 'factures' && typeof loadInvoices === 'function') {
-                loadInvoices();
-            }
-            if (tab === 'alertes' && typeof loadAlerts === 'function') {
-                loadAlerts();
-            }
-            if (tab === 'tresorerie' && typeof refreshCashflow === 'function') {
-                refreshCashflow();
-            }
-        }
-        function loadInvoices() { console.log('Load invoices'); }
-        function refreshCashflow() { console.log('Refresh cashflow'); }
-        function loadAlerts() { console.log('Load alerts'); }
-        function markAllAlertsRead() { console.log('Mark alerts read'); }
-    </script>
     
     <style>
         * {
@@ -257,7 +18,6 @@
         :root {
             --primary: #2563eb;
             --primary-dark: #1e40af;
-            --secondary: #3b82f6;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
@@ -265,278 +25,221 @@
             --bg-white: #ffffff;
             --text-dark: #1e293b;
             --text-gray: #64748b;
-            --text-light: #94a3b8;
             --border: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: var(--bg-light);
             color: var(--text-dark);
-            line-height: 1.6;
         }
 
-        /* Header */
-        .header {
-            background: var(--bg-white);
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
         }
 
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .user-info {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .user-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-role {
+            font-size: 0.875rem;
+            color: var(--text-gray);
+        }
+
+        .user-role-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-light);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            color: var(--text-gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-light);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: #eff6ff;
+            color: var(--primary);
+            font-weight: 600;
+            border-left: 3px solid var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.25rem;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-logout {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .btn-logout:hover {
+            background: var(--border);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            background: white;
             padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .logo-container {
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-left {
             display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
-        .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
-            border-radius: 6px;
+        .dashboard-right {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.25rem;
-        }
-
-        .logo-text {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .nav-menu {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: var(--text-gray);
-            text-decoration: none;
-            font-size: 0.9375rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            color: var(--primary);
-        }
-
-        .btn {
-            padding: 0.625rem 1.25rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9375rem;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-dark);
-        }
-
-        .btn-outline:hover {
-            background: var(--bg-light);
-        }
-
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 4rem 2rem;
-            color: white;
-            text-align: center;
-        }
-
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .hero h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .hero p {
-            font-size: 1.125rem;
-            opacity: 0.95;
-            margin-bottom: 2rem;
-        }
-
-        /* Container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-
-        /* Section */
-        .section {
-            margin-bottom: 4rem;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            color: var(--text-dark);
-        }
-
-        .section-subtitle {
-            font-size: 1.125rem;
-            color: var(--text-gray);
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
         /* Cards */
         .card {
-            background: var(--bg-white);
+            background: white;
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.5rem;
             box-shadow: var(--shadow);
-            border: 1px solid var(--border);
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        /* Grid */
-        .grid {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .grid-2 {
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        }
-
-        .grid-3 {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        }
-
-        /* Feature Cards */
-        .feature-card {
-            background: var(--bg-white);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            text-align: center;
-            transition: all 0.2s;
-        }
-
-        .feature-card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-4px);
-        }
-
-        .feature-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            font-size: 1.5rem;
-        }
-
-        .icon-blue { background: #dbeafe; color: #2563eb; }
-        .icon-purple { background: #f3e8ff; color: #9333ea; }
-        .icon-green { background: #d1fae5; color: #059669; }
-        .icon-orange { background: #fed7aa; color: #ea580c; }
-        .icon-red { background: #fee2e2; color: #dc2626; }
-        .icon-yellow { background: #fef3c7; color: #d97706; }
-
-        .feature-title {
             font-size: 1.125rem;
             font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--text-dark);
         }
 
-        .feature-text {
-            font-size: 0.9375rem;
-            color: var(--text-gray);
-            line-height: 1.5;
-        }
-
-        /* Stats Cards */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .stat-card {
-            background: var(--bg-white);
+            background: white;
             border-radius: 12px;
             padding: 1.5rem;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow);
         }
 
         .stat-label {
             font-size: 0.875rem;
             color: var(--text-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
             margin-bottom: 0.5rem;
         }
 
         .stat-value {
-            font-size: 1.875rem;
+            font-size: 1.75rem;
             font-weight: 700;
             color: var(--text-dark);
         }
@@ -546,175 +249,138 @@
             margin-top: 0.5rem;
         }
 
-        .stat-positive { color: var(--success); }
-        .stat-negative { color: var(--danger); }
+        .stat-change.positive {
+            color: var(--success);
+        }
 
-        /* Step Cards */
-        .step-card {
-            background: var(--bg-white);
-            border-radius: 12px;
-            padding: 2rem;
-            border: 1px solid var(--border);
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        /* Chart Container */
+        .chart-container {
             position: relative;
+            height: 300px;
         }
 
-        .step-number {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #e2e8f0;
-            margin-bottom: 1rem;
-        }
-
-        .step-title {
-            font-size: 1.125rem;
-            font-weight: 600;
+        /* Notifications */
+        .notification-item {
+            padding: 1rem;
+            border-left: 3px solid var(--border);
             margin-bottom: 0.75rem;
-            color: var(--text-dark);
-        }
-
-        .step-text {
-            font-size: 0.9375rem;
-            color: var(--text-gray);
-            line-height: 1.6;
-        }
-
-        /* Form */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--text-dark);
-            font-size: 0.9375rem;
-        }
-
-        .form-input, .form-select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.9375rem;
-            transition: border-color 0.2s;
-        }
-
-        .form-input:focus, .form-select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .form-hint {
-            font-size: 0.875rem;
-            color: var(--text-light);
-            margin-top: 0.25rem;
-        }
-
-        /* File Upload */
-        .file-upload {
-            border: 2px dashed var(--border);
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .file-upload:hover {
-            border-color: var(--primary);
             background: var(--bg-light);
+            border-radius: 4px;
         }
 
-        .file-upload input {
-            display: none;
+        .notification-item.warning {
+            border-left-color: var(--warning);
+            background: #fffbeb;
         }
 
-        .file-upload-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
+        .notification-item.danger {
+            border-left-color: var(--danger);
+            background: #fef2f2;
         }
 
-        .file-upload-text {
+        .notification-item.info {
+            border-left-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 0.9375rem;
+        }
+
+        .notification-text {
+            font-size: 0.875rem;
             color: var(--text-gray);
-            font-weight: 500;
+        }
+
+        .notification-date {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            margin-top: 0.5rem;
         }
 
         /* Table */
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-
-        .table {
+        .data-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        .table thead {
-            background: var(--bg-light);
-        }
-
-        .table th {
-            padding: 0.75rem 1rem;
+        .data-table th {
             text-align: left;
+            padding: 0.75rem;
+            border-bottom: 2px solid var(--border);
             font-weight: 600;
             font-size: 0.875rem;
             color: var(--text-gray);
-            border-bottom: 1px solid var(--border);
         }
 
-        .table td {
-            padding: 0.75rem 1rem;
+        .data-table td {
+            padding: 0.75rem;
             border-bottom: 1px solid var(--border);
             font-size: 0.9375rem;
         }
 
-        .table tbody tr:hover {
+        .data-table tr:hover {
             background: var(--bg-light);
         }
 
-        .table tbody tr:last-child td {
-            border-bottom: none;
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text-dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-light);
         }
 
         /* Badge */
         .badge {
             display: inline-block;
             padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
             font-weight: 600;
         }
 
-        .badge-success { background: #d1fae5; color: #065f46; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-        .badge-info { background: #dbeafe; color: #1e40af; }
-
-        /* Alert */
-        .alert {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
         }
 
-        .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
-        .alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
-        .alert-danger { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
-        .alert-info { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
 
-        /* Chart Container */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 1rem;
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         /* Modal */
@@ -726,10 +392,9 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            z-index: 1000;
         }
 
         .modal.active {
@@ -737,26 +402,25 @@
         }
 
         .modal-content {
-            background: var(--bg-white);
+            background: white;
             border-radius: 12px;
-            padding: 2rem;
             max-width: 500px;
-            width: 100%;
+            width: 90%;
             max-height: 90vh;
             overflow-y: auto;
         }
 
         .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
         }
 
         .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-dark);
+            font-size: 1.25rem;
+            font-weight: 600;
         }
 
         .modal-close {
@@ -767,1956 +431,662 @@
             color: var(--text-gray);
         }
 
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 1rem;
-            border-bottom: 2px solid var(--border);
-            margin-bottom: 2rem;
+        .modal-body {
+            padding: 1.5rem;
         }
 
-        .tab {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-gray);
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* CTA Section */
-        .cta-section {
-            background: var(--primary);
-            color: white;
-            padding: 4rem 2rem;
-            text-align: center;
-            margin-top: 4rem;
-        }
-
-        .cta-title {
-            font-size: 2rem;
-            font-weight: 700;
+        /* Form */
+        .form-group {
             margin-bottom: 1rem;
         }
 
-        .cta-text {
-            font-size: 1.125rem;
-            opacity: 0.95;
-            margin-bottom: 2rem;
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
         }
 
-        /* Hidden */
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9375rem;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
         .hidden {
             display: none !important;
         }
 
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-gray);
-        }
-
-        .spinner {
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
         /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 100;
+                transition: left 0.3s;
             }
 
-            .nav-menu {
-                flex-wrap: wrap;
-                gap: 1rem;
-            }
-
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .section-title {
-                font-size: 1.5rem;
+            .sidebar.open {
+                left: 0;
             }
 
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-
-            .tabs {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo-container">
-                <div class="logo-icon">S</div>
-                <div class="logo-text">SUMMA</div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">S</div>
+                    <span>SUMMA</span>
+                </div>
             </div>
+
+            <div class="user-info">
+                <div class="user-name" id="userName">Jean Dupont</div>
+                <div class="user-role" id="userCompany">Entreprise ABC</div>
+                <div class="user-role-badge" id="userAccessLevel">Admin</div>
+            </div>
+
             <nav class="nav-menu">
-                <a class="nav-link active" data-page="accueil" onclick="switchPage('accueil'); return false;">Accueil</a>
-                <a class="nav-link" data-page="fonctionnalites" onclick="switchPage('fonctionnalites'); return false;">Fonctionnalités</a>
-                <a class="nav-link" data-page="dashboard" onclick="switchPage('dashboard'); return false;">Dashboard</a>
-                <a class="nav-link" data-page="contact" onclick="switchPage('contact'); return false;">Contact</a>
+                <div class="nav-item active" onclick="switchView('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    <span>Tableau de bord</span>
+                </div>
+                <div class="nav-item" onclick="switchView('tresorerie')">
+                    <span class="nav-icon">💰</span>
+                    <span>Trésorerie</span>
+                </div>
+                <div class="nav-item" onclick="switchView('factures')">
+                    <span class="nav-icon">📄</span>
+                    <span>Factures</span>
+                </div>
+                <div class="nav-item" onclick="switchView('import')">
+                    <span class="nav-icon">📁</span>
+                    <span>Import</span>
+                </div>
+                <div class="nav-item" onclick="switchView('alertes')">
+                    <span class="nav-icon">🔔</span>
+                    <span>Alertes</span>
+                </div>
+                <div class="nav-item" onclick="switchView('analyse')">
+                    <span class="nav-icon">📈</span>
+                    <span>Analyse fiscale</span>
+                </div>
+                <div class="nav-item" onclick="switchView('espace-client')">
+                    <span class="nav-icon">👤</span>
+                    <span>Espace client</span>
+                </div>
             </nav>
-            <div>
-                <button class="btn btn-primary" id="loginBtn" onclick="showLogin()">Se connecter</button>
-                <button class="btn btn-outline hidden" id="logoutBtn" onclick="handleLogout()">Déconnexion</button>
-            </div>
-        </div>
-    </header>
 
-    <!-- Page: Accueil -->
-    <div id="pageAccueil" class="page">
-        <!-- Hero -->
-        <section class="hero">
-            <div class="hero-content">
-                <div style="display: inline-block; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; margin-bottom: 1.5rem;">
-                    ✨ Bêta privée disponible
-                </div>
-                <h1>Votre assistant de gestion intelligent</h1>
-                <p>Trésorerie, factures, échéances fiscales... tout au même endroit. Simplifiez votre quotidien et concentrez-vous sur votre croissance.</p>
-                <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="switchPage('contact')">
-                    Commencer gratuitement →
-                </button>
-            </div>
-        </section>
-
-        <!-- Dashboard Preview -->
-        <div class="container">
-            <div class="card" style="margin-bottom: 4rem;">
-                <div style="text-align: center; margin-bottom: 2rem;">
-                    <div style="display: inline-block; background: #dbeafe; padding: 0.5rem 1rem; border-radius: 9999px; color: #2563eb; font-weight: 600; font-size: 0.875rem; margin-bottom: 1rem;">
-                        Tableau de bord
-                    </div>
-                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-dark);">Analyse de mise à jour tous les 2 heures</h2>
-                </div>
-                
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Trésorerie</div>
-                        <div class="stat-value">48 250 €</div>
-                        <div class="stat-change stat-positive">+12%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">À recevoir</div>
-                        <div class="stat-value">12 500 €</div>
-                        <div class="stat-change">3 factures</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Prochaine échéance TVA</div>
-                        <div class="stat-value">Gare 12 avril</div>
-                        <div class="stat-change">Dans 12 jours</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Les défis des TPE -->
-            <section class="section">
-                <div class="section-header">
-                    <h2 class="section-title">Les défis des TPE et indépendants</h2>
-                    <p class="section-subtitle">La gestion administrative peut vite devenir un cauchemar. Nous avons la solution.</p>
-                </div>
-
-                <div class="grid grid-3">
-                    <div class="feature-card" style="background: #fef2f2; border-color: #fecaca;">
-                        <div class="feature-icon icon-red">⚠️</div>
-                        <div class="feature-title">Gestion dispersée</div>
-                        <div class="feature-text">Vos données sont éparpillées entre plusieurs outils, difficulté à suivre l'activité d'un seul coup d'œil.</div>
-                    </div>
-                    <div class="feature-card" style="background: #fef2f2; border-color: #fecaca;">
-                        <div class="feature-icon icon-red">⏰</div>
-                        <div class="feature-title">Perte de temps</div>
-                        <div class="feature-text">Des heures perdues chaque semaine sur la saisie manuelle et le suivi administratif.</div>
-                    </div>
-                    <div class="feature-card" style="background: #fef2f2; border-color: #fecaca;">
-                        <div class="feature-icon icon-red">📋</div>
-                        <div class="feature-title">Oublis fréquents</div>
-                        <div class="feature-text">Retards sur les échéances et factures oubliées qui impactent votre trésorerie.</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Comment SUMMA simplifie tout -->
-            <section class="section">
-                <div class="section-header">
-                    <h2 class="section-title">Comment SUMMA simplifie tout</h2>
-                    <p class="section-subtitle">3 étapes pour reprendre le contrôle de votre entreprise</p>
-                </div>
-
-                <div class="grid grid-3">
-                    <div class="step-card">
-                        <div class="step-number">01</div>
-                        <div class="step-title">Connectez vos comptes</div>
-                        <div class="step-text">Liez votre compte bancaire et importez vos factures en quelques clics. Notre IA se charge du reste.</div>
-                    </div>
-                    <div class="step-card">
-                        <div class="step-number">02</div>
-                        <div class="step-title">L'IA analyse automatiquement</div>
-                        <div class="step-text">Notre intelligence artificielle détecte et classe tous vos flux financiers en temps réel.</div>
-                    </div>
-                    <div class="step-card">
-                        <div class="step-number">03</div>
-                        <div class="step-title">Pilotez en temps réel</div>
-                        <div class="step-text">Visualisez votre situation complète, anticipez vos échéances et prenez les bonnes décisions.</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Pourquoi choisir SUMMA -->
-            <section class="section">
-                <div class="section-header">
-                    <h2 class="section-title">Pourquoi choisir SUMMA ?</h2>
-                    <p class="section-subtitle">Une solution complète pensée pour les dirigeants d'aujourd'hui</p>
-                </div>
-
-                <div class="grid grid-2">
-                    <div class="feature-card">
-                        <div class="feature-icon icon-orange">🤖</div>
-                        <div class="feature-title">Automatisation totale</div>
-                        <div class="feature-text">Connexion bancaire, détection des factures, classification automatique.</div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon icon-blue">👁️</div>
-                        <div class="feature-title">Vision claire</div>
-                        <div class="feature-text">Tableau de bord en temps réel de votre trésorerie et rentabilité.</div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon icon-purple">💡</div>
-                        <div class="feature-title">Optimisation fiscale</div>
-                        <div class="feature-text">Stratégies personnalisées pour réduire légalement votre charge fiscale.</div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon icon-green">✅</div>
-                        <div class="feature-title">Audit fiscal</div>
-                        <div class="feature-text">Analyse complète de votre situation pour identifier risques et opportunités.</div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- CTA Section -->
-        <section class="cta-section">
-            <div class="cta-title">Prêt à simplifier votre gestion ?</div>
-            <div class="cta-text">Rejoignez les entrepreneurs qui ont déjà gagné du temps en adoptant SUMMA. Plus d'oublis, plus de stress, plus de panique à la TVA.</div>
-            <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="switchPage('contact')">
-                Rejoignez la bêta privée →
-            </button>
-        </section>
-    </div>
-
-    <!-- Page: Fonctionnalités -->
-    <div id="pageFonctionnalites" class="page hidden">
-        <div class="hero" style="padding: 3rem 2rem;">
-            <h1 style="font-size: 2rem;">Toutes les fonctionnalités dont vous avez besoin</h1>
-            <p>Notre IA analyse vos factures, vos flux bancaires et vos échéances fiscales pour vous offrir une vision claire et en temps réel de votre entreprise.</p>
-        </div>
-
-        <div class="container">
-            <!-- Section 1: Core Features -->
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title" style="font-size: 1.75rem;">Fonctionnalités principales</h2>
-                    <p class="section-subtitle">Les outils essentiels pour gérer votre entreprise au quotidien</p>
-                </div>
-
-                <div class="grid grid-2">
-                    <div class="card">
-                        <div class="feature-icon icon-blue" style="margin: 0 0 1rem 0;">📊</div>
-                        <h3 style="margin-bottom: 0.75rem;">Suivi bancaire automatisé</h3>
-                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Connectez votre compte bancaire et laissez notre IA catégoriser automatiquement toutes vos transactions. Synchronisation quotidienne pour une vue en temps réel de vos finances.</p>
-                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
-                            <li>Synchronisation bancaire quotidienne</li>
-                            <li>Catégorisation intelligente des transactions</li>
-                            <li>Détection des anomalies de caisse</li>
-                            <li>Rapprochement bancaire automatique</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <div class="feature-icon icon-purple" style="margin: 0 0 1rem 0;">📄</div>
-                        <h3 style="margin-bottom: 0.75rem;">Facturation simplifiée</h3>
-                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Créez, envoyez et suivez toutes vos factures clients et fournisseurs en quelques clics. Relances automatiques pour ne plus jamais oublier un impayé.</p>
-                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
-                            <li>Modèles de factures personnalisables</li>
-                            <li>Relances automatiques pour les impayés</li>
-                            <li>Suivi des règlements en temps réel</li>
-                            <li>Export vers votre comptabilité</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 2: Dashboard & Analytics -->
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title" style="font-size: 1.75rem;">Pilotage et analyse</h2>
-                    <p class="section-subtitle">Visualisez et anticipez l'évolution de votre activité</p>
-                </div>
-
-                <div class="grid grid-2">
-                    <div class="card">
-                        <div class="feature-icon icon-green" style="margin: 0 0 1rem 0;">💰</div>
-                        <h3 style="margin-bottom: 0.75rem;">Tableau de bord intelligent</h3>
-                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Un tableau de bord complet pour visualiser votre activité en temps réel. Graphiques d'évolution, indicateurs de performance et prévisions de trésorerie pour prendre les bonnes décisions.</p>
-                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
-                            <li>Indicateurs de performance en temps réel</li>
-                            <li>Graphiques d'évolution de trésorerie</li>
-                            <li>Prévisions sur 7-30 jours</li>
-                            <li>Analyse des marges et rentabilité</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <div class="feature-icon icon-orange" style="margin: 0 0 1rem 0;">🔔</div>
-                        <h3 style="margin-bottom: 0.75rem;">Alertes et conseils personnalisés</h3>
-                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Ne manquez plus aucune échéance importante. Notre système vous alerte automatiquement pour la TVA, l'IS, les charges sociales et vous recommande des actions d'optimisation.</p>
-                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
-                            <li>Alertes TVA, IS, charges sociales</li>
-                            <li>Notifications de factures impayées</li>
-                            <li>Recommandations d'optimisation</li>
-                            <li>Calendrier fiscal personnalisé</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Tax Optimization -->
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title" style="font-size: 1.75rem;">Optimisation fiscale</h2>
-                    <p class="section-subtitle">Réduisez légalement votre charge fiscale grâce à l'IA</p>
-                </div>
-
-                <div class="grid grid-2">
-                    <div class="card">
-                        <div class="feature-icon icon-blue" style="margin: 0 0 1rem 0;">📈</div>
-                        <h3 style="margin-bottom: 0.75rem;">Optimisation fiscale intelligente</h3>
-                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Notre intelligence artificielle analyse votre situation en profondeur et vous guide vers la meilleure stratégie fiscale. Identifiez les leviers d'optimisation et les dispositifs dont vous pouvez bénéficier.</p>
-                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
-                            <li>Analyse de déductibilité optimale</li>
-                            <li>Simulation des amortissements et provisions</li>
-                            <li>Proposition de structure juridique adaptée</li>
-                            <li>Identification des crédits d'impôt (CIR, CII...)</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <div class="feature-icon icon-purple" style="margin: 0 0 1rem 0;">🔐</div>
-                        <h3 style="margin-bottom: 0.75rem;">Audit fiscal complet</h3>
-                        <p style="color: var(--text-gray); margin-bottom: 1rem; line-height: 1.6;">Un diagnostic complet et détaillé de votre situation fiscale. Notre système identifie les zones de risque, les opportunités d'économies et vous fournit un rapport actionnable.</p>
-                        <ul style="color: var(--text-gray); padding-left: 1.5rem; line-height: 1.8;">
-                            <li>Identification des zones de risque fiscal</li>
-                            <li>Détection des crédits d'impôt non exploités</li>
-                            <li>Rapport d'audit complet et actionnable</li>
-                            <li>Recommandations personnalisées</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 4: Additional Features -->
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title" style="font-size: 1.75rem;">Et bien plus encore...</h2>
-                    <p class="section-subtitle">Une solution complète pour gérer votre activité sans stress</p>
-                </div>
-
-                <div class="grid grid-3">
-                    <div class="card">
-                        <div class="feature-icon icon-yellow" style="margin: 0 0 1rem 0;">🔗</div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Intégrations comptables</h3>
-                        <p style="color: var(--text-gray); line-height: 1.6;">Compatible avec votre expert-comptable et les principaux logiciels de comptabilité. Export automatique de vos données.</p>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="feature-icon icon-green" style="margin: 0 0 1rem 0;">🔒</div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Sécurité bancaire</h3>
-                        <p style="color: var(--text-gray); line-height: 1.6;">Chiffrement de niveau bancaire pour toutes vos données. Conformité RGPD et hébergement sécurisé en Europe.</p>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="feature-icon icon-blue" style="margin: 0 0 1rem 0;">📱</div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Multi-utilisateurs</h3>
-                        <p style="color: var(--text-gray); line-height: 1.6;">Partagez l'accès avec votre équipe et votre comptable. Gestion des droits et des permissions.</p>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="feature-icon icon-orange" style="margin: 0 0 1rem 0;">⚡</div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Automatisation totale</h3>
-                        <p style="color: var(--text-gray); line-height: 1.6;">Gagnez 10h par semaine minimum grâce à l'automatisation de vos tâches administratives répétitives.</p>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="feature-icon icon-purple" style="margin: 0 0 1rem 0;">💳</div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Paiement intégré</h3>
-                        <p style="color: var(--text-gray); line-height: 1.6;">Liens de paiement en 1 clic dans vos factures. Vos clients paient plus rapidement et facilement.</p>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="feature-icon icon-red" style="margin: 0 0 1rem 0;">📊</div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 0.75rem;">Reporting avancé</h3>
-                        <p style="color: var(--text-gray); line-height: 1.6;">Export comptable automatique et rapports personnalisés pour piloter efficacement votre activité.</p>
-                    </div>
-                </div>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="handleLogout()">🚪 Déconnexion</button>
             </div>
         </div>
 
-        <section class="cta-section">
-            <div class="cta-title">Simplifiez votre quotidien</div>
-            <div class="cta-text">Zéro temps perdu en saisies manuelles. Réduction de 50% du stress administratif. Interface intuitive pour tous, même sans être comptable.</div>
-            <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="switchPage('contact')">
-                Commencer gratuitement →
-            </button>
-        </section>
-    </div>
-
-    <!-- Page: Dashboard (protected) -->
-    <div id="pageDashboard" class="page hidden">
-        <div class="container">
-            <!-- Welcome Tutorial (shown on first login) -->
-            <div id="welcomeTutorial" class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 2rem;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <h2 style="color: white; margin-bottom: 1rem;">👋 Bienvenue sur SUMMA !</h2>
-                        <p style="opacity: 0.95; margin-bottom: 1.5rem; line-height: 1.6;">
-                            Découvrez comment utiliser votre tableau de bord en 3 étapes simples.
-                        </p>
-                        <button class="btn btn-primary" style="background: white; color: var(--primary);" onclick="showTutorial()">
-                            Démarrer le guide →
-                        </button>
-                        <button class="btn btn-outline" style="margin-left: 0.5rem; border-color: white; color: white;" onclick="dismissTutorial()">
-                            Plus tard
-                        </button>
-                    </div>
-                    <button onclick="dismissTutorial()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; flex-shrink: 0;">×</button>
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="page-title" id="pageTitle">Tableau de bord</div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <span id="currentDate"></span>
                 </div>
             </div>
 
-            <!-- Tutorial Modal -->
-            <div id="tutorialModal" class="modal">
-                <div class="modal-content" style="max-width: 700px;">
-                    <div class="modal-header">
-                        <div class="modal-title">Guide d'utilisation</div>
-                        <button class="modal-close" onclick="closeTutorial()">×</button>
-                    </div>
-
-                    <!-- Tutorial Steps -->
-                    <div id="tutorialStep1" class="tutorial-step">
-                        <div style="text-align: center; margin-bottom: 2rem;">
-                            <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">1</div>
-                            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Importez vos données</h3>
+            <div class="content-area">
+                <!-- Dashboard View -->
+                <div id="viewDashboard" class="view">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Trésorerie</div>
+                            <div class="stat-value" id="statTresorerie">€ 48,250</div>
+                            <div class="stat-change positive">+12%</div>
                         </div>
-
-                        <div class="card" style="background: var(--bg-light); margin-bottom: 1.5rem;">
-                            <h4 style="margin-bottom: 1rem;">📁 Allez dans l'onglet "Import"</h4>
-                            <p style="color: var(--text-gray); line-height: 1.6; margin-bottom: 1rem;">
-                                Cliquez sur l'onglet <strong>"Import"</strong> en haut de la page pour commencer à importer vos données.
-                            </p>
-                            
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📊 Transactions bancaires :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray);">Téléchargez vos relevés bancaires au format CSV avec les colonnes : date, description, montant</p>
-                            </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📄 Factures de vente :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray);">Importez vos factures clients (CSV/XLSX) avec : numéro, client, date, échéance, montant</p>
-                            </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📋 Factures fournisseurs :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray);">Importez vos factures d'achats (CSV/XLSX) avec les mêmes colonnes</p>
-                            </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📈 Balance comptable :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray);">Pour l'analyse fiscale, importez votre balance avec : account, label, debit, credit</p>
-                            </div>
+                        <div class="stat-card">
+                            <div class="stat-label">À recevoir</div>
+                            <div class="stat-value" id="statRecevoir">€ 12,500</div>
+                            <div class="stat-change">3 factures</div>
                         </div>
-
-                        <div class="alert alert-info">
-                            <span>💡</span>
-                            <div>
-                                <strong>Astuce :</strong> Commencez par importer vos transactions bancaires, c'est le plus important pour visualiser votre trésorerie.
-                            </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Revenus (mois)</div>
+                            <div class="stat-value" id="statRevenus">€ 25,380</div>
+                            <div class="stat-change positive">+8%</div>
                         </div>
-
-                        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 2rem;">
-                            <button class="btn btn-outline" onclick="closeTutorial()">Fermer</button>
-                            <button class="btn btn-primary" onclick="nextTutorialStep(2)">Suivant →</button>
+                        <div class="stat-card">
+                            <div class="stat-label">Prochaine échéance</div>
+                            <div class="stat-value" style="font-size: 1.25rem;">21 Jan</div>
+                            <div class="stat-change">TVA trimestrielle</div>
                         </div>
                     </div>
 
-                    <div id="tutorialStep2" class="tutorial-step hidden">
-                        <div style="text-align: center; margin-bottom: 2rem;">
-                            <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">2</div>
-                            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Visualisez votre activité</h3>
-                        </div>
-
-                        <div class="card" style="background: var(--bg-light); margin-bottom: 1.5rem;">
-                            <h4 style="margin-bottom: 1rem;">📊 Explorez les onglets</h4>
-                            
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">🏠 Vue d'ensemble :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray); margin-bottom: 0.5rem;">
-                                    Votre tableau de bord principal avec les indicateurs clés : trésorerie actuelle, factures en attente, revenus du mois.
-                                </p>
-                                <p style="font-size: 0.875rem; color: var(--text-light);">
-                                    Les graphiques montrent l'évolution sur 7 jours et les prévisions sur 30 jours.
-                                </p>
+                    <!-- Main Dashboard Grid -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-left">
+                            <!-- Trésorerie Chart -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Évolution de la trésorerie</div>
+                                    <select id="periodSelect" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                                        <option value="7">7 jours</option>
+                                        <option value="30">30 jours</option>
+                                        <option value="90">90 jours</option>
+                                    </select>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="tresorerieChart"></canvas>
+                                </div>
                             </div>
 
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">💰 Trésorerie :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray); margin-bottom: 0.5rem;">
-                                    Analyse détaillée de votre trésorerie avec un graphique complet et la liste de toutes vos transactions.
-                                </p>
-                                <p style="font-size: 0.875rem; color: var(--text-light);">
-                                    Utilisez le bouton "Actualiser" pour mettre à jour les données.
-                                </p>
-                            </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📄 Factures :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray); margin-bottom: 0.5rem;">
-                                    Gérez toutes vos factures : créez de nouvelles factures, filtrez par statut (brouillon, envoyée, payée, en retard).
-                                </p>
-                                <p style="font-size: 0.875rem; color: var(--text-light);">
-                                    Cliquez sur "Nouvelle facture" pour créer une facture directement depuis l'interface.
-                                </p>
-                            </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">🔔 Alertes :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray);">
-                                    Consultez toutes vos notifications : échéances fiscales, factures en retard, recommandations.
-                                </p>
-                            </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">📈 Analyse fiscale :</p>
-                                <p style="font-size: 0.9375rem; color: var(--text-gray);">
-                                    Après avoir importé votre balance comptable, obtenez une analyse complète avec recommandations d'optimisation fiscale.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
-                            <button class="btn btn-outline" onclick="prevTutorialStep(1)">← Précédent</button>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button class="btn btn-outline" onclick="closeTutorial()">Fermer</button>
-                                <button class="btn btn-primary" onclick="nextTutorialStep(3)">Suivant →</button>
+                            <!-- Recent Transactions -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Dernières transactions</div>
+                                    <button class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="switchView('tresorerie')">Voir tout</button>
+                                </div>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th>Catégorie</th>
+                                            <th>Montant</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTransactions">
+                                        <tr>
+                                            <td>20 Déc</td>
+                                            <td>Virement client ABC</td>
+                                            <td>Vente</td>
+                                            <td style="color: var(--success); font-weight: 600;">+€ 2,500</td>
+                                        </tr>
+                                        <tr>
+                                            <td>19 Déc</td>
+                                            <td>Loyer bureau</td>
+                                            <td>Charges</td>
+                                            <td style="color: var(--danger); font-weight: 600;">-€ 1,200</td>
+                                        </tr>
+                                        <tr>
+                                            <td>18 Déc</td>
+                                            <td>Facture fournisseur XYZ</td>
+                                            <td>Achat</td>
+                                            <td style="color: var(--danger); font-weight: 600;">-€ 850</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </div>
 
-                    <div id="tutorialStep3" class="tutorial-step hidden">
-                        <div style="text-align: center; margin-bottom: 2rem;">
-                            <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">3</div>
-                            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Conseils pour bien démarrer</h3>
-                        </div>
-
-                        <div class="card" style="background: var(--bg-light); margin-bottom: 1.5rem;">
-                            <h4 style="margin-bottom: 1rem;">🎯 Bonnes pratiques</h4>
-                            
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                    <div style="font-size: 2rem;">📅</div>
-                                    <div>
-                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Importez régulièrement</p>
-                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
-                                            Mettez à jour vos données chaque semaine pour avoir une vision précise de votre trésorerie.
-                                        </p>
+                        <div class="dashboard-right">
+                            <!-- Notifications / Alertes -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Notifications</div>
+                                </div>
+                                <div id="notificationsList">
+                                    <div class="notification-item danger">
+                                        <div class="notification-title">⚠️ TVA à payer</div>
+                                        <div class="notification-text">Déclaration TVA T4 à soumettre avant le 21 janvier</div>
+                                        <div class="notification-date">Dans 2 jours</div>
+                                    </div>
+                                    <div class="notification-item warning">
+                                        <div class="notification-title">📄 Facture en retard</div>
+                                        <div class="notification-text">Client XYZ - Facture #1234 échue depuis 5 jours</div>
+                                        <div class="notification-date">Aujourd'hui</div>
+                                    </div>
+                                    <div class="notification-item info">
+                                        <div class="notification-title">💡 Conseil fiscal</div>
+                                        <div class="notification-text">Optimisez vos charges déductibles avant fin d'année</div>
+                                        <div class="notification-date">Il y a 1 heure</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                    <div style="font-size: 2rem;">✅</div>
-                                    <div>
-                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Suivez vos factures</p>
-                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
-                                            Consultez l'onglet Factures régulièrement pour identifier les impayés et relancer vos clients.
-                                        </p>
+                            <!-- Quick Stats -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Résumé rapide</div>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
+                                        <span>Factures émises</span>
+                                        <span style="font-weight: 600;">28</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
+                                        <span>Factures payées</span>
+                                        <span style="font-weight: 600; color: var(--success);">25</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
+                                        <span>En attente</span>
+                                        <span style="font-weight: 600; color: var(--warning);">3</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
+                                        <span>Taux de recouvrement</span>
+                                        <span style="font-weight: 600;">89%</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                    <div style="font-size: 2rem;">🔔</div>
-                                    <div>
-                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Vérifiez les alertes</p>
-                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
-                                            Les alertes vous signalent les échéances importantes (TVA, IS) et les opportunités d'optimisation.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px; margin-bottom: 1rem;">
-                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                    <div style="font-size: 2rem;">📊</div>
-                                    <div>
-                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Analysez les prévisions</p>
-                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
-                                            Les graphiques de prévisions vous aident à anticiper votre trésorerie sur les 30 prochains jours.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="padding: 1rem; background: white; border-radius: 8px;">
-                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                    <div style="font-size: 2rem;">💡</div>
-                                    <div>
-                                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Utilisez l'analyse fiscale</p>
-                                        <p style="font-size: 0.9375rem; color: var(--text-gray);">
-                                            Importez votre balance comptable pour obtenir des recommandations personnalisées et identifier des opportunités d'économies.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info">
-                            <span>🎓</span>
-                            <div>
-                                <strong>Besoin d'aide ?</strong> Vous pouvez toujours réafficher ce guide depuis le menu en haut à droite.
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
-                            <button class="btn btn-outline" onclick="prevTutorialStep(2)">← Précédent</button>
-                            <button class="btn btn-primary" onclick="finishTutorial()">Commencer →</button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div style="margin-bottom: 2rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Tableau de bord</h1>
-                        <p style="color: var(--text-gray);">Vue d'ensemble de votre activité</p>
-                    </div>
-                    <button class="btn btn-outline" onclick="showTutorial()">
-                        📖 Guide d'utilisation
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabs -->
-            <div class="tabs">
-                <button class="tab active" data-tab="vue-ensemble" onclick="switchTab('vue-ensemble')">Vue d'ensemble</button>
-                <button class="tab" data-tab="tresorerie" onclick="switchTab('tresorerie')">Trésorerie</button>
-                <button class="tab" data-tab="factures" onclick="switchTab('factures')">Factures</button>
-                <button class="tab" data-tab="import" onclick="switchTab('import')">Import</button>
-                <button class="tab" data-tab="alertes" onclick="switchTab('alertes')">Alertes</button>
-                <button class="tab" data-tab="analyse" onclick="switchTab('analyse')">Analyse fiscale</button>
-            </div>
-
-            <!-- Tab: Vue d'ensemble -->
-            <div class="tab-content active" id="tabVueEnsemble">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Trésorerie</div>
-                        <div class="stat-value" id="dashCash">€ 0</div>
-                        <div class="stat-change stat-positive" id="dashCashChange">+0%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Factures en attente</div>
-                        <div class="stat-value" id="dashPending">0</div>
-                        <div class="stat-change" id="dashPendingInfo">0 en retard</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Revenus du mois</div>
-                        <div class="stat-value" id="dashRevenue">€ 0</div>
-                        <div class="stat-change stat-positive">vs mois dernier</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Prochaine échéance</div>
-                        <div class="stat-value" id="dashNextDue">-</div>
-                        <div class="stat-change" id="dashNextDueInfo">-</div>
-                    </div>
-                </div>
-
-                <div class="grid grid-2">
+                <!-- Espace Client View -->
+                <div id="viewEspaceClient" class="view hidden">
                     <div class="card">
+                        <div class="card-title" style="margin-bottom: 2rem;">Informations de l'entreprise</div>
+                        
+                        <form id="clientInfoForm">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Nom de l'entreprise</label>
+                                    <input type="text" class="form-input" id="companyName" value="Entreprise ABC">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">SIRET</label>
+                                    <input type="text" class="form-input" id="companySIRET" value="123 456 789 00012">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Forme juridique</label>
+                                    <select class="form-select" id="companyType">
+                                        <option value="SARL">SARL</option>
+                                        <option value="SAS">SAS</option>
+                                        <option value="EURL">EURL</option>
+                                        <option value="SCI">SCI</option>
+                                        <option value="Auto-entrepreneur">Auto-entrepreneur</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Régime fiscal</label>
+                                    <select class="form-select" id="fiscalRegime">
+                                        <option value="IS">Impôt sur les sociétés (IS)</option>
+                                        <option value="IR">Impôt sur le revenu (IR)</option>
+                                        <option value="Micro">Régime micro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">TVA</label>
+                                    <select class="form-select" id="tvaRegime">
+                                        <option value="normale">Régime normal</option>
+                                        <option value="simplifie">Régime simplifié</option>
+                                        <option value="franchise">Franchise en base</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Périodicité TVA</label>
+                                    <select class="form-select" id="tvaPeriod">
+                                        <option value="mensuelle">Mensuelle (le 21)</option>
+                                        <option value="trimestrielle">Trimestrielle (le 24)</option>
+                                        <option value="annuelle">Annuelle</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label class="form-label">Adresse</label>
+                                <input type="text" class="form-input" id="companyAddress" value="123 Rue de la République, 75001 Paris">
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-input" id="companyEmail" value="contact@entreprise-abc.fr">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Téléphone</label>
+                                    <input type="tel" class="form-input" id="companyPhone" value="+33 1 23 45 67 89">
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+                                <div class="card-title" style="margin-bottom: 1rem;">Informations bancaires</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label">IBAN</label>
+                                        <input type="text" class="form-input" id="companyIBAN" value="FR76 1234 5678 9012 3456 7890 123">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">BIC</label>
+                                        <input type="text" class="form-input" id="companyBIC" value="BNPAFRPPXXX">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="margin-top: 2rem;">Enregistrer les modifications</button>
+                        </form>
+                    </div>
+
+                    <!-- User Management (Admin only) -->
+                    <div class="card" id="userManagementSection" style="margin-top: 1.5rem;">
                         <div class="card-header">
-                            <div class="card-title">Évolution trésorerie (7j)</div>
+                            <div class="card-title">Gestion des utilisateurs</div>
+                            <button class="btn btn-primary" onclick="showAddUserModal()">+ Ajouter un utilisateur</button>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="chartCashflow7"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">Prévisions (30j)</div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chartForecast30"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Alertes récentes</div>
-                        <button class="btn btn-outline" onclick="switchTab('alertes')">Voir tout</button>
-                    </div>
-                    <div id="dashAlerts"></div>
-                </div>
-            </div>
-
-            <!-- Tab: Trésorerie -->
-            <div class="tab-content" id="tabTresorerie">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Trésorerie quotidienne</div>
-                        <button class="btn btn-primary" onclick="refreshCashflow()">Actualiser</button>
-                    </div>
-                    <div class="chart-container" style="height: 400px;">
-                        <canvas id="chartCashflowFull"></canvas>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Transactions récentes</div>
-                    </div>
-                    <div class="table-container">
-                        <table class="table">
+                        <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Description</th>
-                                    <th>Catégorie</th>
-                                    <th>Montant</th>
-                                    <th>Solde</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactionsTable"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Factures -->
-            <div class="tab-content" id="tabFactures">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Gestion des factures</div>
-                        <button class="btn btn-primary" onclick="showCreateInvoice()">Nouvelle facture</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Filtrer par statut</label>
-                        <select class="form-select" id="invoiceFilter" onchange="loadInvoices()">
-                            <option value="all">Toutes</option>
-                            <option value="draft">Brouillon</option>
-                            <option value="sent">Envoyée</option>
-                            <option value="paid">Payée</option>
-                            <option value="overdue">En retard</option>
-                        </select>
-                    </div>
-
-                    <div class="table-container">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>N°</th>
-                                    <th>Client</th>
-                                    <th>Date</th>
-                                    <th>Échéance</th>
-                                    <th>Montant</th>
-                                    <th>Statut</th>
+                                    <th>Nom</th>
+                                    <th>Email</th>
+                                    <th>Niveau d'accès</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="invoicesTable"></tbody>
+                            <tbody id="usersList">
+                                <tr>
+                                    <td>Jean Dupont</td>
+                                    <td>jean.dupont@entreprise-abc.fr</td>
+                                    <td><span class="badge badge-success">Admin</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>Marie Martin</td>
+                                    <td>marie.martin@entreprise-abc.fr</td>
+                                    <td><span class="badge badge-warning">Comptable</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="editUser(2)">Modifier</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Pierre Dubois</td>
+                                    <td>pierre.dubois@entreprise-abc.fr</td>
+                                    <td><span class="badge">Consultation</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="editUser(3)">Modifier</button></td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
 
-            <!-- Tab: Import -->
-            <div class="tab-content" id="tabImport">
-                <!-- What's Next Guide -->
-                <div class="card" style="margin-bottom: 2rem;">
-                    <h3 style="margin-bottom: 1rem;">🎯 Que faire après l'import ?</h3>
-                    <div class="grid grid-3">
-                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; cursor: pointer; transition: all 0.2s;" 
-                             onclick="switchTab('vue-ensemble')"
-                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'"
-                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
-                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Vue d'ensemble</div>
-                            <div style="font-size: 0.875rem; color: var(--text-gray);">Consultez vos indicateurs clés et graphiques</div>
-                        </div>
-                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; cursor: pointer; transition: all 0.2s;" 
-                             onclick="switchTab('tresorerie')"
-                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'"
-                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💰</div>
-                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Trésorerie</div>
-                            <div style="font-size: 0.875rem; color: var(--text-gray);">Analysez vos transactions bancaires</div>
-                        </div>
-                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; cursor: pointer; transition: all 0.2s;" 
-                             onclick="switchTab('factures')"
-                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'"
-                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📄</div>
-                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Factures</div>
-                            <div style="font-size: 0.875rem; color: var(--text-gray);">Suivez vos factures clients et fournisseurs</div>
-                        </div>
+                <!-- Other views will be added here -->
+                <div id="viewTresorerie" class="view hidden">
+                    <div class="card">
+                        <div class="card-title">Trésorerie détaillée</div>
+                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue trésorerie...</p>
                     </div>
                 </div>
 
-                <div class="grid grid-2">
+                <div id="viewFactures" class="view hidden">
                     <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Transactions bancaires</h3>
-                        <div class="file-upload" onclick="document.getElementById('bankFile').click()">
-                            <input type="file" id="bankFile" accept=".csv" onchange="uploadBank()">
-                            <div class="file-upload-icon">📁</div>
-                            <div class="file-upload-text">Cliquez ou glissez un fichier CSV</div>
-                            <div class="form-hint" style="margin-top: 0.5rem;">Format: date, description, montant</div>
-                        </div>
-                        <div id="bankUploadStatus" class="alert hidden"></div>
-                    </div>
-
-                    <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Factures de vente</h3>
-                        <div class="file-upload" onclick="document.getElementById('salesFile').click()">
-                            <input type="file" id="salesFile" accept=".csv,.xlsx" onchange="uploadSales()">
-                            <div class="file-upload-icon">📄</div>
-                            <div class="file-upload-text">Cliquez ou glissez un fichier</div>
-                            <div class="form-hint" style="margin-top: 0.5rem;">CSV ou XLSX acceptés</div>
-                        </div>
-                        <div id="salesUploadStatus" class="alert hidden"></div>
-                    </div>
-
-                    <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Factures fournisseurs</h3>
-                        <div class="file-upload" onclick="document.getElementById('purchaseFile').click()">
-                            <input type="file" id="purchaseFile" accept=".csv,.xlsx" onchange="uploadPurchase()">
-                            <div class="file-upload-icon">📋</div>
-                            <div class="file-upload-text">Cliquez ou glissez un fichier</div>
-                            <div class="form-hint" style="margin-top: 0.5rem;">CSV ou XLSX acceptés</div>
-                        </div>
-                        <div id="purchaseUploadStatus" class="alert hidden"></div>
-                    </div>
-
-                    <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Balance comptable</h3>
-                        <div class="alert alert-info" style="margin-bottom: 1rem;">
-                            <span>ℹ️</span>
-                            <div>
-                                <strong>Format requis :</strong> Fichier CSV avec les colonnes suivantes :<br>
-                                <code style="background: white; padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-block; margin-top: 0.5rem;">account, label, debit, credit</code>
-                                <br>
-                                <a href="#" onclick="downloadSampleCSV(); return false;" style="color: var(--primary); text-decoration: underline; font-size: 0.875rem; margin-top: 0.5rem; display: inline-block;">
-                                    📥 Télécharger un exemple de fichier
-                                </a>
-                            </div>
-                        </div>
-                        <div class="file-upload" onclick="document.getElementById('trialBalanceFile').click()">
-                            <input type="file" id="trialBalanceFile" accept=".csv" onchange="uploadTrialBalance()">
-                            <div class="file-upload-icon">📊</div>
-                            <div class="file-upload-text">Cliquez ou glissez un fichier CSV</div>
-                            <div class="form-hint" style="margin-top: 0.5rem;">Analyse fiscale et optimisation automatique</div>
-                        </div>
-                        <div id="trialBalanceUploadStatus" class="alert hidden"></div>
+                        <div class="card-title">Gestion des factures</div>
+                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue factures...</p>
                     </div>
                 </div>
-            </div>
 
-            <!-- Tab: Alertes -->
-            <div class="tab-content" id="tabAlertes">
-                <div class="card">
-                    <div class="card-header">
+                <div id="viewImport" class="view hidden">
+                    <div class="card">
+                        <div class="card-title">Import de données</div>
+                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue import...</p>
+                    </div>
+                </div>
+
+                <div id="viewAlertes" class="view hidden">
+                    <div class="card">
                         <div class="card-title">Alertes et notifications</div>
-                        <button class="btn btn-outline" onclick="markAllAlertsRead()">Tout marquer comme lu</button>
+                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue alertes...</p>
                     </div>
-                    <div id="alertsList"></div>
                 </div>
-            </div>
 
-            <!-- Tab: Analyse fiscale -->
-            <div class="tab-content" id="tabAnalyse">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Analyse fiscale et optimisation</div>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <span>ℹ️</span>
-                        <div>
-                            <strong>Importez votre balance comptable</strong>
-                            <p style="margin-top: 0.25rem;">Pour obtenir une analyse complète de votre situation fiscale, importez votre balance dans l'onglet "Import".</p>
-                        </div>
-                    </div>
-
-                    <div id="analysisResults" class="hidden">
-                        <div class="grid grid-2">
-                            <div class="card" style="background: var(--bg-light);">
-                                <h3 style="margin-bottom: 1rem;">Indicateurs clés</h3>
-                                <div id="kpiList"></div>
-                            </div>
-
-                            <div class="card" style="background: var(--bg-light);">
-                                <h3 style="margin-bottom: 1rem;">Estimation fiscale</h3>
-                                <div id="taxEstimate"></div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h3 style="margin-bottom: 1rem;">Recommandations d'optimisation</h3>
-                            <div id="suggestions"></div>
-                        </div>
+                <div id="viewAnalyse" class="view hidden">
+                    <div class="card">
+                        <div class="card-title">Analyse fiscale</div>
+                        <p style="color: var(--text-gray); margin-top: 1rem;">Contenu de la vue analyse...</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Page: Contact -->
-    <div id="pageContact" class="page hidden">
-        <div class="hero" style="padding: 3rem 2rem;">
-            <h1 style="font-size: 2rem;">Rejoignez la bêta privée</h1>
-            <p>Remplissez le formulaire ci-dessous et découvrez comment SUMMA peut transformer votre gestion d'entreprise.</p>
-        </div>
-
-        <div class="container" style="max-width: 600px;">
-            <div class="card">
-                <h2 style="margin-bottom: 2rem;">Demandez votre accès</h2>
-                <form id="contactForm">
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Ajouter un utilisateur</div>
+                <button class="modal-close" onclick="hideAddUserModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
                     <div class="form-group">
-                        <label class="form-label">Nom complet *</label>
-                        <input type="text" class="form-input" placeholder="Jean Dupont" required>
+                        <label class="form-label">Nom complet</label>
+                        <input type="text" class="form-input" required>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">Email professionnel *</label>
-                        <input type="email" class="form-input" placeholder="jean@entreprise.fr" required>
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" required>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">Nom de votre entreprise</label>
-                        <input type="text" class="form-input" placeholder="Mon Entreprise SARL">
+                        <label class="form-label">Niveau d'accès</label>
+                        <select class="form-select" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="admin">Admin - Accès complet</option>
+                            <option value="comptable">Comptable - Factures, trésorerie, fiscalité</option>
+                            <option value="consultation">Consultation - Lecture seule</option>
+                        </select>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Téléphone (optionnel)</label>
-                        <input type="tel" class="form-input" placeholder="06 12 34 56 78">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Message (optionnel)</label>
-                        <textarea class="form-input" rows="4" placeholder="Parlez-nous de vos besoins, de votre activité..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        Envoyer ma demande →
-                    </button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Ajouter</button>
                 </form>
             </div>
-
-            <div style="margin-top: 3rem;">
-                <div class="card">
-                    <h3 style="margin-bottom: 1.5rem;">Pourquoi nous rejoindre maintenant ?</h3>
-                    <div class="grid" style="gap: 1rem;">
-                        <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                            <div class="feature-icon icon-blue" style="flex-shrink: 0; margin: 0;">🚀</div>
-                            <div>
-                                <div style="font-weight: 600; margin-bottom: 0.25rem;">Accès anticipé</div>
-                                <div style="font-size: 0.9375rem; color: var(--text-gray);">Soyez parmi les premiers à utiliser SUMMA en version bêta</div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                            <div class="feature-icon icon-green" style="flex-shrink: 0; margin: 0;">⚡</div>
-                            <div>
-                                <div style="font-weight: 600; margin-bottom: 0.25rem;">Réponse rapide</div>
-                                <div style="font-size: 0.9375rem; color: var(--text-gray);">Notre équipe vous contacte sous 24h</div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                            <div class="feature-icon icon-purple" style="flex-shrink: 0; margin: 0;">🎁</div>
-                            <div>
-                                <div style="font-weight: 600; margin-bottom: 0.25rem;">Sans engagement</div>
-                                <div style="font-size: 0.9375rem; color: var(--text-gray);">Aucune carte bancaire requise pour tester</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top: 1.5rem; text-align: center;">
-                    <h3 style="margin-bottom: 1rem;">Contactez-nous</h3>
-                    <div style="color: var(--text-gray);">
-                        <p><strong>Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d9bab6b7adb8baad99b6a9adb0b4b0aabfb0aabab8b5bcf7bfab">[email&#160;protected]</a></p>
-                        <p><strong>Téléphone:</strong> +33 1 23 45 67 89</p>
-                        <p style="margin-top: 1rem;">
-                            <strong>Adresse:</strong><br>
-                            Paris, France<br>
-                            Hébergement européen (RGPD)
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Login -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Connexion</div>
-                <button class="modal-close" onclick="hideLogin()">×</button>
-            </div>
-
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label class="form-label">Identifiant entreprise</label>
-                    <input type="text" class="form-input" id="loginCompanyId" placeholder="demo" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Mot de passe</label>
-                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    Se connecter →
-                </button>
-            </form>
-
-            <div style="margin-top: 1.5rem; text-align: center; color: var(--text-gray);">
-                <p>Pas encore de compte ? <a href="#" style="color: var(--primary); font-weight: 600;" onclick="switchPage('contact'); hideLogin(); return false;">Demandez un accès</a></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Create Invoice -->
-    <div id="invoiceModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Créer une facture</div>
-                <button class="modal-close" onclick="hideCreateInvoice()">×</button>
-            </div>
-
-            <form id="invoiceForm" onsubmit="handleCreateInvoice(event)">
-                <div class="form-group">
-                    <label class="form-label">N° de facture</label>
-                    <input type="text" class="form-input" id="invoiceNumber" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Client</label>
-                    <input type="text" class="form-input" id="invoiceClient" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Email client</label>
-                    <input type="email" class="form-input" id="invoiceClientEmail">
-                </div>
-
-                <div class="grid grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Date d'émission</label>
-                        <input type="date" class="form-input" id="invoiceDate" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Date d'échéance</label>
-                        <input type="date" class="form-input" id="invoiceDue" required>
-                    </div>
-                </div>
-
-                <div class="grid grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Montant HT</label>
-                        <input type="number" class="form-input" id="invoiceAmount" step="0.01" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">TVA (%)</label>
-                        <input type="number" class="form-input" id="invoiceTax" value="20" step="0.01">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-input" id="invoiceDescription" rows="3"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    Créer la facture →
-                </button>
-            </form>
         </div>
     </div>
 
     <script>
         // Configuration
         const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
-        let authToken = null;
-        let currentUser = null;
-        let charts = {};
+        let currentUser = {
+            name: 'Jean Dupont',
+            company: 'Entreprise ABC',
+            accessLevel: 'admin' // admin, comptable, consultation
+        };
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            setupNavigation();
-            setupTabs();
+            updateCurrentDate();
+            initChart();
+            loadNotifications();
+            checkAccessLevel();
             
-            // Check if logged in
-            authToken = localStorage.getItem('authToken');
-            if (authToken) {
-                verifyAuth();
+            // Check auth token
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'login.html'; // Redirect to login page
             }
         });
 
-        // Navigation
-        function setupNavigation() {
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', () => {
-                    const page = link.dataset.page;
-                    switchPage(page);
-                });
-            });
+        // Update current date
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('fr-FR', options);
         }
 
-        function switchPage(page) {
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-            
-            // Show selected page
-            const pageMap = {
-                'accueil': 'pageAccueil',
-                'fonctionnalites': 'pageFonctionnalites',
-                'dashboard': 'pageDashboard',
-                'contact': 'pageContact'
-            };
-            
-            const pageId = pageMap[page];
-            if (pageId) {
-                document.getElementById(pageId).classList.remove('hidden');
-            }
-
+        // Switch view
+        function switchView(view) {
             // Update nav
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-                if (link.dataset.page === page) {
-                    link.classList.add('active');
-                }
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
             });
+            event.currentTarget.classList.add('active');
 
-            // Load data if dashboard
-            if (page === 'dashboard' && authToken) {
-                loadDashboard();
-            }
-        }
+            // Update page title
+            const titles = {
+                'dashboard': 'Tableau de bord',
+                'tresorerie': 'Trésorerie',
+                'factures': 'Factures',
+                'import': 'Import',
+                'alertes': 'Alertes',
+                'analyse': 'Analyse fiscale',
+                'espace-client': 'Espace client'
+            };
+            document.getElementById('pageTitle').textContent = titles[view] || 'Dashboard';
 
-        // Tabs
-        function setupTabs() {
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.dataset.tab;
-                    switchTab(tabName);
-                });
-            });
-        }
+            // Hide all views
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
 
-        function switchTab(tabName) {
-            // Update tabs
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
-            
-            // Update content
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById('tab' + tabName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')).classList.add('active');
-
-            // Load data
-            if (tabName === 'factures') loadInvoices();
-            if (tabName === 'alertes') loadAlerts();
-            if (tabName === 'tresorerie') refreshCashflow();
-        }
-
-        // Auth
-        function showLogin() {
-            document.getElementById('loginModal').classList.add('active');
-        }
-
-        function hideLogin() {
-            document.getElementById('loginModal').classList.remove('active');
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            
-            const companyId = document.getElementById('loginCompanyId').value;
-            const password = document.getElementById('loginPassword').value;
-
-            try {
-                const response = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ company_id: companyId, password: password })
-                });
-
-                if (!response.ok) throw new Error('Login failed');
-
-                const data = await response.json();
-                authToken = data.token || 'logged-in'; // Simplified
-                localStorage.setItem('authToken', authToken);
-                currentUser = { company_id: companyId };
-
-                hideLogin();
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('logoutBtn').classList.remove('hidden');
-                
-                switchPage('dashboard');
-                loadDashboard();
-            } catch (error) {
-                alert('Erreur de connexion. Vérifiez vos identifiants.');
-            }
-        }
-
-        async function verifyAuth() {
-            // Simplified - in production, verify with backend
-            currentUser = { company_id: 'user' };
-            document.getElementById('loginBtn').classList.add('hidden');
-            document.getElementById('logoutBtn').classList.remove('hidden');
-        }
-
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            authToken = null;
-            currentUser = null;
-            localStorage.removeItem('authToken');
-            document.getElementById('loginBtn').classList.remove('hidden');
-            document.getElementById('logoutBtn').classList.add('hidden');
-            switchPage('accueil');
-        });
-
-        // Dashboard
-        async function loadDashboard() {
-            try {
-                await Promise.all([
-                    loadDashboardStats(),
-                    loadDashboardCharts(),
-                    loadDashboardAlerts()
-                ]);
-            } catch (error) {
-                console.error('Dashboard load error:', error);
-            }
-        }
-
-        async function loadDashboardStats() {
-            try {
-                const response = await fetch(`${API_BASE}/bank/summary`, {
-                    credentials: 'include'
-                });
-                
-                if (!response.ok) {
-                    console.log('Bank summary not available yet');
-                    return;
-                }
-                
-                const data = await response.json();
-                
-                document.getElementById('dashCash').textContent = `€ ${(data.balance || 0).toFixed(2)}`;
-            } catch (error) {
-                console.log('Stats will be available after data import');
-            }
-        }
-
-        async function loadDashboardCharts() {
-            // Check if Chart.js is loaded
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded');
-                return;
-            }
-
-            try {
-                const [cashflowRes, forecastRes] = await Promise.all([
-                    fetch(`${API_BASE}/cashflow/daily`, { credentials: 'include' }),
-                    fetch(`${API_BASE}/cashflow/forecast?days=30`, { credentials: 'include' })
-                ]);
-
-                if (!cashflowRes.ok || !forecastRes.ok) {
-                    console.log('Charts will be available after data import');
-                    return;
-                }
-
-                const cashflowData = await cashflowRes.json();
-                const forecastData = await forecastRes.json();
-
-                if (!Array.isArray(cashflowData) || cashflowData.length === 0) {
-                    console.log('No cashflow data available yet');
-                    return;
-                }
-
-                if (!Array.isArray(forecastData) || forecastData.length === 0) {
-                    console.log('No forecast data available yet');
-                    return;
-                }
-
-                // Cashflow 7 days
-                const ctx7 = document.getElementById('chartCashflow7')?.getContext('2d');
-                if (!ctx7) return;
-                
-                if (charts.cashflow7) charts.cashflow7.destroy();
-                charts.cashflow7 = new Chart(ctx7, {
-                    type: 'line',
-                    data: {
-                        labels: cashflowData.slice(-7).map(d => new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })),
-                        datasets: [{
-                            label: 'Trésorerie',
-                            data: cashflowData.slice(-7).map(d => d.balance),
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-
-                // Forecast 30 days
-                const ctx30 = document.getElementById('chartForecast30')?.getContext('2d');
-                if (!ctx30) return;
-                
-                if (charts.forecast30) charts.forecast30.destroy();
-                charts.forecast30 = new Chart(ctx30, {
-                    type: 'line',
-                    data: {
-                        labels: forecastData.map(d => new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })),
-                        datasets: [{
-                            label: 'Prévisions',
-                            data: forecastData.map(d => d.projected_balance || d.balance),
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderDash: [5, 5],
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-            } catch (error) {
-                console.log('Charts will be available after data import');
-            }
-        }
-
-        async function loadDashboardAlerts() {
-            try {
-                const response = await fetch(`${API_BASE}/alerts/?skip=0&limit=3`, {
-                    credentials: 'include'
-                });
-                
-                if (!response.ok) {
-                    const container = document.getElementById('dashAlerts');
-                    if (container) {
-                        container.innerHTML = '<p style="color: var(--text-gray);">Aucune alerte pour le moment</p>';
-                    }
-                    return;
-                }
-                
-                const alerts = await response.json();
-                
-                const container = document.getElementById('dashAlerts');
-                if (!container) return;
-                
-                if (!Array.isArray(alerts) || alerts.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-gray);">Aucune alerte récente</p>';
-                    return;
-                }
-                
-                container.innerHTML = alerts.map(alert => {
-                    const type = alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'warning' : 'info';
-                    return `
-                        <div class="alert alert-${type}">
-                            <span>${alert.severity === 'high' ? '🔴' : alert.severity === 'medium' ? '🟡' : 'ℹ️'}</span>
-                            <div>
-                                <strong>${alert.title || alert.message}</strong>
-                                ${alert.title ? `<p style="margin-top: 0.25rem;">${alert.message}</p>` : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch (error) {
-                console.log('Alerts will be available after configuration');
-            }
-        }
-
-        // Invoices
-        async function loadInvoices() {
-            try {
-                const filter = document.getElementById('invoiceFilter').value;
-                const response = await fetch(`${API_BASE}/invoices/sales`, {
-                    credentials: 'include'
-                });
-                let invoices = await response.json();
-                
-                if (filter !== 'all') {
-                    invoices = invoices.filter(inv => inv.status === filter);
-                }
-                
-                const tbody = document.getElementById('invoicesTable');
-                if (invoices.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-gray);">Aucune facture trouvée</td></tr>';
-                    return;
-                }
-                
-                tbody.innerHTML = invoices.map(inv => {
-                    const statusBadges = {
-                        'draft': '<span class="badge badge-warning">Brouillon</span>',
-                        'sent': '<span class="badge badge-info">Envoyée</span>',
-                        'paid': '<span class="badge badge-success">Payée</span>',
-                        'overdue': '<span class="badge badge-danger">En retard</span>'
-                    };
-                    
-                    return `
-                        <tr>
-                            <td>${inv.number}</td>
-                            <td>${inv.client_name}</td>
-                            <td>${new Date(inv.issue_date).toLocaleDateString('fr-FR')}</td>
-                            <td>${new Date(inv.due_date).toLocaleDateString('fr-FR')}</td>
-                            <td>€ ${(inv.amount || 0).toFixed(2)}</td>
-                            <td>${statusBadges[inv.status] || inv.status}</td>
-                            <td><button class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Voir</button></td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (error) {
-                console.error('Error loading invoices:', error);
-            }
-        }
-
-        function showCreateInvoice() {
-            document.getElementById('invoiceModal').classList.add('active');
-            document.getElementById('invoiceDate').valueAsDate = new Date();
-            const due = new Date();
-            due.setDate(due.getDate() + 30);
-            document.getElementById('invoiceDue').valueAsDate = due;
-        }
-
-        function hideCreateInvoice() {
-            document.getElementById('invoiceModal').classList.remove('active');
-        }
-
-        async function handleCreateInvoice(e) {
-            e.preventDefault();
-            
-            const invoiceData = {
-                client_name: document.getElementById('invoiceClient').value,
-                client_email: document.getElementById('invoiceClientEmail').value,
-                number: document.getElementById('invoiceNumber').value,
-                issue_date: document.getElementById('invoiceDate').value,
-                due_date: document.getElementById('invoiceDue').value,
-                amount_ht: parseFloat(document.getElementById('invoiceAmount').value),
-                vat_rate: parseFloat(document.getElementById('invoiceTax').value) / 100,
-                description: document.getElementById('invoiceDescription').value
+            // Show selected view
+            const viewMap = {
+                'dashboard': 'viewDashboard',
+                'tresorerie': 'viewTresorerie',
+                'factures': 'viewFactures',
+                'import': 'viewImport',
+                'alertes': 'viewAlertes',
+                'analyse': 'viewAnalyse',
+                'espace-client': 'viewEspaceClient'
             };
 
-            try {
-                const response = await fetch(`${API_BASE}/invoices/sales/create`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+            const viewId = viewMap[view];
+            if (viewId) {
+                document.getElementById(viewId).classList.remove('hidden');
+            }
+        }
+
+        // Initialize chart
+        function initChart() {
+            const ctx = document.getElementById('tresorerieChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['14 Déc', '15 Déc', '16 Déc', '17 Déc', '18 Déc', '19 Déc', '20 Déc'],
+                    datasets: [{
+                        label: 'Trésorerie',
+                        data: [45000, 46200, 45800, 47000, 46500, 47800, 48250],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
                     },
-                    credentials: 'include',
-                    body: JSON.stringify(invoiceData)
-                });
-
-                if (!response.ok) throw new Error('Failed to create invoice');
-
-                hideCreateInvoice();
-                loadInvoices();
-                alert('Facture créée avec succès !');
-            } catch (error) {
-                alert('Erreur lors de la création de la facture');
-                console.error(error);
-            }
-        }
-
-        // File Uploads
-        async function uploadBank() {
-            const file = document.getElementById('bankFile').files[0];
-            if (!file) return;
-            
-            await uploadFile(file, '/bank/upload', 'bankUploadStatus');
-        }
-
-        async function uploadSales() {
-            const file = document.getElementById('salesFile').files[0];
-            if (!file) return;
-            
-            await uploadFile(file, '/invoices/sales', 'salesUploadStatus');
-        }
-
-        async function uploadPurchase() {
-            const file = document.getElementById('purchaseFile').files[0];
-            if (!file) return;
-            
-            await uploadFile(file, '/invoices/purchases', 'purchaseUploadStatus');
-        }
-
-        async function uploadTrialBalance() {
-            const file = document.getElementById('trialBalanceFile').files[0];
-            if (!file) return;
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            const statusEl = document.getElementById('trialBalanceUploadStatus');
-            statusEl.className = 'alert alert-info';
-            statusEl.textContent = 'Analyse en cours...';
-            statusEl.classList.remove('hidden');
-            
-            try {
-                const response = await fetch(`${API_BASE}/analyze/trial-balance`, {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'include'
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || 'Upload failed');
-                }
-                
-                const data = await response.json();
-                
-                statusEl.className = 'alert alert-success';
-                statusEl.innerHTML = '<span>✓</span><div>Analyse terminée ! <a href="#" onclick="switchTab(\'analyse\'); return false;" style="color: inherit; text-decoration: underline;">Voir les résultats</a></div>';
-                
-                displayAnalysisResults(data);
-                
-                // Switch to analysis tab after 1 second
-                setTimeout(() => {
-                    switchTab('analyse');
-                }, 1000);
-            } catch (error) {
-                statusEl.className = 'alert alert-danger';
-                statusEl.innerHTML = `<span>✗</span><div><strong>Erreur d'upload</strong><br>Vérifiez que votre fichier CSV contient les colonnes : account, label, debit, credit</div>`;
-                console.error('Upload error:', error);
-            }
-        }
-
-        async function uploadFile(file, endpoint, statusId) {
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            const statusEl = document.getElementById(statusId);
-            statusEl.className = 'alert alert-info';
-            statusEl.textContent = 'Import en cours...';
-            statusEl.classList.remove('hidden');
-            
-            try {
-                const response = await fetch(`${API_BASE}${endpoint}`, {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'include'
-                });
-                
-                if (!response.ok) throw new Error('Upload failed');
-                
-                const data = await response.json();
-                
-                statusEl.className = 'alert alert-success';
-                statusEl.innerHTML = `
-                    <span>✓</span>
-                    <div>
-                        <strong>${data.count || 0} enregistrements importés avec succès !</strong>
-                        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
-                            ${getPostImportMessage(endpoint)}
-                        </p>
-                    </div>
-                `;
-                
-                // Reload dashboard to show new data
-                await loadDashboard();
-                
-                // Show success notification
-                showImportSuccess(endpoint, data.count || 0);
-                
-            } catch (error) {
-                statusEl.className = 'alert alert-danger';
-                statusEl.innerHTML = `<span>✗</span><div>Erreur: ${error.message}</div>`;
-            }
-        }
-
-        function getPostImportMessage(endpoint) {
-            const messages = {
-                '/bank/upload': 'Consultez l\'onglet <strong>Trésorerie</strong> pour voir vos transactions et graphiques.',
-                '/invoices/sales': 'Consultez l\'onglet <strong>Factures</strong> pour gérer vos factures clients.',
-                '/invoices/purchases': 'Consultez l\'onglet <strong>Factures</strong> pour voir vos factures fournisseurs.'
-            };
-            return messages[endpoint] || 'Données importées avec succès.';
-        }
-
-        function showImportSuccess(endpoint, count) {
-            // Create floating notification
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 80px;
-                right: 20px;
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-                padding: 1rem 1.5rem;
-                z-index: 1001;
-                max-width: 400px;
-                border-left: 4px solid var(--success);
-                animation: slideIn 0.3s ease-out;
-            `;
-            
-            const targetTab = endpoint === '/bank/upload' ? 'tresorerie' : 'factures';
-            
-            notification.innerHTML = `
-                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                    <div style="font-size: 1.5rem;">✓</div>
-                    <div style="flex: 1;">
-                        <strong style="display: block; margin-bottom: 0.25rem;">${count} enregistrements importés</strong>
-                        <button onclick="switchTab('${targetTab}'); this.parentElement.parentElement.parentElement.remove();" 
-                                class="btn btn-primary" 
-                                style="margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;">
-                            Voir les données →
-                        </button>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" 
-                            style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text-gray);">
-                        ×
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // Auto-remove after 10 seconds
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 10000);
-        }
-
-        // Add animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Analysis
-        function displayAnalysisResults(data) {
-            document.getElementById('analysisResults').classList.remove('hidden');
-            
-            const kpi = data.kpi || {};
-            const tax = data.tax || {};
-            const suggestions = data.suggestions || [];
-            
-            // KPIs
-            document.getElementById('kpiList').innerHTML = `
-                <div style="display: grid; gap: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-gray);">Chiffre d'affaires</span>
-                        <strong>€ ${(kpi.revenue || 0).toFixed(2)}</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-gray);">Marge brute</span>
-                        <strong>€ ${(kpi.gross_margin || 0).toFixed(2)}</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-gray);">EBITDA</span>
-                        <strong>€ ${(kpi.ebitda_approx || 0).toFixed(2)}</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-gray);">Résultat net</span>
-                        <strong>€ ${(kpi.net_result || 0).toFixed(2)}</strong>
-                    </div>
-                </div>
-            `;
-            
-            // Tax
-            document.getElementById('taxEstimate').innerHTML = `
-                <div style="display: grid; gap: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-gray);">IS estimé</span>
-                        <strong>€ ${(tax.corporate_income_tax || 0).toFixed(2)}</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-gray);">Contribution sociale</span>
-                        <strong>€ ${(tax.social_contribution_on_cit || 0).toFixed(2)}</strong>
-                    </div>
-                    ${tax.vat_balance !== undefined && tax.vat_balance !== null ? `
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--text-gray);">TVA nette</span>
-                        <strong>€ ${(tax.vat_balance || 0).toFixed(2)}</strong>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-            
-            // Suggestions
-            if (suggestions.length > 0) {
-                document.getElementById('suggestions').innerHTML = suggestions.map(s => `
-                    <div class="alert alert-info" style="margin-bottom: 1rem;">
-                        <span>💡</span>
-                        <div>
-                            <strong>${s.title}</strong>
-                            <p style="margin-top: 0.5rem;">${s.rationale}</p>
-                            ${s.impact ? `<p style="margin-top: 0.5rem; font-size: 0.875rem;"><strong>Impact:</strong> ${s.impact}</p>` : ''}
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                document.getElementById('suggestions').innerHTML = '<p style="color: var(--text-gray);">Aucune recommandation spécifique pour le moment.</p>';
-            }
-        }
-
-        // Alerts
-        async function loadAlerts() {
-            try {
-                const response = await fetch(`${API_BASE}/alerts/?skip=0&limit=50`, {
-                    credentials: 'include'
-                });
-                const alerts = await response.json();
-                
-                const container = document.getElementById('alertsList');
-                if (alerts.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-gray); text-align: center; padding: 2rem;">Aucune alerte</p>';
-                    return;
-                }
-                
-                container.innerHTML = alerts.map(alert => {
-                    const type = alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'warning' : 'info';
-                    return `
-                        <div class="alert alert-${type}">
-                            <span>${alert.severity === 'high' ? '🔴' : alert.severity === 'medium' ? '🟡' : 'ℹ️'}</span>
-                            <div style="flex: 1;">
-                                <strong>${alert.title || alert.message}</strong>
-                                ${alert.title && alert.message ? `<p style="margin-top: 0.25rem;">${alert.message}</p>` : ''}
-                                <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-light);">
-                                    ${new Date(alert.created_at || alert.due_date).toLocaleDateString('fr-FR')}
-                                </p>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch (error) {
-                console.error('Error loading alerts:', error);
-            }
-        }
-
-        async function markAllAlertsRead() {
-            // Implementation here
-            alert('Fonctionnalité à venir');
-        }
-
-        // Cashflow
-        async function refreshCashflow() {
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded');
-                return;
-            }
-
-            try {
-                const [cashflowRes, transactionsRes] = await Promise.all([
-                    fetch(`${API_BASE}/cashflow/daily`, { credentials: 'include' }),
-                    fetch(`${API_BASE}/bank/transactions`, { credentials: 'include' })
-                ]);
-
-                const cashflowData = await cashflowRes.json();
-                const transactions = await transactionsRes.json();
-
-                // Full cashflow chart
-                const ctxFull = document.getElementById('chartCashflowFull')?.getContext('2d');
-                if (!ctxFull) return;
-                
-                if (charts.cashflowFull) charts.cashflowFull.destroy();
-                charts.cashflowFull = new Chart(ctxFull, {
-                    type: 'line',
-                    data: {
-                        labels: cashflowData.map(d => new Date(d.date).toLocaleDateString('fr-FR')),
-                        datasets: [{
-                            label: 'Solde',
-                            data: cashflowData.map(d => d.balance),
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
                     }
-                });
-
-                // Transactions table
-                const tbody = document.getElementById('transactionsTable');
-                if (tbody) {
-                    tbody.innerHTML = transactions.slice(0, 50).map(trans => `
-                        <tr>
-                            <td>${new Date(trans.date).toLocaleDateString('fr-FR')}</td>
-                            <td>${trans.description || trans.label}</td>
-                            <td>${trans.category || 'Non catégorisé'}</td>
-                            <td style="color: ${trans.amount >= 0 ? 'var(--success)' : 'var(--danger)'}">
-                                ${trans.amount >= 0 ? '+' : ''}€ ${trans.amount.toFixed(2)}
-                            </td>
-                            <td>€ ${trans.balance.toFixed(2)}</td>
-                        </tr>
-                    `).join('');
                 }
-            } catch (error) {
-                console.error('Error loading cashflow:', error);
+            });
+        }
+
+        // Load notifications based on company type and date
+        function loadNotifications() {
+            const now = new Date();
+            const day = now.getDate();
+            const notificationsList = document.getElementById('notificationsList');
+            
+            // Get company info
+            const tvaRegime = document.getElementById('tvaPeriod')?.value || 'mensuelle';
+            
+            // Add automatic notifications based on date
+            let notifications = [];
+            
+            // TVA notification (21st or 24th depending on regime)
+            if (tvaRegime === 'trimestrielle' && day >= 20 && day <= 24) {
+                notifications.push({
+                    type: 'danger',
+                    title: '⚠️ TVA trimestrielle',
+                    text: 'Déclaration TVA à soumettre avant le 24 de ce mois',
+                    date: 'Urgent'
+                });
+            } else if (tvaRegime === 'mensuelle' && day >= 17 && day <= 21) {
+                notifications.push({
+                    type: 'danger',
+                    title: '⚠️ TVA mensuelle',
+                    text: 'Déclaration TVA à soumettre avant le 21 de ce mois',
+                    date: 'Urgent'
+                });
+            }
+            
+            // Keep existing notifications
+            // (would load from backend in production)
+        }
+
+        // Check access level and hide/show sections
+        function checkAccessLevel() {
+            const accessLevel = currentUser.accessLevel;
+            
+            // Update badge
+            const badge = document.getElementById('userAccessLevel');
+            const accessLabels = {
+                'admin': 'Admin',
+                'comptable': 'Comptable',
+                'consultation': 'Consultation'
+            };
+            badge.textContent = accessLabels[accessLevel];
+            
+            // Show/hide user management section
+            const userMgmt = document.getElementById('userManagementSection');
+            if (accessLevel !== 'admin' && userMgmt) {
+                userMgmt.style.display = 'none';
+            }
+            
+            // Disable editing for consultation users
+            if (accessLevel === 'consultation') {
+                document.querySelectorAll('.form-input, .form-select').forEach(input => {
+                    input.disabled = true;
+                });
+                document.querySelectorAll('.btn-primary').forEach(btn => {
+                    btn.style.display = 'none';
+                });
             }
         }
 
-        // Contact Form
-        document.getElementById('contactForm').addEventListener('submit', (e) => {
+        // Modal functions
+        function showAddUserModal() {
+            document.getElementById('addUserModal').classList.add('active');
+        }
+
+        function hideAddUserModal() {
+            document.getElementById('addUserModal').classList.remove('active');
+        }
+
+        function editUser(userId) {
+            alert('Edit user ' + userId);
+        }
+
+        // Logout
+        function handleLogout() {
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Save client info
+        document.getElementById('clientInfoForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Merci ! Votre demande a été envoyée. Nous vous contacterons sous 24h.');
-            e.target.reset();
+            alert('Informations enregistrées avec succès !');
         });
 
-        // Tutorial Functions
-        function showTutorial() {
-            document.getElementById('tutorialModal').classList.add('active');
-            showTutorialStep(1);
-        }
-
-        function closeTutorial() {
-            document.getElementById('tutorialModal').classList.remove('active');
-        }
-
-        function dismissTutorial() {
-            document.getElementById('welcomeTutorial').style.display = 'none';
-            localStorage.setItem('tutorialDismissed', 'true');
-        }
-
-        function showTutorialStep(step) {
-            // Hide all steps
-            document.querySelectorAll('.tutorial-step').forEach(s => s.classList.add('hidden'));
-            // Show selected step
-            document.getElementById('tutorialStep' + step).classList.remove('hidden');
-        }
-
-        function nextTutorialStep(step) {
-            showTutorialStep(step);
-        }
-
-        function prevTutorialStep(step) {
-            showTutorialStep(step);
-        }
-
-        function finishTutorial() {
-            closeTutorial();
-            dismissTutorial();
-            // Switch to Import tab to start
-            switchTab('import');
-        }
-
-        // Check if tutorial should be shown
-        function checkTutorialStatus() {
-            const dismissed = localStorage.getItem('tutorialDismissed');
-            if (dismissed === 'true') {
-                document.getElementById('welcomeTutorial').style.display = 'none';
-            }
-        }
-
-        // Show tutorial on first dashboard load
-        if (currentUser && !localStorage.getItem('tutorialDismissed')) {
-            setTimeout(() => {
-                const welcomeBanner = document.getElementById('welcomeTutorial');
-                if (welcomeBanner && !welcomeBanner.classList.contains('hidden')) {
-                    // Tutorial banner is visible
-                }
-            }, 1000);
-        }
-
-            const csvContent = `account,label,debit,credit
-701,VENTES DE PRODUITS FINIS,0,100000
-6061,ACHATS MATIERES,40000,0
-611,SOUS-TRAITANCE GENERALE,10000,0
-623,PUBLICITE,5000,0
-635,IMPOTS ET TAXES,3000,0
-641,REMUNERATIONS DU PERSONNEL,25000,0
-645,CHARGES SOCIALES,12000,0
-681,DOTATIONS AUX AMORTISSEMENTS,5000,0
-44571,TVA COLLECTEE,0,20000
-44566,TVA DEDUCTIBLE,15000,0
-512,BANQUES,50000,0
-411,CLIENTS,30000,0
-401,FOURNISSEURS,0,20000`;
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'exemple_balance_comptable.csv';
-            link.click();
-        }
+        // Add user
+        document.getElementById('addUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Utilisateur ajouté avec succès !');
+            hideAddUserModal();
+        });
     </script>
 </body>
 </html>
