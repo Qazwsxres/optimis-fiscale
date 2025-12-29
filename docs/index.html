@@ -1743,7 +1743,21 @@
             // Check auth token
             const token = localStorage.getItem('authToken');
             if (!token) {
-                window.location.href = 'login.html'; // Redirect to login page
+                // Redirect to login page
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Load user data
+            const userData = localStorage.getItem('currentUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                if (user.company_name) {
+                    document.getElementById('userCompany').textContent = user.company_name;
+                }
+                if (user.contact_name) {
+                    document.getElementById('userName').textContent = user.contact_name;
+                }
             }
         });
 
@@ -1910,6 +1924,7 @@
             if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('currentUser');
+                // Redirect to login
                 window.location.href = 'login.html';
             }
         }
