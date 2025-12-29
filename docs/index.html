@@ -523,6 +523,10 @@
                     <span class="nav-icon">📄</span>
                     <span>Factures</span>
                 </div>
+                <div class="nav-item" onclick="switchView('planning')">
+                    <span class="nav-icon">📅</span>
+                    <span>Planning</span>
+                </div>
                 <div class="nav-item" onclick="switchView('import')">
                     <span class="nav-icon">📁</span>
                     <span>Import</span>
@@ -793,24 +797,216 @@
                             <tbody id="usersList">
                                 <tr>
                                     <td>Jean Dupont</td>
-                                    <td>jean.dupont@entreprise-abc.fr</td>
+                                    <td><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c8a2ada9a6e6acbdb8a7a6bc88ada6bcbaadb8baa1bbade5a9aaabe6aeba">[email&#160;protected]</a></td>
                                     <td><span class="badge badge-success">Admin</span></td>
                                     <td>-</td>
                                 </tr>
                                 <tr>
                                     <td>Marie Martin</td>
-                                    <td>marie.martin@entreprise-abc.fr</td>
+                                    <td><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a4c9c5d6cdc18ac9c5d6d0cdcae4c1cad0d6c1d4d6cdd7c189c5c6c78ac2d6">[email&#160;protected]</a></td>
                                     <td><span class="badge badge-warning">Comptable</span></td>
                                     <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="editUser(2)">Modifier</button></td>
                                 </tr>
                                 <tr>
                                     <td>Pierre Dubois</td>
-                                    <td>pierre.dubois@entreprise-abc.fr</td>
+                                    <td><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5828313d2a2a3d763c2d3a37312b183d362c2a3d282a312b3d75393a3b763e2a">[email&#160;protected]</a></td>
                                     <td><span class="badge">Consultation</span></td>
                                     <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="editUser(3)">Modifier</button></td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Planning View -->
+                <div id="viewPlanning" class="view hidden">
+                    <!-- Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-label">Tâches en cours</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--primary);">8</div>
+                            <div class="stat-change">3 urgentes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Complétées (mois)</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--success);">24</div>
+                            <div class="stat-change positive">+6 vs nov.</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">En retard</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--danger);">2</div>
+                            <div class="stat-change negative">À traiter</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Prochaine échéance</div>
+                            <div class="stat-value" style="font-size: 1.25rem;">21 Jan</div>
+                            <div class="stat-change">TVA T4</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-left">
+                            <!-- Calendar View -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">📅 Calendrier - Janvier 2025</div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-outline" style="padding: 0.5rem 1rem;">← Déc</button>
+                                        <button class="btn btn-outline" style="padding: 0.5rem 1rem;">Fév →</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Simple Calendar -->
+                                <div style="margin-top: 1rem;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr>
+                                                <th style="padding: 0.75rem; text-align: center; font-size: 0.875rem; color: var(--text-gray); border-bottom: 2px solid var(--border);">Lun</th>
+                                                <th style="padding: 0.75rem; text-align: center; font-size: 0.875rem; color: var(--text-gray); border-bottom: 2px solid var(--border);">Mar</th>
+                                                <th style="padding: 0.75rem; text-align: center; font-size: 0.875rem; color: var(--text-gray); border-bottom: 2px solid var(--border);">Mer</th>
+                                                <th style="padding: 0.75rem; text-align: center; font-size: 0.875rem; color: var(--text-gray); border-bottom: 2px solid var(--border);">Jeu</th>
+                                                <th style="padding: 0.75rem; text-align: center; font-size: 0.875rem; color: var(--text-gray); border-bottom: 2px solid var(--border);">Ven</th>
+                                                <th style="padding: 0.75rem; text-align: center; font-size: 0.875rem; color: var(--text-gray); border-bottom: 2px solid var(--border);">Sam</th>
+                                                <th style="padding: 0.75rem; text-align: center; font-size: 0.875rem; color: var(--text-gray); border-bottom: 2px solid var(--border);">Dim</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); color: var(--text-gray);">30</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); color: var(--text-gray);">31</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); font-weight: 600;">1</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">2</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">3</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light);">4</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light);">5</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">6</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">7</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">8</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">9</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">10</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light);">11</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light);">12</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">13</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">14</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: #fef3c7; font-weight: 600;">15<div style="font-size: 0.7rem; margin-top: 0.25rem;">💼 Salaires</div></td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">16</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">17</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light);">18</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light);">19</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">20</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: #fee2e2; font-weight: 600;">21<div style="font-size: 0.7rem; margin-top: 0.25rem;">📊 TVA</div></td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">22</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">23</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">24</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light);">25</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light);">26</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">27</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">28</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: #eff6ff; font-weight: 600;">29<div style="font-size: 0.7rem; margin-top: 0.25rem;">🤝 RDV Expert</div></td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border);">30</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: #fef2f2; font-weight: 600;">31<div style="font-size: 0.7rem; margin-top: 0.25rem;">📁 Clôture</div></td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light); color: var(--text-gray);">1</td>
+                                                <td style="padding: 1rem; text-align: center; border: 1px solid var(--border); background: var(--bg-light); color: var(--text-gray);">2</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-light); border-radius: 8px; display: flex; gap: 1.5rem; font-size: 0.875rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div style="width: 16px; height: 16px; background: #fee2e2; border-radius: 4px;"></div>
+                                        <span>Urgent</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div style="width: 16px; height: 16px; background: #fef3c7; border-radius: 4px;"></div>
+                                        <span>Important</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div style="width: 16px; height: 16px; background: #eff6ff; border-radius: 4px;"></div>
+                                        <span>Normal</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Task List -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">📋 Tâches</div>
+                                    <button class="btn btn-primary" onclick="showAddTaskModal()">+ Nouvelle tâche</button>
+                                </div>
+
+                                <!-- Filter tabs -->
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border);">
+                                    <button class="btn" style="background: none; border: none; padding: 0.75rem 1rem; border-bottom: 3px solid var(--primary); color: var(--primary); font-weight: 600;">Toutes (10)</button>
+                                    <button class="btn" style="background: none; border: none; padding: 0.75rem 1rem; border-bottom: 3px solid transparent; color: var(--text-gray);">En cours (8)</button>
+                                    <button class="btn" style="background: none; border: none; padding: 0.75rem 1rem; border-bottom: 3px solid transparent; color: var(--text-gray);">Complétées (24)</button>
+                                    <button class="btn" style="background: none; border: none; padding: 0.75rem 1rem; border-bottom: 3px solid transparent; color: var(--danger);">En retard (2)</button>
+                                </div>
+
+                                <div id="taskList" style="max-height: 600px; overflow-y: auto;">
+                                    <!-- Tasks will be listed here - showing sample format -->
+                                    <div style="padding: 1rem; border: 1px solid var(--border); border-left: 4px solid var(--danger); border-radius: 8px; margin-bottom: 1rem; cursor: pointer;" onclick="showTaskDetails(1)">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                            <div style="display: flex; align-items: start; gap: 1rem; flex: 1;">
+                                                <input type="checkbox" style="margin-top: 0.25rem;">
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Déclaration TVA T4 2024</div>
+                                                    <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.5rem;">
+                                                        Préparer et soumettre la déclaration de TVA pour le dernier trimestre 2024
+                                                    </div>
+                                                    <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: var(--text-gray);">
+                                                        <span>📅 21 Jan 2025</span>
+                                                        <span>👤 Marie Martin</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span class="badge badge-danger">Urgent</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-right">
+                            <!-- Upcoming Deadlines -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">🎯 Prochaines échéances</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; gap: 1rem; padding: 1rem; background: #fee2e2; border-radius: 8px; border-left: 3px solid var(--danger);">
+                                        <div style="text-align: center; min-width: 50px;">
+                                            <div style="font-size: 1.5rem; font-weight: 700;">21</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-gray);">JAN</div>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">TVA T4 2024</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-gray);">Déclaration trimestrielle</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Task Statistics -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">📊 Statistiques</div>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                                        <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 0.25rem;">Taux de complétion</div>
+                                        <div style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">75%</div>
+                                        <div style="width: 100%; height: 8px; background: white; border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 75%; height: 100%; background: var(--success);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1117,17 +1313,17 @@
                 <div id="viewImport" class="view hidden">
                     <div class="card" style="margin-bottom: 1.5rem;">
                         <div class="card-title" style="margin-bottom: 0.5rem;">Import de données</div>
-                        <p style="color: var(--text-gray); margin-bottom: 2rem;">Importez vos données bancaires, factures et balances comptables pour une analyse complète.</p>
+                        <p style="color: var(--text-gray); margin-bottom: 2rem;">Importez vos données bancaires, factures et documents comptables. Formats acceptés: CSV, PDF, XLSX</p>
 
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
                             <!-- Bank Transactions -->
                             <div class="card" style="background: var(--bg-light);">
                                 <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📊 Transactions bancaires</h3>
                                 <div class="file-upload-zone" onclick="document.getElementById('bankFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
-                                    <input type="file" id="bankFile" accept=".csv" style="display: none;" onchange="handleBankUpload(event)">
+                                    <input type="file" id="bankFile" accept=".csv,.pdf" style="display: none;" onchange="handleBankUpload(event)">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
-                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier CSV</div>
-                                    <div style="font-size: 0.875rem; color: var(--text-gray);">Format: date, description, montant</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">CSV ou PDF acceptés</div>
                                 </div>
                                 <div id="bankUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
                                 <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; font-size: 0.875rem;">
@@ -1140,10 +1336,10 @@
                             <div class="card" style="background: var(--bg-light);">
                                 <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📄 Factures de vente</h3>
                                 <div class="file-upload-zone" onclick="document.getElementById('salesFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
-                                    <input type="file" id="salesFile" accept=".csv,.xlsx" style="display: none;" onchange="handleSalesUpload(event)">
+                                    <input type="file" id="salesFile" accept=".csv,.xlsx,.pdf" style="display: none;" onchange="handleSalesUpload(event)">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
                                     <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier</div>
-                                    <div style="font-size: 0.875rem; color: var(--text-gray);">CSV ou XLSX acceptés</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">CSV, XLSX ou PDF acceptés</div>
                                 </div>
                                 <div id="salesUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
                                 <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; font-size: 0.875rem;">
@@ -1156,10 +1352,10 @@
                             <div class="card" style="background: var(--bg-light);">
                                 <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📋 Factures fournisseurs</h3>
                                 <div class="file-upload-zone" onclick="document.getElementById('purchaseFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
-                                    <input type="file" id="purchaseFile" accept=".csv,.xlsx" style="display: none;" onchange="handlePurchaseUpload(event)">
+                                    <input type="file" id="purchaseFile" accept=".csv,.xlsx,.pdf" style="display: none;" onchange="handlePurchaseUpload(event)">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
                                     <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier</div>
-                                    <div style="font-size: 0.875rem; color: var(--text-gray);">CSV ou XLSX acceptés</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">CSV, XLSX ou PDF acceptés</div>
                                 </div>
                                 <div id="purchaseUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
                                 <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; font-size: 0.875rem;">
@@ -1172,16 +1368,49 @@
                             <div class="card" style="background: var(--bg-light);">
                                 <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📈 Balance comptable</h3>
                                 <div class="file-upload-zone" onclick="document.getElementById('trialBalanceFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
-                                    <input type="file" id="trialBalanceFile" accept=".csv" style="display: none;" onchange="handleTrialBalanceUpload(event)">
+                                    <input type="file" id="trialBalanceFile" accept=".csv,.pdf" style="display: none;" onchange="handleTrialBalanceUpload(event)">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
-                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier CSV</div>
-                                    <div style="font-size: 0.875rem; color: var(--text-gray);">Format: account, label, debit, credit</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez un fichier</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">CSV ou PDF acceptés</div>
                                 </div>
                                 <div id="trialBalanceUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
                                 <div style="margin-top: 1rem;">
                                     <a href="#" onclick="downloadSampleBalance(); return false;" style="color: var(--primary); text-decoration: underline; font-size: 0.875rem;">
                                         📥 Télécharger un exemple de fichier
                                     </a>
+                                </div>
+                            </div>
+
+                            <!-- General Documents -->
+                            <div class="card" style="background: var(--bg-light);">
+                                <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📎 Documents divers</h3>
+                                <div class="file-upload-zone" onclick="document.getElementById('generalDocsFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <input type="file" id="generalDocsFile" accept=".pdf,.csv,.xlsx,.doc,.docx" multiple style="display: none;" onchange="handleGeneralDocsUpload(event)">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez des fichiers</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">Tous formats acceptés (PDF, CSV, XLSX, DOC)</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-gray); margin-top: 0.5rem;">Sélection multiple possible</div>
+                                </div>
+                                <div id="generalDocsUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
+                                <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; font-size: 0.875rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Documents stockés:</div>
+                                    <div style="color: var(--text-gray);">12 fichiers</div>
+                                </div>
+                            </div>
+
+                            <!-- Tax Documents -->
+                            <div class="card" style="background: var(--bg-light);">
+                                <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">🏛️ Documents fiscaux</h3>
+                                <div class="file-upload-zone" onclick="document.getElementById('taxDocsFile').click()" style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <input type="file" id="taxDocsFile" accept=".pdf,.csv" multiple style="display: none;" onchange="handleTaxDocsUpload(event)">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Cliquez ou glissez des fichiers</div>
+                                    <div style="font-size: 0.875rem; color: var(--text-gray);">Déclarations TVA, liasses fiscales, etc.</div>
+                                </div>
+                                <div id="taxDocsUploadStatus" class="hidden" style="margin-top: 1rem;"></div>
+                                <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; font-size: 0.875rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Dernière importation:</div>
+                                    <div style="color: var(--text-gray);">01 Déc 2024 - Déclaration TVA T3</div>
                                 </div>
                             </div>
                         </div>
@@ -1196,35 +1425,48 @@
                                     <th>Date</th>
                                     <th>Type</th>
                                     <th>Fichier</th>
+                                    <th>Format</th>
                                     <th>Enregistrements</th>
                                     <th>Statut</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="importHistoryTable">
                                 <tr>
                                     <td>18 Déc 2024 14:30</td>
                                     <td>Transactions bancaires</td>
                                     <td>relevé_decembre.csv</td>
+                                    <td><span class="badge">CSV</span></td>
                                     <td>30</td>
                                     <td><span class="badge badge-success">Réussi</span></td>
-                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Voir</button></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewImportDetails(1)">Voir</button></td>
                                 </tr>
                                 <tr>
                                     <td>16 Déc 2024 09:15</td>
                                     <td>Factures fournisseurs</td>
-                                    <td>achats_T4.xlsx</td>
+                                    <td>factures_t4.pdf</td>
+                                    <td><span class="badge" style="background: #fee2e2; color: #991b1b;">PDF</span></td>
                                     <td>18</td>
                                     <td><span class="badge badge-success">Réussi</span></td>
-                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Voir</button></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewImportDetails(2)">Voir</button></td>
                                 </tr>
                                 <tr>
                                     <td>15 Déc 2024 16:45</td>
                                     <td>Factures de vente</td>
-                                    <td>ventes_decembre.csv</td>
+                                    <td>ventes_decembre.xlsx</td>
+                                    <td><span class="badge" style="background: #d1fae5; color: #065f46;">XLSX</span></td>
                                     <td>25</td>
                                     <td><span class="badge badge-success">Réussi</span></td>
-                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Voir</button></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewImportDetails(3)">Voir</button></td>
+                                </tr>
+                                <tr>
+                                    <td>01 Déc 2024 10:20</td>
+                                    <td>Documents fiscaux</td>
+                                    <td>declaration_tva_t3.pdf</td>
+                                    <td><span class="badge" style="background: #fee2e2; color: #991b1b;">PDF</span></td>
+                                    <td>1</td>
+                                    <td><span class="badge badge-success">Réussi</span></td>
+                                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewImportDetails(4)">Voir</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1234,12 +1476,18 @@
                     <div class="card" style="background: #eff6ff; border: 1px solid var(--primary);">
                         <div style="display: flex; gap: 1rem;">
                             <div style="font-size: 2rem;">💡</div>
-                            <div>
+                            <div style="flex: 1;">
                                 <div style="font-weight: 600; margin-bottom: 0.5rem; color: var(--primary);">Besoin d'aide pour l'import ?</div>
                                 <div style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 1rem;">
-                                    Consultez notre guide d'importation pour savoir comment formater vos fichiers correctement.
+                                    <strong>Formats supportés:</strong>
+                                    <ul style="margin: 0.5rem 0 0 1.5rem; line-height: 1.8;">
+                                        <li><strong>CSV</strong> - Données structurées (transactions, factures)</li>
+                                        <li><strong>PDF</strong> - Documents scannés (relevés bancaires, factures, déclarations)</li>
+                                        <li><strong>XLSX</strong> - Tableaux Excel (exports comptables)</li>
+                                    </ul>
+                                    Notre système extrait automatiquement les données des PDF grâce à l'OCR.
                                 </div>
-                                <button class="btn btn-primary" style="padding: 0.5rem 1rem;">📖 Voir le guide</button>
+                                <button class="btn btn-primary" style="padding: 0.5rem 1rem;">📖 Voir le guide complet</button>
                             </div>
                         </div>
                     </div>
@@ -1724,7 +1972,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // Configuration
         const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
         let currentUser = {
@@ -1781,6 +2029,7 @@
                 'dashboard': 'Tableau de bord',
                 'tresorerie': 'Trésorerie',
                 'factures': 'Factures',
+                'planning': 'Planning',
                 'import': 'Import',
                 'alertes': 'Alertes',
                 'analyse': 'Analyse fiscale',
@@ -1796,6 +2045,7 @@
                 'dashboard': 'viewDashboard',
                 'tresorerie': 'viewTresorerie',
                 'factures': 'viewFactures',
+                'planning': 'viewPlanning',
                 'import': 'viewImport',
                 'alertes': 'viewAlertes',
                 'analyse': 'viewAnalyse',
@@ -2050,7 +2300,12 @@
             if (file) {
                 const status = document.getElementById('bankUploadStatus');
                 status.classList.remove('hidden');
-                status.innerHTML = '<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">30 transactions importées depuis ' + file.name + '</div></div>';
+                const fileType = file.name.split('.').pop().toUpperCase();
+                const recordCount = fileType === 'PDF' ? 'Extraction en cours...' : '30 transactions';
+                status.innerHTML = `<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">${recordCount} importées depuis ${file.name} (${fileType})</div></div>`;
+                
+                // Add to history
+                addToImportHistory('Transactions bancaires', file.name, fileType, recordCount);
             }
         }
 
@@ -2059,7 +2314,11 @@
             if (file) {
                 const status = document.getElementById('salesUploadStatus');
                 status.classList.remove('hidden');
-                status.innerHTML = '<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">25 factures importées depuis ' + file.name + '</div></div>';
+                const fileType = file.name.split('.').pop().toUpperCase();
+                const recordCount = fileType === 'PDF' ? 'Extraction en cours...' : '25 factures';
+                status.innerHTML = `<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">${recordCount} importées depuis ${file.name} (${fileType})</div></div>`;
+                
+                addToImportHistory('Factures de vente', file.name, fileType, recordCount);
             }
         }
 
@@ -2068,7 +2327,11 @@
             if (file) {
                 const status = document.getElementById('purchaseUploadStatus');
                 status.classList.remove('hidden');
-                status.innerHTML = '<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">18 factures importées depuis ' + file.name + '</div></div>';
+                const fileType = file.name.split('.').pop().toUpperCase();
+                const recordCount = fileType === 'PDF' ? 'Extraction en cours...' : '18 factures';
+                status.innerHTML = `<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">${recordCount} importées depuis ${file.name} (${fileType})</div></div>`;
+                
+                addToImportHistory('Factures fournisseurs', file.name, fileType, recordCount);
             }
         }
 
@@ -2077,12 +2340,79 @@
             if (file) {
                 const status = document.getElementById('trialBalanceUploadStatus');
                 status.classList.remove('hidden');
-                status.innerHTML = '<div class="notification-item info"><div class="notification-title">✓ Analyse en cours</div><div class="notification-text">Balance comptable importée. Analyse fiscale disponible.</div></div>';
+                const fileType = file.name.split('.').pop().toUpperCase();
+                status.innerHTML = `<div class="notification-item info"><div class="notification-title">✓ Analyse en cours</div><div class="notification-text">Balance comptable importée (${fileType}). Analyse fiscale disponible.</div></div>`;
+                
+                addToImportHistory('Balance comptable', file.name, fileType, '1 fichier');
                 
                 setTimeout(() => {
                     switchView('analyse');
                 }, 2000);
             }
+        }
+
+        function handleGeneralDocsUpload(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                const status = document.getElementById('generalDocsUploadStatus');
+                status.classList.remove('hidden');
+                const fileList = Array.from(files).map(f => f.name).join(', ');
+                status.innerHTML = `<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">${files.length} fichier(s) importé(s): ${fileList}</div></div>`;
+                
+                for (let file of files) {
+                    const fileType = file.name.split('.').pop().toUpperCase();
+                    addToImportHistory('Documents divers', file.name, fileType, '1 fichier');
+                }
+            }
+        }
+
+        function handleTaxDocsUpload(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                const status = document.getElementById('taxDocsUploadStatus');
+                status.classList.remove('hidden');
+                const fileList = Array.from(files).map(f => f.name).join(', ');
+                status.innerHTML = `<div class="notification-item info"><div class="notification-title">✓ Upload réussi</div><div class="notification-text">${files.length} document(s) fiscal(ux) importé(s)</div></div>`;
+                
+                for (let file of files) {
+                    const fileType = file.name.split('.').pop().toUpperCase();
+                    addToImportHistory('Documents fiscaux', file.name, fileType, '1 document');
+                }
+            }
+        }
+
+        function addToImportHistory(type, filename, format, records) {
+            const table = document.getElementById('importHistoryTable');
+            if (!table) return;
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            const badgeColors = {
+                'CSV': 'background: #dbeafe; color: #1e40af;',
+                'PDF': 'background: #fee2e2; color: #991b1b;',
+                'XLSX': 'background: #d1fae5; color: #065f46;',
+                'DOC': 'background: #fef3c7; color: #92400e;',
+                'DOCX': 'background: #fef3c7; color: #92400e;'
+            };
+            
+            const row = `
+                <tr>
+                    <td>${dateStr}</td>
+                    <td>${type}</td>
+                    <td>${filename}</td>
+                    <td><span class="badge" style="${badgeColors[format] || ''}">${format}</span></td>
+                    <td>${records}</td>
+                    <td><span class="badge badge-success">Réussi</span></td>
+                    <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewImportDetails()">Voir</button></td>
+                </tr>
+            `;
+            
+            table.insertAdjacentHTML('afterbegin', row);
+        }
+
+        function viewImportDetails(id) {
+            alert('Détails de l\'import #' + (id || 'nouveau'));
         }
 
         function downloadSampleBalance() {
@@ -2136,7 +2466,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
+                                               legend: {
                             position: 'bottom'
                         }
                     }
@@ -2155,6 +2485,23 @@
 
         // Call on page load
         initAllCharts();
+
+        // Planning functions
+        function showAddTaskModal() {
+            alert('Modal "Nouvelle tâche" à implémenter\n\nChamps:\n- Titre\n- Description\n- Date échéance\n- Priorité\n- Assigné à\n- Pièces jointes');
+        }
+
+        function showTaskDetails(taskId) {
+            alert('Détails de la tâche #' + taskId + '\n\nAffichera:\n- Informations complètes\n- Commentaires\n- Historique\n- Documents joints');
+        }
+
+        function exportPlanning() {
+            alert('Export du planning en cours...\n\nFormats disponibles:\n- PDF\n- iCal\n- Excel');
+        }
+
+        function syncCalendar() {
+            alert('Synchronisation avec calendrier externe\n\nOptions:\n- Google Calendar\n- Outlook\n- Apple Calendar');
+        }
     </script>
 </body>
 </html>
