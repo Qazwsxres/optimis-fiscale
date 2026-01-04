@@ -523,6 +523,10 @@
                     <span class="nav-icon">📄</span>
                     <span>Factures</span>
                 </div>
+                <div class="nav-item" onclick="switchView('rh')">
+                    <span class="nav-icon">👥</span>
+                    <span>RH & Paie</span>
+                </div>
                 <div class="nav-item" onclick="switchView('planning')">
                     <span class="nav-icon">📅</span>
                     <span>Planning</span>
@@ -688,6 +692,25 @@
                                         <span>Taux de recouvrement</span>
                                         <span style="font-weight: 600;">89%</span>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">Actions rapides</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <button class="btn btn-primary" onclick="generateCompleteReport()" style="justify-content: center; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>📊</span>
+                                        <span>Générer rapport complet</span>
+                                    </button>
+                                    <button class="btn btn-outline" onclick="contactExpert()" style="justify-content: center; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>👨‍💼</span>
+                                        <span>Contacter un expert</span>
+                                    </button>
+                                    <button class="btn btn-outline" onclick="planOptimization()" style="justify-content: center; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>📅</span>
+                                        <span>Planifier optimisation</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -944,11 +967,11 @@
                                 </div>
 
                                 <!-- Filter tabs -->
-                                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border);">
-                                    <button class="btn" style="background: none; border: none; padding: 0.75rem 1rem; border-bottom: 3px solid var(--primary); color: var(--primary); font-weight: 600;">Toutes (10)</button>
-                                    <button class="btn" style="background: none; border: none; padding: 0.75rem 1rem; border-bottom: 3px solid transparent; color: var(--text-gray);">En cours (8)</button>
-                                    <button class="btn" style="background: none; border: none; padding: 0.75rem 1rem; border-bottom: 3px solid transparent; color: var(--text-gray);">Complétées (24)</button>
-                                    <button class="btn" style="background: none; border: none; padding: 0.75rem 1rem; border-bottom: 3px solid transparent; color: var(--danger);">En retard (2)</button>
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border);">
+                                    <button class="btn" onclick="filterTasks('all')" style="background: none; border: none; padding: 1rem 1.5rem; border-bottom: 3px solid var(--primary); color: var(--primary); font-weight: 600; font-size: 0.9375rem;">Toutes (10)</button>
+                                    <button class="btn" onclick="filterTasks('in-progress')" style="background: none; border: none; padding: 1rem 1.5rem; border-bottom: 3px solid transparent; color: var(--text-gray); font-size: 0.9375rem;">En cours (8)</button>
+                                    <button class="btn" onclick="filterTasks('completed')" style="background: none; border: none; padding: 1rem 1.5rem; border-bottom: 3px solid transparent; color: var(--text-gray); font-size: 0.9375rem;">Complétées (24)</button>
+                                    <button class="btn" onclick="filterTasks('overdue')" style="background: none; border: none; padding: 1rem 1.5rem; border-bottom: 3px solid transparent; color: var(--danger); font-size: 0.9375rem;">En retard (2)</button>
                                 </div>
 
                                 <div id="taskList" style="max-height: 600px; overflow-y: auto;">
@@ -1003,6 +1026,268 @@
                                         <div style="width: 100%; height: 8px; background: white; border-radius: 4px; overflow: hidden;">
                                             <div style="width: 75%; height: 100%; background: var(--success);"></div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RH & Paie View -->
+                <div id="viewRH" class="view hidden">
+                    <!-- Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-label">Employés</div>
+                            <div class="stat-value" style="font-size: 1.5rem;">5</div>
+                            <div class="stat-change">3 CDI, 2 CDD</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Masse salariale (mois)</div>
+                            <div class="stat-value" style="font-size: 1.5rem;">€ 8,500</div>
+                            <div class="stat-change">+5% vs dernier mois</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Charges sociales</div>
+                            <div class="stat-value" style="font-size: 1.5rem;">€ 3,400</div>
+                            <div class="stat-change">40% masse salariale</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Fiches à générer</div>
+                            <div class="stat-value" style="font-size: 1.5rem; color: var(--warning);">5</div>
+                            <div class="stat-change">Janvier 2025</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-left">
+                            <!-- Employee List -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">👥 Liste des employés</div>
+                                    <button class="btn btn-primary" onclick="showAddEmployeeModal()">+ Nouvel employé</button>
+                                </div>
+
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Poste</th>
+                                            <th>Type contrat</th>
+                                            <th>Salaire brut</th>
+                                            <th>Début</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="employeesList">
+                                        <tr>
+                                            <td><strong>Marie Martin</strong></td>
+                                            <td>Comptable</td>
+                                            <td><span class="badge badge-success">CDI</span></td>
+                                            <td>€ 2,400</td>
+                                            <td>01/03/2022</td>
+                                            <td>
+                                                <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewEmployee(1)">Voir</button>
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem; margin-left: 0.5rem;" onclick="generatePayslip(1)">Fiche</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Pierre Dubois</strong></td>
+                                            <td>Assistant commercial</td>
+                                            <td><span class="badge badge-success">CDI</span></td>
+                                            <td>€ 2,000</td>
+                                            <td>15/06/2023</td>
+                                            <td>
+                                                <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewEmployee(2)">Voir</button>
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem; margin-left: 0.5rem;" onclick="generatePayslip(2)">Fiche</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Sophie Laurent</strong></td>
+                                            <td>Développeuse</td>
+                                            <td><span class="badge badge-success">CDI</span></td>
+                                            <td>€ 2,800</td>
+                                            <td>10/09/2021</td>
+                                            <td>
+                                                <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewEmployee(3)">Voir</button>
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem; margin-left: 0.5rem;" onclick="generatePayslip(3)">Fiche</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Lucas Bernard</strong></td>
+                                            <td>Stagiaire Marketing</td>
+                                            <td><span class="badge badge-warning">CDD</span></td>
+                                            <td>€ 800</td>
+                                            <td>01/12/2024</td>
+                                            <td>
+                                                <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewEmployee(4)">Voir</button>
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem; margin-left: 0.5rem;" onclick="generatePayslip(4)">Fiche</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Emma Petit</strong></td>
+                                            <td>Designer</td>
+                                            <td><span class="badge badge-warning">CDD</span></td>
+                                            <td>€ 1,500</td>
+                                            <td>01/11/2024</td>
+                                            <td>
+                                                <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewEmployee(5)">Voir</button>
+                                                <button class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem; margin-left: 0.5rem;" onclick="generatePayslip(5)">Fiche</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Payslips History -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">📄 Historique des fiches de paie</div>
+                                    <button class="btn btn-primary" onclick="generateAllPayslips()">Générer toutes (Janvier)</button>
+                                </div>
+
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mois</th>
+                                            <th>Employé</th>
+                                            <th>Brut</th>
+                                            <th>Net</th>
+                                            <th>Statut</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Déc 2024</td>
+                                            <td>Marie Martin</td>
+                                            <td>€ 2,400</td>
+                                            <td>€ 1,872</td>
+                                            <td><span class="badge badge-success">Payée</span></td>
+                                            <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="downloadPayslip('dec_2024_marie')">📥 PDF</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Déc 2024</td>
+                                            <td>Pierre Dubois</td>
+                                            <td>€ 2,000</td>
+                                            <td>€ 1,560</td>
+                                            <td><span class="badge badge-success">Payée</span></td>
+                                            <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="downloadPayslip('dec_2024_pierre')">📥 PDF</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Déc 2024</td>
+                                            <td>Sophie Laurent</td>
+                                            <td>€ 2,800</td>
+                                            <td>€ 2,184</td>
+                                            <td><span class="badge badge-success">Payée</span></td>
+                                            <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="downloadPayslip('dec_2024_sophie')">📥 PDF</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-right">
+                            <!-- Quick Actions -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">⚡ Actions rapides</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <button class="btn btn-primary" onclick="generateAllPayslips()">📄 Générer fiches janvier</button>
+                                    <button class="btn btn-outline" onclick="exportDSN()">📊 Export DSN</button>
+                                    <button class="btn btn-outline" onclick="calculateCharges()">💰 Calcul charges sociales</button>
+                                    <button class="btn btn-outline" onclick="manageLeaves()">🏖️ Gérer les congés</button>
+                                </div>
+                            </div>
+
+                            <!-- Charges Breakdown -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">💼 Charges sociales</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                            <span>URSSAF</span>
+                                            <span style="font-weight: 600;">€ 2,040</span>
+                                        </div>
+                                        <div style="width: 100%; height: 6px; background: var(--bg-light); border-radius: 3px; overflow: hidden;">
+                                            <div style="width: 60%; height: 100%; background: var(--primary);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                            <span>Retraite</span>
+                                            <span style="font-weight: 600;">€ 850</span>
+                                        </div>
+                                        <div style="width: 100%; height: 6px; background: var(--bg-light); border-radius: 3px; overflow: hidden;">
+                                            <div style="width: 25%; height: 100%; background: var(--success);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                            <span>Prévoyance</span>
+                                            <span style="font-weight: 600;">€ 340</span>
+                                        </div>
+                                        <div style="width: 100%; height: 6px; background: var(--bg-light); border-radius: 3px; overflow: hidden;">
+                                            <div style="width: 10%; height: 100%; background: var(--warning);"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                            <span>Mutuelle</span>
+                                            <span style="font-weight: 600;">€ 170</span>
+                                        </div>
+                                        <div style="width: 100%; height: 6px; background: var(--bg-light); border-radius: 3px; overflow: hidden;">
+                                            <div style="width: 5%; height: 100%; background: #8b5cf6;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 0.5rem; padding-top: 0.75rem; border-top: 2px solid var(--border);">
+                                        <div style="display: flex; justify-content: space-between; font-weight: 600;">
+                                            <span>Total</span>
+                                            <span style="color: var(--primary);">€ 3,400</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Upcoming Payments -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">📅 Prochains paiements</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="padding: 1rem; background: #fef3c7; border-radius: 8px; border-left: 3px solid var(--warning);">
+                                        <div style="font-weight: 600; margin-bottom: 0.25rem;">Salaires janvier</div>
+                                        <div style="font-size: 0.875rem; color: var(--text-gray);">15 janvier 2025</div>
+                                        <div style="font-weight: 600; margin-top: 0.5rem; color: var(--text-dark);">€ 8,500</div>
+                                    </div>
+                                    <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; border-left: 3px solid var(--primary);">
+                                        <div style="font-weight: 600; margin-bottom: 0.25rem;">Charges URSSAF</div>
+                                        <div style="font-size: 0.875rem; color: var(--text-gray);">15 janvier 2025</div>
+                                        <div style="font-weight: 600; margin-top: 0.5rem; color: var(--text-dark);">€ 2,040</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Leave Balance -->
+                            <div class="card">
+                                <div class="card-title" style="margin-bottom: 1rem;">🏖️ Solde des congés</div>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-light); border-radius: 6px;">
+                                        <span>Marie Martin</span>
+                                        <span style="font-weight: 600;">18 jours</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-light); border-radius: 6px;">
+                                        <span>Pierre Dubois</span>
+                                        <span style="font-weight: 600;">22 jours</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-light); border-radius: 6px;">
+                                        <span>Sophie Laurent</span>
+                                        <span style="font-weight: 600;">15 jours</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-light); border-radius: 6px;">
+                                        <span>Lucas Bernard</span>
+                                        <span style="font-weight: 600;">5 jours</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-light); border-radius: 6px;">
+                                        <span>Emma Petit</span>
+                                        <span style="font-weight: 600;">8 jours</span>
                                     </div>
                                 </div>
                             </div>
@@ -1502,20 +1787,21 @@
                         </div>
 
                         <!-- Filter -->
-                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-                            <select id="filterAlertType" onchange="filterAlerts()" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
-                                <option value="all">Tous les types</option>
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center;">
+                            <select id="filterAlertType" onchange="filterAlerts()" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9375rem; min-width: 150px;">
+                                <option value="all">Conseils</option>
                                 <option value="fiscal">Fiscal</option>
                                 <option value="invoice">Factures</option>
                                 <option value="cash">Trésorerie</option>
-                                <option value="advice">Conseils</option>
+                                <option value="advice">Tous</option>
                             </select>
-                            <select id="filterAlertPriority" onchange="filterAlerts()" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
-                                <option value="all">Toutes priorités</option>
+                            <select id="filterAlertPriority" onchange="filterAlerts()" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9375rem; min-width: 150px;">
+                                <option value="all">Moyenne</option>
                                 <option value="high">Urgente</option>
                                 <option value="medium">Moyenne</option>
                                 <option value="low">Faible</option>
                             </select>
+                            <button class="btn btn-outline" onclick="markAllAlertsRead()" style="margin-left: auto; padding: 0.75rem 1.5rem;">✓ Tout marquer comme lu</button>
                         </div>
                     </div>
 
@@ -1524,13 +1810,13 @@
                         <div class="card-title" style="margin-bottom: 1rem; color: var(--danger);">⚠️ Alertes urgentes</div>
                         <div id="urgentAlerts">
                             <div class="notification-item danger" style="margin-bottom: 1rem;">
-                                <div style="display: flex; justify-content: between; align-items: start; gap: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
                                     <div style="flex: 1;">
                                         <div class="notification-title">TVA trimestrielle à déclarer</div>
                                         <div class="notification-text">La déclaration de TVA du T4 2024 doit être soumise avant le 24 janvier 2025. Montant estimé: € 4,200</div>
                                         <div class="notification-date">Échéance dans 4 jours</div>
                                     </div>
-                                    <button class="btn btn-primary" style="padding: 0.5rem 1rem; white-space: nowrap;">Traiter</button>
+                                    <button class="btn btn-primary" style="padding: 0.75rem 1.5rem; white-space: nowrap;" onclick="handleTVADeclaration()">Traiter</button>
                                 </div>
                             </div>
 
@@ -1541,7 +1827,7 @@
                                         <div class="notification-text">3 factures sont en retard de paiement pour un montant total de € 2,680. Relance recommandée.</div>
                                         <div class="notification-date">Retard moyen: 8 jours</div>
                                     </div>
-                                    <button class="btn btn-outline" style="padding: 0.5rem 1rem; white-space: nowrap;" onclick="switchView('factures')">Voir</button>
+                                    <button class="btn btn-outline" style="padding: 0.75rem 1.5rem; white-space: nowrap;" onclick="switchView('factures')">Voir</button>
                                 </div>
                             </div>
                         </div>
@@ -1885,56 +2171,127 @@
 
     <!-- Create Invoice Modal -->
     <div id="createInvoiceModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
-                <div class="modal-title">Créer une facture</div>
+                <div class="modal-title">📄 Créer une facture</div>
                 <button class="modal-close" onclick="hideCreateInvoiceModal()">×</button>
             </div>
             <div class="modal-body">
-                <form id="createInvoiceForm">
-                    <div class="form-group">
-                        <label class="form-label">Client</label>
-                        <select class="form-select" id="invoiceClient" required>
-                            <option value="">Sélectionner un client...</option>
-                            <option value="client1">Client ABC</option>
-                            <option value="client2">Client XYZ</option>
-                            <option value="client3">Entreprise DEF</option>
-                        </select>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <form id="createInvoiceForm" onsubmit="generateInvoice(event)">
+                    <!-- Invoice Info -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">N° Facture</label>
+                            <input type="text" class="form-input" id="invoiceNumber" value="F-2025-001" required>
+                        </div>
                         <div class="form-group">
                             <label class="form-label">Date de facture</label>
-                            <input type="date" class="form-input" required>
+                            <input type="date" class="form-input" id="invoiceDate" required>
+                        </div>
+                    </div>
+
+                    <!-- Client Information -->
+                    <div style="border: 2px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">👤 Informations client</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Nom du client</label>
+                                <input type="text" class="form-input" id="clientName" placeholder="Nom ou raison sociale" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="clientEmail" placeholder="client@email.com" required>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Date d'échéance</label>
-                            <input type="date" class="form-input" required>
+                            <label class="form-label">Adresse</label>
+                            <input type="text" class="form-input" id="clientAddress" placeholder="Adresse complète" required>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Numéro de téléphone</label>
+                                <input type="tel" class="form-input" id="clientPhone" placeholder="+33 1 23 45 67 89">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date d'échéance</label>
+                                <input type="date" class="form-input" id="invoiceDueDate" required>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <input type="text" class="form-input" placeholder="Prestation de services..." required>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group">
-                            <label class="form-label">Montant HT</label>
-                            <input type="number" class="form-input" placeholder="0.00" step="0.01" required>
+
+                    <!-- Services / Products -->
+                    <div style="border: 2px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📦 Prestations / Produits</h3>
+                        <div id="invoiceLines">
+                            <!-- Line 1 -->
+                            <div class="invoice-line" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 0.75rem; margin-bottom: 0.75rem; align-items: end;">
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <input type="text" class="form-input" placeholder="Détailler prestation ici" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Prix unitaire HT</label>
+                                    <input type="number" class="form-input line-price" placeholder="0.00" step="0.01" required oninput="calculateLineTotal(this)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Unité</label>
+                                    <select class="form-select">
+                                        <option>heures</option>
+                                        <option>jours</option>
+                                        <option>unité</option>
+                                        <option>forfait</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Quantité</label>
+                                    <input type="number" class="form-input line-quantity" placeholder="1" step="0.01" required oninput="calculateLineTotal(this)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Montant HT</label>
+                                    <input type="text" class="form-input line-total" placeholder="0.00 €" readonly style="background: var(--bg-light);">
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">TVA (%)</label>
-                            <select class="form-select" required>
-                                <option value="20">20%</option>
-                                <option value="10">10%</option>
-                                <option value="5.5">5.5%</option>
-                                <option value="0">0%</option>
-                            </select>
+                        <button type="button" class="btn btn-outline" onclick="addInvoiceLine()" style="margin-top: 0.5rem;">+ Ajouter une ligne</button>
+                    </div>
+
+                    <!-- Totals -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <div class="form-group">
+                                <label class="form-label">Modalités et conditions de règlement</label>
+                                <textarea class="form-textarea" id="paymentTerms" placeholder="Ex: Paiement à 30 jours, virement bancaire">Paiement à 30 jours par virement bancaire</textarea>
+                            </div>
+                        </div>
+                        <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 1rem;">
+                                <span>Total HT</span>
+                                <span id="totalHT" style="font-weight: 600;">0.00 €</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">TVA (%)</label>
+                                <select class="form-select" id="tvaRate" onchange="calculateTotals()">
+                                    <option value="20">20%</option>
+                                    <option value="10">10%</option>
+                                    <option value="5.5">5.5%</option>
+                                    <option value="0">0% (Franchise en base)</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <span>TVA</span>
+                                <span id="totalTVA" style="font-weight: 600;">0.00 €</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 2px solid var(--border); font-size: 1.25rem; font-weight: 700;">
+                                <span>Total TTC</span>
+                                <span id="totalTTC" style="color: var(--primary);">0.00 €</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Notes (optionnel)</label>
-                        <textarea class="form-textarea" placeholder="Conditions de paiement, remarques..."></textarea>
+
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">📄 Générer la facture (PDF)</button>
+                        <button type="button" class="btn btn-outline" onclick="previewInvoice()">👁️ Aperçu</button>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Créer la facture</button>
                 </form>
             </div>
         </div>
@@ -2029,6 +2386,7 @@
                 'dashboard': 'Tableau de bord',
                 'tresorerie': 'Trésorerie',
                 'factures': 'Factures',
+                'rh': 'RH & Paie',
                 'planning': 'Planning',
                 'import': 'Import',
                 'alertes': 'Alertes',
@@ -2045,6 +2403,7 @@
                 'dashboard': 'viewDashboard',
                 'tresorerie': 'viewTresorerie',
                 'factures': 'viewFactures',
+                'rh': 'viewRH',
                 'planning': 'viewPlanning',
                 'import': 'viewImport',
                 'alertes': 'viewAlertes',
@@ -2502,6 +2861,249 @@
         function syncCalendar() {
             alert('Synchronisation avec calendrier externe\n\nOptions:\n- Google Calendar\n- Outlook\n- Apple Calendar');
         }
+
+        // Quick Actions functions
+        function generateCompleteReport() {
+            if (confirm('Générer un rapport complet de votre situation financière et fiscale ?\n\nLe rapport inclura:\n- Analyse de trésorerie\n- État des factures\n- Optimisations fiscales\n- Recommandations\n\nFormat: PDF')) {
+                alert('📊 Génération du rapport en cours...\n\nVous recevrez le rapport par email dans quelques minutes.');
+            }
+        }
+
+        function contactExpert() {
+            if (confirm('Contacter un expert-comptable ?\n\nUn expert SUMMA vous contactera dans les 24h pour:\n- Répondre à vos questions\n- Optimiser votre fiscalité\n- Accompagner votre développement')) {
+                // Show contact form or redirect
+                alert('✅ Demande envoyée !\n\nUn expert vous contactera par email et téléphone dans les 24h.\n\nVous pouvez aussi nous joindre directement au:\n📞 01 23 45 67 89\n📧 expert@summa.fr');
+            }
+        }
+
+        function planOptimization() {
+            // Switch to planning view and suggest creating optimization task
+            switchView('planning');
+            setTimeout(() => {
+                if (confirm('Créer une tâche "Optimisation fiscale 2024" ?\n\nCette tâche vous guidera dans:\n- L\'analyse de vos charges déductibles\n- La révision des amortissements\n- L\'identification des crédits d\'impôt\n- La planification de fin d\'année')) {
+                    alert('✅ Tâche créée !\n\n"Optimisation fiscale 2024"\nÉchéance: 31 janvier 2025\nPriorité: Importante\n\nConsultez l\'onglet Planning pour les détails.');
+                }
+            }, 500);
+        }
+
+        // Alert handling functions
+        function handleTVADeclaration() {
+            if (confirm('Commencer la déclaration TVA T4 2024 ?\n\nVous serez guidé pour:\n1. Vérifier les montants collectés et déductibles\n2. Remplir le formulaire CA3\n3. Télétransmettre la déclaration\n\nÉchéance: 24 janvier 2025')) {
+                alert('📋 Préparation de la déclaration...\n\nVous allez être redirigé vers l\'assistant de déclaration TVA.\n\nDocuments nécessaires:\n- Relevés bancaires\n- Factures émises\n- Factures reçues');
+                // In production, this would open the TVA declaration wizard
+            }
+        }
+
+        function filterAlerts() {
+            const type = document.getElementById('filterAlertType').value;
+            const priority = document.getElementById('filterAlertPriority').value;
+            console.log('Filtering alerts:', type, priority);
+            // In production, this would filter the alerts list
+        }
+
+        // Task filtering function
+        function filterTasks(filter) {
+            console.log('Filtering tasks:', filter);
+            
+            // Update tab styling
+            const tabs = document.querySelectorAll('#viewPlanning .btn');
+            tabs.forEach(tab => {
+                tab.style.borderBottomColor = 'transparent';
+                tab.style.color = 'var(--text-gray)';
+                tab.style.fontWeight = 'normal';
+            });
+            
+            event.target.style.borderBottomColor = 'var(--primary)';
+            event.target.style.color = 'var(--primary)';
+            event.target.style.fontWeight = '600';
+            
+            // In production, this would filter the task list based on status
+            alert('Filtre appliqué: ' + filter + '\n\n(En production, la liste des tâches serait filtrée)');
+        }
+
+        // RH Functions
+        function showAddEmployeeModal() {
+            alert('Modal "Nouvel employé" à implémenter\n\nChamps:\n- Nom/Prénom\n- Poste\n- Type de contrat (CDI/CDD)\n- Salaire brut\n- Date de début\n- Numéro de sécurité sociale\n- Adresse\n- Coordonnées bancaires');
+        }
+
+        function viewEmployee(id) {
+            alert('Fiche employé #' + id + '\n\nAffichera:\n- Informations personnelles\n- Contrat\n- Historique des paies\n- Congés\n- Documents');
+        }
+
+        function generatePayslip(employeeId) {
+            if (confirm('Générer la fiche de paie de janvier 2025 pour cet employé ?')) {
+                alert('📄 Génération de la fiche de paie en cours...\n\nLa fiche sera disponible au format PDF dans quelques secondes.');
+                // In production, would call API to generate payslip PDF
+            }
+        }
+
+        function generateAllPayslips() {
+            if (confirm('Générer toutes les fiches de paie de janvier 2025 ?\n\n5 fiches seront créées.')) {
+                alert('📄 Génération en cours...\n\n5 fiches de paie créées :\n- Marie Martin\n- Pierre Dubois\n- Sophie Laurent\n- Lucas Bernard\n- Emma Petit\n\nVous recevrez un email avec toutes les fiches en pièce jointe.');
+            }
+        }
+
+        function downloadPayslip(id) {
+            alert('📥 Téléchargement de la fiche de paie: ' + id + '\n\nFormat: PDF');
+            // In production, would download the PDF
+        }
+
+        function exportDSN() {
+            if (confirm('Exporter la Déclaration Sociale Nominative (DSN) ?\n\nFichier au format requis par l\'URSSAF.')) {
+                alert('📊 Export DSN en cours...\n\nFichier DSN_janvier_2025.xml généré.');
+            }
+        }
+
+        function calculateCharges() {
+            alert('💰 Calcul des charges sociales\n\nTotal masse salariale: € 8,500\nCharges patronales: € 3,400 (40%)\n\nDétail:\n- URSSAF: € 2,040\n- Retraite: € 850\n- Prévoyance: € 340\n- Mutuelle: € 170');
+        }
+
+        function manageLeaves() {
+            alert('🏖️ Gestion des congés\n\nFonctionnalités:\n- Demandes de congés\n- Validation par le manager\n- Solde CP/RTT\n- Calendrier des absences\n\n(Module complet à développer)');
+        }
+
+        // Invoice Functions
+        function showCreateInvoiceModal() {
+            document.getElementById('createInvoiceModal').classList.add('active');
+            
+            // Set today's date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('invoiceDate').value = today;
+            
+            // Set due date (30 days from now)
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 30);
+            document.getElementById('invoiceDueDate').value = dueDate.toISOString().split('T')[0];
+            
+            // Auto-increment invoice number
+            const lastNumber = localStorage.getItem('lastInvoiceNumber') || 0;
+            const newNumber = parseInt(lastNumber) + 1;
+            document.getElementById('invoiceNumber').value = `F-2025-${String(newNumber).padStart(3, '0')}`;
+        }
+
+        function hideCreateInvoiceModal() {
+            document.getElementById('createInvoiceModal').classList.remove('active');
+        }
+
+        function addInvoiceLine() {
+            const container = document.getElementById('invoiceLines');
+            const newLine = document.createElement('div');
+            newLine.className = 'invoice-line';
+            newLine.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 0.75rem; margin-bottom: 0.75rem; align-items: end;';
+            newLine.innerHTML = `
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Détailler prestation ici" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" class="form-input line-price" placeholder="0.00" step="0.01" required oninput="calculateLineTotal(this)">
+                </div>
+                <div class="form-group">
+                    <select class="form-select">
+                        <option>heures</option>
+                        <option>jours</option>
+                        <option>unité</option>
+                        <option>forfait</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="number" class="form-input line-quantity" placeholder="1" step="0.01" required oninput="calculateLineTotal(this)">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input line-total" placeholder="0.00 €" readonly style="background: var(--bg-light);">
+                </div>
+            `;
+            container.appendChild(newLine);
+        }
+
+        function calculateLineTotal(input) {
+            const line = input.closest('.invoice-line');
+            const price = parseFloat(line.querySelector('.line-price').value) || 0;
+            const quantity = parseFloat(line.querySelector('.line-quantity').value) || 0;
+            const total = price * quantity;
+            line.querySelector('.line-total').value = total.toFixed(2) + ' €';
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            let totalHT = 0;
+            document.querySelectorAll('.line-price').forEach((priceInput, index) => {
+                const price = parseFloat(priceInput.value) || 0;
+                const quantity = parseFloat(document.querySelectorAll('.line-quantity')[index].value) || 0;
+                totalHT += price * quantity;
+            });
+            
+            const tvaRate = parseFloat(document.getElementById('tvaRate').value) || 0;
+            const totalTVA = totalHT * (tvaRate / 100);
+            const totalTTC = totalHT + totalTVA;
+            
+            document.getElementById('totalHT').textContent = totalHT.toFixed(2) + ' €';
+            document.getElementById('totalTVA').textContent = totalTVA.toFixed(2) + ' €';
+            document.getElementById('totalTTC').textContent = totalTTC.toFixed(2) + ' €';
+        }
+
+        function generateInvoice(event) {
+            event.preventDefault();
+            
+            // Get company info from localStorage
+            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const companyInfo = {
+                name: document.getElementById('companyName')?.value || userData.company_name || 'Entreprise ABC',
+                address: document.getElementById('companyAddress')?.value || '123 Rue de la République, 75001 Paris',
+                siret: document.getElementById('companySIRET')?.value || '123 456 789 00012',
+                email: document.getElementById('companyEmail')?.value || 'contact@entreprise.fr',
+                phone: document.getElementById('companyPhone')?.value || '+33 1 23 45 67 89',
+                iban: document.getElementById('companyIBAN')?.value || 'FR76 1234 5678 9012 3456 7890 123'
+            };
+            
+            // Get form data
+            const invoiceData = {
+                number: document.getElementById('invoiceNumber').value,
+                date: document.getElementById('invoiceDate').value,
+                dueDate: document.getElementById('invoiceDueDate').value,
+                client: {
+                    name: document.getElementById('clientName').value,
+                    address: document.getElementById('clientAddress').value,
+                    email: document.getElementById('clientEmail').value,
+                    phone: document.getElementById('clientPhone').value
+                },
+                lines: [],
+                paymentTerms: document.getElementById('paymentTerms').value,
+                totalHT: document.getElementById('totalHT').textContent,
+                totalTVA: document.getElementById('totalTVA').textContent,
+                totalTTC: document.getElementById('totalTTC').textContent
+            };
+            
+            // Get all invoice lines
+            document.querySelectorAll('.invoice-line').forEach(line => {
+                invoiceData.lines.push({
+                    description: line.querySelectorAll('input')[0].value,
+                    price: line.querySelector('.line-price').value,
+                    unit: line.querySelector('select').value,
+                    quantity: line.querySelector('.line-quantity').value,
+                    total: line.querySelector('.line-total').value
+                });
+            });
+            
+            // Save invoice number
+            const invoiceNum = parseInt(invoiceData.number.split('-')[2]);
+            localStorage.setItem('lastInvoiceNumber', invoiceNum);
+            
+            // Generate PDF (in production)
+            alert('✅ Facture créée !\n\n' + invoiceData.number + '\n\nClient: ' + invoiceData.client.name + '\nMontant TTC: ' + invoiceData.totalTTC + '\n\n📄 PDF en cours de génération...');
+            
+            hideCreateInvoiceModal();
+            
+            // Refresh invoices list
+            if (typeof loadInvoices === 'function') {
+                loadInvoices();
+            }
+        }
+
+        function previewInvoice() {
+            alert('👁️ Aperçu de la facture\n\n(Ouvrira une fenêtre de prévisualisation PDF)');
+        }
+
+        document.getElementById('createInvoiceForm').addEventListener('submit', generateInvoice);
     </script>
 </body>
 </html>
