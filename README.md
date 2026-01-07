@@ -7,7 +7,6 @@ Un prototype minimal d'API qui :
 - détecte TVA collectée/déductible (si les comptes 445* sont fournis),
 - génère une **liste de pistes d’optimisation conformes** (explicables).
 
-> ⚠️ **Avertissement important** : les calculs sont **pédagogiques** et **simplifiés**. Ils **ne remplacent pas** un avis professionnel ni un calcul fiscal certifié. Les taux/conditions évoluent. Paramétrez-les via `app/config/rates_fr_2025.yaml`.
 
 ## Lancer l'API
 
