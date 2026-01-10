@@ -619,6 +619,7 @@
                 localStorage.setItem('authToken', token);
                 localStorage.setItem('currentUser', JSON.stringify({
                     company_id: companyId,
+                    company_name: data.company_name || 'Entreprise',
                     accessLevel: data.access_level || 'admin'
                 }));
 
@@ -630,7 +631,7 @@
                 console.log('✅ Login successful');
                 
                 // Redirect to dashboard
-                window.location.href = 'numma-dashboard.html';
+                window.location.href = 'index.html';
                 
             } catch (error) {
                 console.error('Login error:', error);
@@ -716,11 +717,23 @@
                 localStorage.setItem('currentUser', JSON.stringify({
                     company_id: formData.username,
                     company_name: formData.company_name,
+                    siret: formData.siret,
+                    legal_structure: formData.company_type,
+                    address: formData.address,
+                    city: formData.city,
+                    postal_code: formData.postal_code,
+                    phone: formData.phone,
+                    email: formData.email,
+                    capital: '10000',
+                    contact_name: formData.contact_name,
+                    iban: formData.iban,
+                    bic: formData.bic,
+                    bank_name: formData.bank_name,
                     accessLevel: 'admin'
                 }));
                 
                 // Redirect to dashboard
-                window.location.href = 'numma-dashboard.html';
+                window.location.href = 'index.html';
                 
             } catch (error) {
                 console.error('Registration error:', error);
