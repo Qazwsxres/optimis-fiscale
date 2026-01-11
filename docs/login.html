@@ -564,13 +564,19 @@
         </div>
 
         <div class="login-footer">
-            <p>Besoin d'aide ? Contactez-nous à <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e2919792928d9096a291978f8f83cc8490">[email&#160;protected]</a></strong> ou au <strong>01 23 45 67 89</strong></p>
+            <p>Besoin d'aide ? Contactez-nous à <strong><a href="mailto:contact@numma.fr">contact@numma.fr</a></strong> ou au <strong>01 23 45 67 89</strong></p>
             <p style="margin-top: 0.5rem; font-size: 0.8rem;">© 2024 NUMMA. Tous droits réservés.</p>
         </div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script>
+        console.log('=== NUMMA Login Page Loaded ===');
+        console.log('Script is running...');
+        
         const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
+        
+        // Test that functions will be defined
+        console.log('About to define switchTab and handleLogin functions...');
 
         // Switch between login and register tabs
         function switchTab(tab) {
@@ -675,6 +681,8 @@
                 alert('Erreur de connexion. Vérifiez vos identifiants.\n\n' + error.message);
             }
         }
+        
+        console.log('✅ handleLogin function defined:', typeof handleLogin);
 
         // Handle registration
         async function handleRegister(e) {
