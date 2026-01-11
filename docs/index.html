@@ -845,20 +845,37 @@
                     </div>
                 </div>
 
+
                 <!-- Pointage View -->
                 <div id="viewPointage" class="view hidden">
-                    <!-- Top Grid: Clock + Quick Actions -->
+                    <!-- Top Actions Bar -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="font-size: 1.5rem; font-weight: 700;">Gestion des Pointages</h2>
+                        <button class="btn btn-primary" onclick="openEmployeeSettingsModal()">
+                            ⚙️ Configurer les employés
+                        </button>
+                    </div>
+
+                    <!-- Top Grid: Clock + Quick Stats -->
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                         <!-- Left: Clock In Card -->
                         <div class="card" style="padding: 2rem;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
                                 <div>
-                                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Pointage employé</h3>
+                                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Pointer</h3>
                                     <p style="color: var(--text-gray); font-size: 0.875rem;" id="liveDate">Chargement...</p>
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums;" id="liveClock">--:--:--</div>
                                 </div>
+                            </div>
+                            
+                            <!-- Employee Selector -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Sélectionner l'employé</label>
+                                <select id="clockEmployeeSelect" class="form-input" style="font-size: 1rem;">
+                                    <option value="">-- Choisir un employé --</option>
+                                </select>
                             </div>
                             
                             <button onclick="clockIn()" class="btn btn-primary" style="width: 100%; padding: 1.25rem; font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
@@ -867,7 +884,7 @@
                             </button>
                             
                             <div id="clockStatus" style="margin-top: 1rem; padding: 1rem; background: var(--bg-light); border-radius: 8px; text-align: center; font-weight: 500; color: var(--text-gray);">
-                                En attente de pointage...
+                                Sélectionnez un employé pour pointer
                             </div>
                         </div>
 
@@ -884,8 +901,8 @@
                                     <span style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="lateCount">0</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-light); border-radius: 8px;">
-                                    <span style="color: var(--text-gray); font-size: 0.875rem;">⏱️ Heures</span>
-                                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary);" id="totalHours">0h00</span>
+                                    <span style="color: var(--text-gray); font-size: 0.875rem;">❌ Absents</span>
+                                    <span style="font-size: 1.5rem; font-weight: 700; color: var(--danger);" id="absentCount">0</span>
                                 </div>
                             </div>
                         </div>
@@ -913,6 +930,7 @@
                                     <th>Arrivée</th>
                                     <th>Départ</th>
                                     <th>Durée</th>
+                                    <th>Horaire prévu</th>
                                     <th>Statut</th>
                                 </tr>
                             </thead>
@@ -2253,188 +2271,229 @@
 
     <!-- Create Invoice Modal -->
     <div id="createInvoiceModal" class="modal">
-        <div class="modal-content" style="max-width: 1200px; max-height: 95vh; overflow-y: auto;">
+        <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header">
-                <div class="modal-title">📄 Nouvelle Facture</div>
+                <div class="modal-title">📄 Créer une facture</div>
                 <button class="modal-close" onclick="hideCreateInvoiceModal()">×</button>
             </div>
             <div class="modal-body">
-                <!-- Invoice Preview (looks like the template) -->
-                <div id="invoicePreview" style="background: white; padding: 3rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1.5rem;">
-                    <!-- Header with Logo and Invoice Number -->
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 3rem;">
-                        <div>
-                            <div style="width: 100px; height: 60px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; color: var(--text-gray);">
-                                LOGO
+                <form id="createInvoiceForm" onsubmit="generateInvoice(event)">
+                    <!-- Invoice Info -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">N° Facture</label>
+                            <input type="text" class="form-input" id="invoiceNumber" value="F-2025-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date de facture</label>
+                            <input type="date" class="form-input" id="invoiceDate" required>
+                        </div>
+                    </div>
+
+                    <!-- Client Information -->
+                    <div style="border: 2px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">👤 Informations client</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Nom du client</label>
+                                <input type="text" class="form-input" id="clientName" placeholder="Nom ou raison sociale" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="clientEmail" placeholder="client@email.com" required>
                             </div>
                         </div>
-                        <div style="text-align: right;">
-                            <h1 style="color: #4CAF50; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">Facture N° <span id="displayInvoiceNumber">F-2025-001</span></h1>
-                            <p style="color: var(--text-gray);">Ville, le <span id="displayInvoiceDate">../../....</span></p>
+                        <div class="form-group">
+                            <label class="form-label">Adresse</label>
+                            <input type="text" class="form-input" id="clientAddress" placeholder="Adresse complète" required>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Numéro de téléphone</label>
+                                <input type="tel" class="form-input" id="clientPhone" placeholder="+33 1 23 45 67 89">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date d'échéance</label>
+                                <input type="date" class="form-input" id="invoiceDueDate" required>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Company and Client Info -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-bottom: 3rem;">
-                        <!-- Company Info (Auto-filled) -->
+                    <!-- Services / Products -->
+                    <div style="border: 2px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">📦 Prestations / Produits</h3>
+                        <div id="invoiceLines">
+                            <!-- Line 1 -->
+                            <div class="invoice-line" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 0.75rem; margin-bottom: 0.75rem; align-items: end;">
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <input type="text" class="form-input" placeholder="Détailler prestation ici" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Prix unitaire HT</label>
+                                    <input type="number" class="form-input line-price" placeholder="0.00" step="0.01" required oninput="calculateLineTotal(this)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Unité</label>
+                                    <select class="form-select">
+                                        <option>heures</option>
+                                        <option>jours</option>
+                                        <option>unité</option>
+                                        <option>forfait</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Quantité</label>
+                                    <input type="number" class="form-input line-quantity" placeholder="1" step="0.01" required oninput="calculateLineTotal(this)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Montant HT</label>
+                                    <input type="text" class="form-input line-total" placeholder="0.00 €" readonly style="background: var(--bg-light);">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline" onclick="addInvoiceLine()" style="margin-top: 0.5rem;">+ Ajouter une ligne</button>
+                    </div>
+
+                    <!-- Totals -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                         <div>
-                            <p style="font-weight: 700; margin-bottom: 0.5rem;" id="displayCompanyName">Nom de l'entreprise</p>
-                            <p style="color: var(--text-gray); line-height: 1.6;" id="displayCompanyAddress">Adresse</p>
-                            <p style="color: var(--text-gray); line-height: 1.6;" id="displayCompanyCity">Ville et Code Postal</p>
-                            <p style="color: var(--text-gray); line-height: 1.6;" id="displayCompanyPhone">Numéro de téléphone</p>
-                            <p style="color: var(--text-gray); line-height: 1.6;" id="displayCompanyEmail">Email</p>
+                            <div class="form-group">
+                                <label class="form-label">Modalités et conditions de règlement</label>
+                                <textarea class="form-textarea" id="paymentTerms" placeholder="Ex: Paiement à 30 jours, virement bancaire">Paiement à 30 jours par virement bancaire</textarea>
+                            </div>
                         </div>
-
-                        <!-- Client Info (Editable) -->
-                        <div style="border: 2px solid var(--border); padding: 1.5rem; border-radius: 8px;">
-                            <input type="text" id="clientName" class="form-input" placeholder="Nom du client" style="margin-bottom: 0.5rem; font-weight: 600;">
-                            <input type="text" id="clientAddress" class="form-input" placeholder="Adresse" style="margin-bottom: 0.5rem;">
-                            <input type="tel" id="clientPhone" class="form-input" placeholder="Numéro de téléphone" style="margin-bottom: 0.5rem;">
-                            <input type="email" id="clientEmail" class="form-input" placeholder="Email">
+                        <div style="background: var(--bg-light); padding: 1.5rem; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 1rem;">
+                                <span>Total HT</span>
+                                <span id="totalHT" style="font-weight: 600;">0.00 €</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">TVA (%)</label>
+                                <select class="form-select" id="tvaRate" onchange="calculateTotals()">
+                                    <option value="20">20%</option>
+                                    <option value="10">10%</option>
+                                    <option value="5.5">5.5%</option>
+                                    <option value="0">0% (Franchise en base)</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                                <span>TVA</span>
+                                <span id="totalTVA" style="font-weight: 600;">0.00 €</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 2px solid var(--border); font-size: 1.25rem; font-weight: 700;">
+                                <span>Total TTC</span>
+                                <span id="totalTTC" style="color: var(--primary);">0.00 €</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Invoice Table -->
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">📄 Générer la facture (PDF)</button>
+                        <button type="button" class="btn btn-outline" onclick="previewInvoice()">👁️ Aperçu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Settings Modal -->
+    <div id="employeeSettingsModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ Configuration des Employés</div>
+                <button class="modal-close" onclick="closeEmployeeSettingsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Add Employee Button -->
+                <button class="btn btn-primary" onclick="showAddEmployeeForm()" style="margin-bottom: 1.5rem; width: 100%;">
+                    + Ajouter un employé
+                </button>
+
+                <!-- Add Employee Form (hidden by default) -->
+                <div id="addEmployeeForm" style="display: none; background: var(--bg-light); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem; font-weight: 600;">Nouvel employé</h3>
+                    <form onsubmit="saveEmployeeSettings(event)">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Nom complet *</label>
+                                <input type="text" id="empName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Poste</label>
+                                <input type="text" id="empPosition" class="form-input">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Heure d'arrivée prévue *</label>
+                                <input type="time" id="empStartTime" class="form-input" value="09:00" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Heure de départ prévue *</label>
+                                <input type="time" id="empEndTime" class="form-input" value="18:00" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Jours de travail</label>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" class="empWorkDays" value="1" checked> Lun
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" class="empWorkDays" value="2" checked> Mar
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" class="empWorkDays" value="3" checked> Mer
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" class="empWorkDays" value="4" checked> Jeu
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" class="empWorkDays" value="5" checked> Ven
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" class="empWorkDays" value="6"> Sam
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                                    <input type="checkbox" class="empWorkDays" value="0"> Dim
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tolérance retard (minutes)</label>
+                            <input type="number" id="empLateTolerance" class="form-input" value="10" min="0">
+                        </div>
+
+                        <div style="display: flex; gap: 1rem;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
+                            <button type="button" class="btn btn-outline" onclick="hideAddEmployeeForm()" style="flex: 1;">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Employees List -->
+                <div class="card">
+                    <div class="card-title">Liste des employés configurés</div>
+                    <table class="data-table" style="margin-top: 1rem;">
                         <thead>
-                            <tr style="background: #8BC34A; color: white;">
-                                <th style="padding: 1rem; text-align: left; border: 1px solid #8BC34A;">Description</th>
-                                <th style="padding: 1rem; text-align: center; border: 1px solid #8BC34A;">Prix unitaire HT</th>
-                                <th style="padding: 1rem; text-align: center; border: 1px solid #8BC34A;">Unité</th>
-                                <th style="padding: 1rem; text-align: center; border: 1px solid #8BC34A;">Quantité</th>
-                                <th style="padding: 1rem; text-align: right; border: 1px solid #8BC34A;">Montant HT</th>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Poste</th>
+                                <th>Horaires</th>
+                                <th>Jours</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="invoiceLinesTable">
+                        <tbody id="employeeSettingsList">
                             <tr>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border);">
-                                    <input type="text" class="form-input line-description" placeholder="Détailler prestation ici" style="border: none; background: transparent;">
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <input type="number" class="form-input line-price" placeholder="0" step="0.01" style="border: none; background: transparent; text-align: center; width: 80px;" oninput="calculateInvoiceTotals()">
-                                    <span> €</span>
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <select class="form-select line-unit" style="border: none; background: transparent; text-align: center;">
-                                        <option>heures</option>
-                                        <option>jours</option>
-                                        <option>unité</option>
-                                        <option>forfait</option>
-                                    </select>
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <input type="number" class="form-input line-quantity" placeholder="0" step="0.01" style="border: none; background: transparent; text-align: center; width: 60px;" oninput="calculateInvoiceTotals()">
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: right;">
-                                    <span class="line-total">... €</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border);">
-                                    <input type="text" class="form-input line-description" placeholder="Détailler prestation ici" style="border: none; background: transparent;">
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <input type="number" class="form-input line-price" placeholder="0" step="0.01" style="border: none; background: transparent; text-align: center; width: 80px;" oninput="calculateInvoiceTotals()">
-                                    <span> €</span>
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <select class="form-select line-unit" style="border: none; background: transparent; text-align: center;">
-                                        <option>heures</option>
-                                        <option>jours</option>
-                                        <option>unité</option>
-                                        <option>forfait</option>
-                                    </select>
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <input type="number" class="form-input line-quantity" placeholder="0" step="0.01" style="border: none; background: transparent; text-align: center; width: 60px;" oninput="calculateInvoiceTotals()">
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: right;">
-                                    <span class="line-total">... €</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border);">
-                                    <input type="text" class="form-input line-description" placeholder="Détailler prestation ici" style="border: none; background: transparent;">
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <input type="number" class="form-input line-price" placeholder="0" step="0.01" style="border: none; background: transparent; text-align: center; width: 80px;" oninput="calculateInvoiceTotals()">
-                                    <span> €</span>
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <select class="form-select line-unit" style="border: none; background: transparent; text-align: center;">
-                                        <option>heures</option>
-                                        <option>jours</option>
-                                        <option>unité</option>
-                                        <option>forfait</option>
-                                    </select>
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                                    <input type="number" class="form-input line-quantity" placeholder="0" step="0.01" style="border: none; background: transparent; text-align: center; width: 60px;" oninput="calculateInvoiceTotals()">
-                                </td>
-                                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: right;">
-                                    <span class="line-total">... €</span>
-                                </td>
+                                <td colspan="5" style="text-align: center; color: var(--text-gray);">Aucun employé configuré</td>
                             </tr>
                         </tbody>
                     </table>
-
-                    <button type="button" class="btn btn-outline" onclick="addInvoiceLineToTable()" style="margin-bottom: 2rem;">+ Ajouter une ligne</button>
-
-                    <!-- Bottom Section: Payment Terms and Totals -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                        <!-- Payment Terms -->
-                        <div style="border: 2px solid var(--border); padding: 1.5rem; border-radius: 8px;">
-                            <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Modalités et conditions de règlement :</label>
-                            <textarea id="paymentTerms" class="form-textarea" rows="3" placeholder="Ex: Paiement à 30 jours par virement bancaire" style="margin-bottom: 1rem;">Paiement à 30 jours par virement bancaire</textarea>
-                            <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Date d'échéance :</label>
-                            <input type="date" id="invoiceDueDate" class="form-input">
-                        </div>
-
-                        <!-- Totals -->
-                        <div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: #FFFDE7; border-radius: 4px; margin-bottom: 0.5rem;">
-                                <span style="font-weight: 600;">Total HT</span>
-                                <span id="invoiceTotalHT" style="font-weight: 600;">... €</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: #FFFDE7; border-radius: 4px; margin-bottom: 0.5rem;">
-                                <span style="font-weight: 600;">TVA 
-                                    <select id="tvaRate" onchange="calculateInvoiceTotals()" style="border: none; background: transparent; font-weight: 600;">
-                                        <option value="20">20%</option>
-                                        <option value="10">10%</option>
-                                        <option value="5.5">5.5%</option>
-                                        <option value="0">0%</option>
-                                    </select>
-                                </span>
-                                <span id="invoiceTotalTVA" style="font-weight: 600;">... €</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: #FFFDE7; border-radius: 4px; font-size: 1.25rem; font-weight: 700;">
-                                <span>Total TTC</span>
-                                <span id="invoiceTotalTTC">... €</span>
-                            </div>
-
-                            <!-- Signature Box -->
-                            <div style="margin-top: 2rem; text-align: right;">
-                                <p style="font-weight: 600; margin-bottom: 0.5rem;">Signature :</p>
-                                <div style="width: 200px; height: 100px; border: 2px solid var(--border); border-radius: 8px; margin-left: auto;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Footer -->
-                    <div style="text-align: center; color: var(--text-gray); font-size: 0.875rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-                        <p id="displayCompanyFooter">Mon entreprise – Société ... au capital de ... euros</p>
-                        <p id="displayCompanySiret">N° Siret :</p>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div style="display: flex; gap: 1rem;">
-                    <button type="button" class="btn btn-primary" onclick="generateInvoicePDF()" style="flex: 1;">
-                        📄 Générer et Télécharger PDF
-                    </button>
-                    <button type="button" class="btn btn-outline" onclick="hideCreateInvoiceModal()">
-                        Annuler
-                    </button>
                 </div>
             </div>
         </div>
@@ -2473,6 +2532,9 @@
     </div>
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // NUMMA Dashboard v2.0 - Updated 2026-01-10
+        console.log('NUMMA Dashboard loading...');
+        
         // Configuration
         const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
         let currentUser = {
@@ -2482,52 +2544,29 @@
         };
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCurrentDate();
-            initChart();
-            loadNotifications();
-            
-            // Check auth token
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                // Redirect to login page
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            // Load user data
-            const userData = localStorage.getItem('currentUser');
-            if (userData) {
-                const user = JSON.parse(userData);
-                currentUser = user; // Update global currentUser
-                
-                if (user.company_name) {
-                    document.getElementById('userCompany').textContent = user.company_name;
-                }
-                if (user.contact_name) {
-                    document.getElementById('userName').textContent = user.contact_name;
-                } else if (user.name) {
-                    document.getElementById('userName').textContent = user.name;
-                }
-            }
-            
-            checkAccessLevel();
-        });
-
         // Update current date
         function updateCurrentDate() {
             const now = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('fr-FR', options);
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) dateEl.textContent = now.toLocaleDateString('fr-FR', options);
         }
 
         // Switch view
         function switchView(view) {
+            console.log('switchView called with:', view);
             // Update nav
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.currentTarget.classList.add('active');
+            
+            // Find and activate the clicked nav item
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(`'${view}'`)) {
+                    item.classList.add('active');
+                }
+            });
 
             // Update page title
             const titles = {
@@ -2542,7 +2581,8 @@
                 'analyse': 'Analyse fiscale',
                 'espace-client': 'Espace client'
             };
-            document.getElementById('pageTitle').textContent = titles[view] || 'Dashboard';
+            const titleEl = document.getElementById('pageTitle');
+            if (titleEl) titleEl.textContent = titles[view] || 'Dashboard';
 
             // Hide all views
             document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
@@ -2563,9 +2603,50 @@
 
             const viewId = viewMap[view];
             if (viewId) {
-                document.getElementById(viewId).classList.remove('hidden');
+                const viewEl = document.getElementById(viewId);
+                if (viewEl) {
+                    viewEl.classList.remove('hidden');
+                    console.log('Switched to view:', viewId);
+                } else {
+                    console.error('View element not found:', viewId);
+                }
             }
         }
+        
+        console.log('switchView function defined:', typeof switchView);
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            initChart();
+            loadNotifications();
+            
+            // Check auth token
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Load user data
+            const userData = localStorage.getItem('currentUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                currentUser = user;
+                
+                if (user.company_name) {
+                    document.getElementById('userCompany').textContent = user.company_name;
+                }
+                if (user.contact_name) {
+                    document.getElementById('userName').textContent = user.contact_name;
+                } else if (user.name) {
+                    document.getElementById('userName').textContent = user.name;
+                }
+            }
+            
+            checkAccessLevel();
+        });
+
 
         // Initialize chart
         function initChart() {
@@ -3116,22 +3197,9 @@
         function showCreateInvoiceModal() {
             document.getElementById('createInvoiceModal').classList.add('active');
             
-            // Get company data from localStorage (from registration)
-            const companyData = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            
-            // Auto-fill company information
-            document.getElementById('displayCompanyName').textContent = companyData.company_name || 'Nom de l\'entreprise';
-            document.getElementById('displayCompanyAddress').textContent = companyData.address || 'Adresse';
-            document.getElementById('displayCompanyCity').textContent = `${companyData.city || 'Ville'} ${companyData.postal_code || 'Code Postal'}`;
-            document.getElementById('displayCompanyPhone').textContent = companyData.phone || 'Numéro de téléphone';
-            document.getElementById('displayCompanyEmail').textContent = companyData.email || 'Email';
-            document.getElementById('displayCompanySiret').textContent = `N° Siret : ${companyData.siret || '...'}`;
-            document.getElementById('displayCompanyFooter').textContent = `${companyData.company_name || 'Mon entreprise'} – ${companyData.legal_structure || 'Société'} au capital de ${companyData.capital || '...'} euros`;
-            
             // Set today's date
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('fr-FR');
-            document.getElementById('displayInvoiceDate').textContent = dateStr;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('invoiceDate').value = today;
             
             // Set due date (30 days from now)
             const dueDate = new Date();
@@ -3139,168 +3207,13 @@
             document.getElementById('invoiceDueDate').value = dueDate.toISOString().split('T')[0];
             
             // Auto-increment invoice number
-            const lastNumber = parseInt(localStorage.getItem('lastInvoiceNumber') || '0');
-            const newNumber = lastNumber + 1;
-            document.getElementById('displayInvoiceNumber').textContent = `F-2025-${String(newNumber).padStart(3, '0')}`;
-            
-            // Reset client fields
-            document.getElementById('clientName').value = '';
-            document.getElementById('clientAddress').value = '';
-            document.getElementById('clientPhone').value = '';
-            document.getElementById('clientEmail').value = '';
-            
-            // Reset invoice lines
-            const lines = document.querySelectorAll('#invoiceLinesTable .line-description');
-            lines.forEach(line => {
-                line.value = '';
-                const row = line.closest('tr');
-                row.querySelector('.line-price').value = '';
-                row.querySelector('.line-quantity').value = '';
-                row.querySelector('.line-total').textContent = '... €';
-            });
-            
-            // Reset totals
-            document.getElementById('invoiceTotalHT').textContent = '... €';
-            document.getElementById('invoiceTotalTVA').textContent = '... €';
-            document.getElementById('invoiceTotalTTC').textContent = '... €';
+            const lastNumber = localStorage.getItem('lastInvoiceNumber') || 0;
+            const newNumber = parseInt(lastNumber) + 1;
+            document.getElementById('invoiceNumber').value = `F-2025-${String(newNumber).padStart(3, '0')}`;
         }
 
         function hideCreateInvoiceModal() {
             document.getElementById('createInvoiceModal').classList.remove('active');
-        }
-
-        // Calculate invoice totals
-        function calculateInvoiceTotals() {
-            let totalHT = 0;
-            
-            // Calculate each line
-            const rows = document.querySelectorAll('#invoiceLinesTable tr');
-            rows.forEach(row => {
-                const priceInput = row.querySelector('.line-price');
-                const quantityInput = row.querySelector('.line-quantity');
-                const totalSpan = row.querySelector('.line-total');
-                
-                if (priceInput && quantityInput && totalSpan) {
-                    const price = parseFloat(priceInput.value) || 0;
-                    const quantity = parseFloat(quantityInput.value) || 0;
-                    const lineTotal = price * quantity;
-                    
-                    totalSpan.textContent = lineTotal > 0 ? `${lineTotal.toFixed(2)} €` : '... €';
-                    totalHT += lineTotal;
-                }
-            });
-            
-            // Calculate TVA
-            const tvaRate = parseFloat(document.getElementById('tvaRate').value) || 0;
-            const totalTVA = (totalHT * tvaRate) / 100;
-            const totalTTC = totalHT + totalTVA;
-            
-            // Update display
-            document.getElementById('invoiceTotalHT').textContent = totalHT > 0 ? `${totalHT.toFixed(2)} €` : '... €';
-            document.getElementById('invoiceTotalTVA').textContent = totalTVA > 0 ? `${totalTVA.toFixed(2)} €` : '... €';
-            document.getElementById('invoiceTotalTTC').textContent = totalTTC > 0 ? `${totalTTC.toFixed(2)} €` : '... €';
-        }
-
-        // Add new invoice line to table
-        function addInvoiceLineToTable() {
-            const tbody = document.getElementById('invoiceLinesTable');
-            const newRow = tbody.insertRow();
-            newRow.innerHTML = `
-                <td style="padding: 0.75rem; border: 1px solid var(--border);">
-                    <input type="text" class="form-input line-description" placeholder="Détailler prestation ici" style="border: none; background: transparent;">
-                </td>
-                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                    <input type="number" class="form-input line-price" placeholder="0" step="0.01" style="border: none; background: transparent; text-align: center; width: 80px;" oninput="calculateInvoiceTotals()">
-                    <span> €</span>
-                </td>
-                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                    <select class="form-select line-unit" style="border: none; background: transparent; text-align: center;">
-                        <option>heures</option>
-                        <option>jours</option>
-                        <option>unité</option>
-                        <option>forfait</option>
-                    </select>
-                </td>
-                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: center;">
-                    <input type="number" class="form-input line-quantity" placeholder="0" step="0.01" style="border: none; background: transparent; text-align: center; width: 60px;" oninput="calculateInvoiceTotals()">
-                </td>
-                <td style="padding: 0.75rem; border: 1px solid var(--border); text-align: right;">
-                    <span class="line-total">... €</span>
-                </td>
-            `;
-        }
-
-        // Generate invoice PDF
-        function generateInvoicePDF() {
-            // Validate client info
-            const clientName = document.getElementById('clientName').value.trim();
-            if (!clientName) {
-                alert('❌ Veuillez renseigner le nom du client');
-                return;
-            }
-            
-            // Check if at least one line is filled
-            const lines = document.querySelectorAll('#invoiceLinesTable .line-description');
-            let hasLine = false;
-            lines.forEach(line => {
-                if (line.value.trim()) hasLine = true;
-            });
-            
-            if (!hasLine) {
-                alert('❌ Veuillez ajouter au moins une prestation');
-                return;
-            }
-            
-            // Save invoice number
-            const invoiceNumber = document.getElementById('displayInvoiceNumber').textContent;
-            const numMatch = invoiceNumber.match(/(\d+)$/);
-            if (numMatch) {
-                localStorage.setItem('lastInvoiceNumber', numMatch[1]);
-            }
-            
-            // In a real application, this would generate a PDF
-            // For now, we'll use browser print
-            const printWindow = window.open('', '_blank');
-            const invoiceContent = document.getElementById('invoicePreview').cloneNode(true);
-            
-            // Remove input borders for printing
-            const inputs = invoiceContent.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => {
-                const span = document.createElement('span');
-                span.textContent = input.value || input.textContent || '...';
-                span.style.fontWeight = input.classList.contains('line-description') ? 'normal' : '600';
-                input.parentNode.replaceChild(span, input);
-            });
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Facture ${invoiceNumber}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 2rem; }
-                        @media print {
-                            body { margin: 0; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${invoiceContent.outerHTML}
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                            setTimeout(function() { window.close(); }, 100);
-                        };
-                    </script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            
-            alert(`✅ Facture ${invoiceNumber} générée !\n\nLa fenêtre d'impression va s'ouvrir.`);
-            
-            // Close modal
-            hideCreateInvoiceModal();
         }
 
         function addInvoiceLine() {
@@ -3422,10 +3335,9 @@
         }
 
         document.getElementById('createInvoiceForm').addEventListener('submit', generateInvoice);
-
+    
         // ==================== CLOCK-IN FUNCTIONS ====================
         
-        // Update live clock every second
         function updateLiveClock() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -3440,17 +3352,51 @@
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
         
-        // Clock in/out function
+        // Load employee settings and populate selector
+        function loadEmployeeSettings() {
+            const employees = JSON.parse(localStorage.getItem('numma_employees') || '[]');
+            const select = document.getElementById('clockEmployeeSelect');
+            const filterSelect = document.getElementById('employeeFilter');
+            
+            if (select) {
+                select.innerHTML = '<option value="">-- Choisir un employé --</option>';
+                employees.forEach(emp => {
+                    select.innerHTML += `<option value="${emp.name}">${emp.name} - ${emp.position || 'Employé'}</option>`;
+                });
+            }
+            
+            if (filterSelect) {
+                const currentOptions = filterSelect.innerHTML;
+                if (currentOptions.includes('Tous les employés')) {
+                    filterSelect.innerHTML = '<option value="">Tous les employés</option>';
+                    employees.forEach(emp => {
+                        filterSelect.innerHTML += `<option value="${emp.name}">${emp.name}</option>`;
+                    });
+                }
+            }
+            
+            return employees;
+        }
+        
         function clockIn() {
             const now = new Date();
-            const employeeName = document.getElementById('userName').textContent || 'Employé';
+            const select = document.getElementById('clockEmployeeSelect');
+            const employeeName = select?.value;
+            
+            if (!employeeName) {
+                alert('❌ Veuillez sélectionner un employé');
+                return;
+            }
+            
             const time = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
             const date = now.toLocaleDateString('fr-FR');
+            const dayOfWeek = now.getDay();
             
-            // Get existing clock data
+            // Get employee settings
+            const employees = JSON.parse(localStorage.getItem('numma_employees') || '[]');
+            const employee = employees.find(e => e.name === employeeName);
+            
             let clockData = JSON.parse(localStorage.getItem('numma_clock_data') || '[]');
-            
-            // Check if already clocked in today
             const todayClocks = clockData.filter(c => c.date === date && c.employee === employeeName);
             const lastClock = todayClocks[todayClocks.length - 1];
             
@@ -3463,7 +3409,6 @@
                 lastClock.departTime = time;
                 lastClock.type = 'complete';
                 
-                // Calculate duration
                 const arrivalParts = lastClock.time.split(':');
                 const departParts = time.split(':');
                 const arrivalMinutes = parseInt(arrivalParts[0]) * 60 + parseInt(arrivalParts[1]);
@@ -3474,12 +3419,15 @@
                 lastClock.duration = `${hours}h${minutes.toString().padStart(2, '0')}`;
                 
                 localStorage.setItem('numma_clock_data', JSON.stringify(clockData));
-                message = `✅ Départ enregistré !\n\n${employeeName}\n${date} à ${time}\nDurée: ${lastClock.duration}`;
-                
-                // Update table
+                message = `✅ Départ enregistré!\n\n${employeeName}\n${date} à ${time}\nDurée: ${lastClock.duration}`;
                 updateClockHistoryTable();
             } else {
-                // Clock in
+                // Check if employee is supposed to work today
+                if (employee && employee.workDays && !employee.workDays.includes(dayOfWeek)) {
+                    const confirm = window.confirm(`⚠️ ${employeeName} n'est pas prévu(e) de travailler aujourd'hui.\n\nEnregistrer quand même le pointage ?`);
+                    if (!confirm) return;
+                }
+                
                 const newClock = {
                     employee: employeeName,
                     date: date,
@@ -3488,90 +3436,189 @@
                     duration: 'En cours',
                     type: 'in',
                     timestamp: now.getTime(),
-                    status: getArrivalStatus(time)
+                    expectedStart: employee?.startTime || '09:00',
+                    expectedEnd: employee?.endTime || '18:00',
+                    status: getArrivalStatus(time, employee)
                 };
                 
                 clockData.push(newClock);
                 localStorage.setItem('numma_clock_data', JSON.stringify(clockData));
-                message = `✅ Arrivée enregistrée !\n\n${employeeName}\n${date} à ${time}`;
-                
-                // Update table
+                message = `✅ Arrivée enregistrée!\n\n${employeeName}\n${date} à ${time}`;
                 updateClockHistoryTable();
             }
             
-            // Update status
             const statusEl = document.getElementById('clockStatus');
             if (statusEl) {
-                if (type === 'in') {
-                    statusEl.textContent = `✅ Pointé arrivée à ${time}`;
-                } else {
-                    statusEl.textContent = `✅ Pointé départ à ${time}`;
-                }
+                statusEl.textContent = type === 'in' ? `✅ Pointé arrivée à ${time}` : `✅ Pointé départ à ${time}`;
             }
             
-            // Update stats
             updateClockStats();
-            
             alert(message);
         }
         
-        // Determine arrival status
-        function getArrivalStatus(time) {
+        function getArrivalStatus(time, employee) {
             const parts = time.split(':');
             const minutes = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-            const nineAM = 9 * 60;
             
-            if (minutes <= nineAM) {
-                return 'À l\'heure';
+            // Get expected time
+            let expectedStart = '09:00';
+            if (employee && employee.startTime) {
+                expectedStart = employee.startTime;
+            }
+            
+            const expectedParts = expectedStart.split(':');
+            const expectedMinutes = parseInt(expectedParts[0]) * 60 + parseInt(expectedParts[1]);
+            
+            // Check tolerance
+            const tolerance = employee?.lateTolerance || 10;
+            const diff = minutes - expectedMinutes;
+            
+            if (diff <= tolerance) {
+                return "À l'heure";
             } else {
                 return 'Retard';
             }
         }
         
-        // Update clock statistics
+        // ==================== EMPLOYEE SETTINGS FUNCTIONS ====================
+        
+        function openEmployeeSettingsModal() {
+            document.getElementById('employeeSettingsModal').classList.add('active');
+            loadEmployeeSettingsList();
+        }
+        
+        function closeEmployeeSettingsModal() {
+            document.getElementById('employeeSettingsModal').classList.remove('active');
+            hideAddEmployeeForm();
+        }
+        
+        function showAddEmployeeForm() {
+            document.getElementById('addEmployeeForm').style.display = 'block';
+        }
+        
+        function hideAddEmployeeForm() {
+            document.getElementById('addEmployeeForm').style.display = 'none';
+            document.querySelector('#addEmployeeForm form').reset();
+        }
+        
+        function saveEmployeeSettings(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('empName').value;
+            const position = document.getElementById('empPosition').value;
+            const startTime = document.getElementById('empStartTime').value;
+            const endTime = document.getElementById('empEndTime').value;
+            const lateTolerance = parseInt(document.getElementById('empLateTolerance').value);
+            
+            // Get selected work days
+            const workDays = [];
+            document.querySelectorAll('.empWorkDays:checked').forEach(cb => {
+                workDays.push(parseInt(cb.value));
+            });
+            
+            const employee = {
+                name,
+                position,
+                startTime,
+                endTime,
+                lateTolerance,
+                workDays,
+                id: Date.now()
+            };
+            
+            // Save to localStorage
+            let employees = JSON.parse(localStorage.getItem('numma_employees') || '[]');
+            employees.push(employee);
+            localStorage.setItem('numma_employees', JSON.stringify(employees));
+            
+            alert(`✅ Employé ${name} ajouté avec succès !`);
+            hideAddEmployeeForm();
+            loadEmployeeSettingsList();
+            loadEmployeeSettings();
+        }
+        
+        function loadEmployeeSettingsList() {
+            const employees = JSON.parse(localStorage.getItem('numma_employees') || '[]');
+            const tbody = document.getElementById('employeeSettingsList');
+            
+            if (employees.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-gray);">Aucun employé configuré</td></tr>';
+                return;
+            }
+            
+            const daysMap = {0: 'Dim', 1: 'Lun', 2: 'Mar', 3: 'Mer', 4: 'Jeu', 5: 'Ven', 6: 'Sam'};
+            
+            tbody.innerHTML = employees.map(emp => {
+                const workDaysStr = emp.workDays.map(d => daysMap[d]).join(', ');
+                return `
+                    <tr>
+                        <td><strong>${emp.name}</strong></td>
+                        <td>${emp.position || '-'}</td>
+                        <td>${emp.startTime} - ${emp.endTime}</td>
+                        <td>${workDaysStr}</td>
+                        <td>
+                            <button class="btn btn-outline" onclick="deleteEmployee(${emp.id})" style="padding: 0.5rem 1rem; background: var(--danger); color: white; border: none;">
+                                🗑️ Supprimer
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function deleteEmployee(id) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')) return;
+            
+            let employees = JSON.parse(localStorage.getItem('numma_employees') || '[]');
+            employees = employees.filter(e => e.id !== id);
+            localStorage.setItem('numma_employees', JSON.stringify(employees));
+            
+            loadEmployeeSettingsList();
+            loadEmployeeSettings();
+            alert('✅ Employé supprimé');
+        }
+        
+        // Initialize employee selector on page load
+        setTimeout(() => {
+            loadEmployeeSettings();
+        }, 500);
+        
         function updateClockStats() {
             const today = new Date().toLocaleDateString('fr-FR');
+            const dayOfWeek = new Date().getDay();
             const clockData = JSON.parse(localStorage.getItem('numma_clock_data') || '[]');
             const todayClocks = clockData.filter(c => c.date === today && c.type === 'in');
+            const employees = JSON.parse(localStorage.getItem('numma_employees') || '[]');
             
-            // Count unique employees present
+            // Count present
             const presentEmployees = new Set(todayClocks.map(c => c.employee));
             document.getElementById('presentCount').textContent = presentEmployees.size;
             
-            // Count late arrivals
+            // Count late
             const lateCount = todayClocks.filter(c => c.status === 'Retard').length;
             document.getElementById('lateCount').textContent = lateCount;
             
-            // Absent count (example: total 10 employees)
-            const totalEmployees = 10;
-            document.getElementById('absentCount').textContent = Math.max(0, totalEmployees - presentEmployees.size);
-            
-            // Calculate total hours
-            const completedClocks = clockData.filter(c => c.date === today && c.duration && c.duration !== 'En cours');
-            let totalMinutes = 0;
-            completedClocks.forEach(c => {
-                const parts = c.duration.match(/(\d+)h(\d+)/);
-                if (parts) {
-                    totalMinutes += parseInt(parts[1]) * 60 + parseInt(parts[2]);
-                }
-            });
-            const totalHours = Math.floor(totalMinutes / 60);
-            const totalMins = totalMinutes % 60;
-            document.getElementById('totalHours').textContent = `${totalHours}h${totalMins.toString().padStart(2, '0')}`;
+            // Count absent (employees who should work today but haven't clocked in)
+            const expectedToday = employees.filter(emp => 
+                emp.workDays && emp.workDays.includes(dayOfWeek)
+            );
+            const absentCount = expectedToday.length - presentEmployees.size;
+            document.getElementById('absentCount').textContent = Math.max(0, absentCount);
         }
         
-        // Update clock history table
         function updateClockHistoryTable() {
             const clockData = JSON.parse(localStorage.getItem('numma_clock_data') || '[]');
             const table = document.getElementById('clockHistoryTable');
             if (!table) return;
             
-            // Sort by timestamp (newest first)
             clockData.sort((a, b) => b.timestamp - a.timestamp);
-            
             table.innerHTML = '';
             
             clockData.forEach(clock => {
+                const expectedSchedule = clock.expectedStart && clock.expectedEnd 
+                    ? `${clock.expectedStart} - ${clock.expectedEnd}`
+                    : '09:00 - 18:00';
+                    
                 const row = table.insertRow();
                 row.innerHTML = `
                     <td>${clock.employee}</td>
@@ -3579,11 +3626,11 @@
                     <td>${clock.time}</td>
                     <td>${clock.departTime || '--:--'}</td>
                     <td>${clock.duration || 'En cours'}</td>
-                    <td><span class="badge ${clock.status === 'À l\'heure' ? 'badge-success' : 'badge-warning'}">${clock.status || 'Présent'}</span></td>
+                    <td style="font-size: 0.875rem; color: var(--text-gray);">${expectedSchedule}</td>
+                    <td><span class="badge ${clock.status === "À l'heure" ? 'badge-success' : 'badge-warning'}">${clock.status || 'Présent'}</span></td>
                 `;
             });
             
-            // Update employee filter
             const employeeFilter = document.getElementById('employeeFilter');
             if (employeeFilter) {
                 const employees = [...new Set(clockData.map(c => c.employee))];
@@ -3594,7 +3641,11 @@
             }
         }
         
-        // Filter clocks
+                    employeeFilter.innerHTML += `<option value="${emp}">${emp}</option>`;
+                });
+            }
+        }
+        
         function filterClocks() {
             const dateFilter = document.getElementById('dateFilter')?.value;
             const employeeFilter = document.getElementById('employeeFilter')?.value;
@@ -3623,7 +3674,6 @@
             }
         }
         
-        // Export pointage data to CSV
         function exportPointage() {
             const clockData = JSON.parse(localStorage.getItem('numma_clock_data') || '[]');
             
@@ -3632,13 +3682,11 @@
                 return;
             }
             
-            // Create CSV content
             let csv = 'Employé,Date,Arrivée,Départ,Durée,Statut\n';
             clockData.forEach(entry => {
                 csv += `"${entry.employee}","${entry.date}","${entry.time}","${entry.departTime || '--:--'}","${entry.duration || 'En cours'}","${entry.status || 'Présent'}"\n`;
             });
             
-            // Create download link
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
@@ -3649,15 +3697,14 @@
             link.click();
             document.body.removeChild(link);
             
-            alert('📊 Export réussi !\n\nLe fichier CSV a été téléchargé.');
+            alert('📊 Export réussi!\n\nLe fichier CSV a été téléchargé.');
         }
         
-        // Initialize clock history when switching to pointage view
         setTimeout(() => {
             updateClockHistoryTable();
             updateClockStats();
         }, 500);
-        
+
     </script>
 </body>
 </html>
