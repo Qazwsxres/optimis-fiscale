@@ -315,7 +315,7 @@
     <div class="login-container">
         <div class="login-header">
             <div class="logo">
-                <div class="logo-icon">S</div>
+                <div class="logo-icon">N</div>
                 <div class="logo-text">NUMMA</div>
             </div>
             <div class="header-subtitle">Gestion financière et fiscale simplifiée</div>
@@ -350,7 +350,7 @@
                             <input type="checkbox" id="rememberMe">
                             <span>Se souvenir de moi</span>
                         </label>
-                        <a href="#" style="color: var(--primary); font-size: 0.875rem; text-decoration: none;" onclick="alert('Contactez support@numma.fr'); return false;">Mot de passe oublié ?</a>
+                        <a href="#" style="color: var(--primary); font-size: 0.875rem; text-decoration: none;" onclick="alert('Contactez support@summa.fr'); return false;">Mot de passe oublié ?</a>
                     </div>
 
                     <button type="submit" class="btn btn-primary">
@@ -564,20 +564,18 @@
         </div>
 
         <div class="login-footer">
-            <p>Besoin d'aide ? Contactez-nous à <strong><a href="mailto:contact@numma.fr">contact@numma.fr</a></strong> ou au <strong>01 23 45 67 89</strong></p>
+            <p>Besoin d'aide ? Contactez-nous à <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e2919792928d9096a291978f8f83cc8490">[email&#160;protected]</a></strong> ou au <strong>01 23 45 67 89</strong></p>
             <p style="margin-top: 0.5rem; font-size: 0.8rem;">© 2024 NUMMA. Tous droits réservés.</p>
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         const API_BASE = 'https://optimis-fiscale-production.up.railway.app';
 
         // Switch between login and register tabs
         function switchTab(tab) {
             // Update buttons
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            
-            // Find and activate the correct button
             const buttons = document.querySelectorAll('.tab-button');
             buttons.forEach(btn => {
                 if ((tab === 'login' && btn.textContent.includes('Connexion')) ||
@@ -610,9 +608,9 @@
             
             console.log('Login attempt:', companyId);
 
-            // Demo mode - if credentials are "demo" / "demo123", login without API
+            // Demo mode
             if (companyId.toLowerCase() === 'demo' && password === 'demo123') {
-                console.log('✅ Demo mode login');
+                console.log('✅ Demo login successful');
                 
                 localStorage.setItem('authToken', 'demo-token');
                 localStorage.setItem('currentUser', JSON.stringify({
@@ -632,12 +630,12 @@
                     localStorage.setItem('rememberMe', companyId);
                 }
                 
+                alert('✅ Connexion réussie! Redirection...');
                 window.location.href = 'index.html';
                 return;
             }
 
-            // Regular API login
-            try {
+            try{
                 const response = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -659,7 +657,6 @@
                 localStorage.setItem('authToken', token);
                 localStorage.setItem('currentUser', JSON.stringify({
                     company_id: companyId,
-                    company_name: data.company_name || 'Entreprise',
                     accessLevel: data.access_level || 'admin'
                 }));
 
@@ -675,7 +672,7 @@
                 
             } catch (error) {
                 console.error('Login error:', error);
-                alert('Erreur de connexion. Vérifiez vos identifiants.\n\nErreur: ' + error.message);
+                alert('Erreur de connexion. Vérifiez vos identifiants.\n\n' + error.message);
             }
         }
 
@@ -757,18 +754,6 @@
                 localStorage.setItem('currentUser', JSON.stringify({
                     company_id: formData.username,
                     company_name: formData.company_name,
-                    siret: formData.siret,
-                    legal_structure: formData.company_type,
-                    address: formData.address,
-                    city: formData.city,
-                    postal_code: formData.postal_code,
-                    phone: formData.phone,
-                    email: formData.email,
-                    capital: '10000',
-                    contact_name: formData.contact_name,
-                    iban: formData.iban,
-                    bic: formData.bic,
-                    bank_name: formData.bank_name,
                     accessLevel: 'admin'
                 }));
                 
