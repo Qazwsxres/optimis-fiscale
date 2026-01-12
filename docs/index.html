@@ -2617,22 +2617,34 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== NUMMA DASHBOARD LOADING ===');
+            console.log('Current URL:', window.location.href);
+            
             updateCurrentDate();
             initChart();
             loadNotifications();
             
             // Check auth token
             const token = localStorage.getItem('authToken');
+            console.log('Auth token:', token);
+            
             if (!token) {
+                console.log('❌ No token found, redirecting to login');
                 window.location.href = 'login.html';
                 return;
             }
             
+            console.log('✅ Token found:', token);
+            
             // Load user data
             const userData = localStorage.getItem('currentUser');
+            console.log('User data:', userData);
+            
             if (userData) {
                 const user = JSON.parse(userData);
                 currentUser = user;
+                
+                console.log('✅ User loaded:', user.company_name);
                 
                 if (user.company_name) {
                     document.getElementById('userCompany').textContent = user.company_name;
@@ -2642,9 +2654,12 @@
                 } else if (user.name) {
                     document.getElementById('userName').textContent = user.name;
                 }
+            } else {
+                console.log('⚠️ No user data found');
             }
             
             checkAccessLevel();
+            console.log('=== DASHBOARD LOADED ===');
         });
 
 
