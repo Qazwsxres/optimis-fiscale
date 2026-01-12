@@ -564,12 +564,12 @@
         </div>
 
         <div class="login-footer">
-            <p>Besoin d'aide ? Contactez-nous à <strong><a href="mailto:contact@numma.fr">contact@numma.fr</a></strong> ou au <strong>01 23 45 67 89</strong></p>
+            <p>Besoin d'aide ? Contactez-nous à <strong><a href="/cdn-cgi/l/email-protection#a9cac6c7ddc8cadde9c7dcc4c4c887cfdb"><span class="__cf_email__" data-cfemail="27444849534644536749524a4a46094155">[email&#160;protected]</span></a></strong> ou au <strong>01 23 45 67 89</strong></p>
             <p style="margin-top: 0.5rem; font-size: 0.8rem;">© 2024 NUMMA. Tous droits réservés.</p>
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         console.log('=== NUMMA Login Page Loaded ===');
         console.log('Script is running...');
         
@@ -602,24 +602,25 @@
 
         // Handle login
         async function handleLogin(e) {
+            console.log('=== HANDLE LOGIN CALLED ===');
             e.preventDefault();
             
             const companyId = document.getElementById('loginCompanyId').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
             
+            console.log('Company ID:', companyId);
+            console.log('Password:', password ? '***' + password.slice(-3) : 'empty');
+            
             if (!companyId || !password) {
-                alert('Veuillez remplir tous les champs');
+                alert('❌ Veuillez remplir tous les champs');
                 return;
             }
-            
-            console.log('Login attempt:', companyId);
 
-            // Demo mode
+            // Demo mode ONLY - no API calls
             if (companyId.toLowerCase() === 'demo' && password === 'demo123') {
-                console.log('✅ Demo login successful');
+                console.log('✅ DEMO CREDENTIALS MATCHED');
                 
-                localStorage.setItem('authToken', 'demo-token');
-                localStorage.setItem('currentUser', JSON.stringify({
+                const userData = {
                     company_id: 'demo',
                     company_name: 'Entreprise Demo',
                     contact_name: 'Utilisateur Demo',
@@ -630,56 +631,53 @@
                     phone: '+33 1 23 45 67 89',
                     email: 'demo@numma.fr',
                     accessLevel: 'admin'
-                }));
+                };
                 
-                if (document.getElementById('rememberMe').checked) {
-                    localStorage.setItem('rememberMe', companyId);
+                try {
+                    localStorage.setItem('authToken', 'demo-token');
+                    localStorage.setItem('currentUser', JSON.stringify(userData));
+                    
+                    console.log('✅ Data saved to localStorage');
+                    console.log('Token:', localStorage.getItem('authToken'));
+                    console.log('User:', localStorage.getItem('currentUser'));
+                    
+                    if (document.getElementById('rememberMe')?.checked) {
+                        localStorage.setItem('rememberMe', companyId);
+                    }
+                    
+                    console.log('✅ About to redirect to index.html');
+                    console.log('Current location:', window.location.href);
+                    
+                    // Show success message
+                    alert('✅ Connexion réussie!\n\nIdentifiant: demo\nRedirection vers le dashboard...');
+                    
+                    // Redirect - try multiple methods
+                    console.log('Method 1: Direct assignment');
+                    window.location.href = 'index.html';
+                    
+                    // Fallback
+                    setTimeout(() => {
+                        console.log('Method 2: Using assign');
+                        window.location.assign('index.html');
+                    }, 1000);
+                    
+                    // Last resort
+                    setTimeout(() => {
+                        console.log('Method 3: Using replace');
+                        window.location.replace('index.html');
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('❌ Error during login:', error);
+                    alert('❌ Erreur: ' + error.message);
                 }
                 
-                alert('✅ Connexion réussie! Redirection...');
-                window.location.href = 'index.html';
                 return;
             }
-
-            try{
-                const response = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ 
-                        company_id: companyId, 
-                        password: password 
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Identifiants incorrects');
-                }
-
-                const data = await response.json();
-                const token = data.token || data.access_token || 'logged-in';
-                
-                // Store authentication
-                localStorage.setItem('authToken', token);
-                localStorage.setItem('currentUser', JSON.stringify({
-                    company_id: companyId,
-                    accessLevel: data.access_level || 'admin'
-                }));
-
-                // Remember me
-                if (document.getElementById('rememberMe').checked) {
-                    localStorage.setItem('rememberMe', companyId);
-                }
-
-                console.log('✅ Login successful');
-                
-                // Redirect to dashboard
-                window.location.href = 'index.html';
-                
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Erreur de connexion. Vérifiez vos identifiants.\n\n' + error.message);
-            }
+            
+            // Wrong credentials
+            console.log('❌ Invalid credentials');
+            alert('❌ Identifiants incorrects\n\nPour la démo:\nIdentifiant: demo\nMot de passe: demo123');
         }
         
         console.log('✅ handleLogin function defined:', typeof handleLogin);
@@ -792,11 +790,3 @@
             if (strength <= 2) {
                 strengthBar.classList.add('weak');
             } else if (strength <= 4) {
-                strengthBar.classList.add('medium');
-            } else {
-                strengthBar.classList.add('strong');
-            }
-        }
-
-        // Auto-fill remembered username
-        window.addEventListener('load', function() {
