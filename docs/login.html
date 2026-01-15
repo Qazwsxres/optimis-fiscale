@@ -677,24 +677,25 @@
         
         console.log('✅ handleLogin function defined:', typeof handleLogin);
         
-        // Attach event listener to form
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                console.log('✅ Attaching handleLogin to form');
-                loginForm.addEventListener('submit', handleLogin);
-            } else {
-                console.error('❌ Login form not found');
-            }
-            
-            const registerForm = document.getElementById('registerForm');
-            if (registerForm) {
-                console.log('✅ Attaching handleRegister to form');
-                registerForm.addEventListener('submit', handleRegister);
-            } else {
-                console.log('⚠️ Register form not found (normal if on login tab)');
-            }
-        });
+        // Attach event listener immediately (script is at end of body, DOM is ready)
+        console.log('🔗 Attaching event listeners...');
+        
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        if (loginForm) {
+            console.log('✅ Login form found, attaching handleLogin');
+            loginForm.addEventListener('submit', handleLogin);
+        } else {
+            console.error('❌ Login form NOT found');
+        }
+        
+        if (registerForm) {
+            console.log('✅ Register form found, attaching handleRegister');
+            registerForm.addEventListener('submit', handleRegister);
+        } else {
+            console.log('⚠️ Register form not found (normal if on login tab)');
+        }
 
         // Handle registration
         async function handleRegister(e) {
@@ -793,8 +794,4 @@
             
             let strength = 0;
             
-            if (password.length >= 8) strength++;
-            if (password.match(/[a-z]/)) strength++;
-            if (password.match(/[A-Z]/)) strength++;
-            if (password.match(/[0-9]/)) strength++;
-            if (password.match(/[^a-zA-Z0-9]/))
+            if (pas
