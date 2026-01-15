@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUMMA - Gestion FEC</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .actions {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .form-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        label.required::after {
+            content: ' *';
+            color: #ef4444;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .entries-table {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .validated {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .not-validated {
+            color: #f59e0b;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border-left: 4px solid #2563eb;
+            color: #1e40af;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Gestion FEC (Fichier des Écritures Comptables)</h1>
+            <p class="subtitle">Conforme à l'Article A47 A-1 du Livre des Procédures Fiscales</p>
+        </header>
+
+        <div class="alert alert-info">
+            <strong>ℹ️ Information Importante</strong><br>
+            Ce module génère des fichiers FEC conformes à la réglementation fiscale française.<br>
+            • Encodage: <strong>ISO 8859-1</strong><br>
+            • Séparateur: <strong>Pipe (|)</strong><br>
+            • Intangibilité: Les écritures validées (ValidDate renseignée) ne peuvent plus être modifiées.<br>
+            • 18 champs obligatoires dans l'ordre réglementaire
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total écritures</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Écritures validées</div>
+                <div class="stat-value validated" id="statValidated">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Débit</div>
+                <div class="stat-value" id="statDebit">0.00 €</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Crédit</div>
+                <div class="stat-value" id="statCredit">0.00 €</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Balance</div>
+                <div class="stat-value" id="statBalance">✅ Équilibré</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <h3 style="margin-bottom: 15px;">Actions rapides</h3>
+            <button class="btn btn-success" onclick="downloadFEC()">📥 Exporter FEC (toutes écritures)</button>
+            <button class="btn btn-success" onclick="downloadFECValidated()">📥 Exporter FEC (validées uniquement)</button>
+            <button class="btn btn-primary" onclick="toggleForm()">➕ Nouvelle écriture</button>
+            <button class="btn btn-primary" onclick="loadSampleData()">🧪 Charger données de test</button>
+            <button class="btn btn-danger" onclick="clearAllEntries()">🗑️ Effacer toutes les écritures</button>
+        </div>
+
+        <div class="form-section" id="entryForm" style="display: none;">
+            <h3 style="margin-bottom: 15px;">Nouvelle écriture comptable</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required">Code Journal</label>
+                    <select id="journalCode">
+                        <option value="VE">VE - Ventes</option>
+                        <option value="AC">AC - Achats</option>
+                        <option value="BQ">BQ - Banque</option>
+                        <option value="CA">CA - Caisse</option>
+                        <option value="OD">OD - Opérations Diverses</option>
+                        <option value="AN">AN - À-Nouveaux</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="required">Libellé Journal</label>
+                    <input type="text" id="journalLib" placeholder="Ex: Journal des ventes">
+                </div>
+                <div class="form-group">
+                    <label class="required">Date comptabilisation</label>
+                    <input type="date" id="ecritureDate">
+                    <span class="help-text">Format: AAAAMMJJ</span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required">Numéro de compte (PCG)</label>
+                    <input type="text" id="compteNum" placeholder="Ex: 411000">
+                    <span class="help-text">Plan Comptable Général</span>
+                </div>
+                <div class="form-group">
+                    <label class="required">Libellé du compte</label>
+                    <input type="text" id="compteLib" placeholder="Ex: Clients">
+                </div>
+                <div class="form-group">
+                    <label>Compte auxiliaire</label>
+                    <input type="text" id="compAuxNum" placeholder="Ex: CLI001">
+                    <span class="help-text">Client ou fournisseur (optionnel)</span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Libellé auxiliaire</label>
+                    <input type="text" id="compAuxLib" placeholder="Ex: Entreprise ABC">
+                </div>
+                <div class="form-group">
+                    <label class="required">Référence pièce</label>
+                    <input type="text" id="pieceRef" placeholder="Ex: FA2024001">
+                    <span class="help-text">Numéro facture ou document</span>
+                </div>
+                <div class="form-group">
+                    <label class="required">Date de la pièce</label>
+                    <input type="date" id="pieceDate">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required">Libellé de l'écriture</label>
+                    <input type="text" id="ecritureLib" placeholder="Ex: Facture client ABC">
+                </div>
+                <div class="form-group">
+                    <label>Débit (€)</label>
+                    <input type="number" id="debit" placeholder="0.00" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Crédit (€)</label>
+                    <input type="number" id="credit" placeholder="0.00" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Lettrage</label>
+                    <input type="text" id="ecritureLet" placeholder="Ex: A">
+                    <span class="help-text">Code de lettrage (optionnel)</span>
+                </div>
+                <div class="form-group">
+                    <label>Date de lettrage</label>
+                    <input type="date" id="dateLet">
+                </div>
+                <div class="form-group">
+                    <label>Date de validation définitive</label>
+                    <input type="date" id="validDate">
+                    <span class="help-text">⚠️ Une fois validée, l'écriture ne peut plus être modifiée!</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-success" onclick="saveEntry()">💾 Enregistrer l'écriture</button>
+                <button class="btn btn-danger" onclick="toggleForm()">❌ Annuler</button>
+            </div>
+        </div>
+
+        <div class="entries-table">
+            <h3 style="margin-bottom: 15px;">Liste des écritures comptables</h3>
+            <table id="entriesTable">
+                <thead>
+                    <tr>
+                        <th>N° Écriture</th>
+                        <th>Date</th>
+                        <th>Journal</th>
+                        <th>Compte</th>
+                        <th>Libellé</th>
+                        <th>Débit</th>
+                        <th>Crédit</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="entriesTableBody">
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: #999;">Aucune écriture</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="fec-module.js"></script>
+    <script>
+        const fecManager = new FECManager();
+
+        // Load and display stats
+        function refreshStats() {
+            const stats = fecManager.getStats();
+            document.getElementById('statTotal').textContent = stats.total;
+            document.getElementById('statValidated').textContent = stats.validated;
+            document.getElementById('statDebit').textContent = stats.totalDebit + ' €';
+            document.getElementById('statCredit').textContent = stats.totalCredit + ' €';
+            document.getElementById('statBalance').textContent = stats.balanced ? '✅ Équilibré' : '❌ Déséquilibré';
+            
+            if (!stats.balanced) {
+                document.getElementById('statBalance').style.color = '#ef4444';
+            }
+        }
+
+        // Load and display entries
+        function refreshEntries() {
+            const entries = fecManager.getEntries();
+            const tbody = document.getElementById('entriesTableBody');
+            
+            if (entries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #999;">Aucune écriture</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = entries.map(entry => `
+                <tr>
+                    <td>${entry.EcritureNum}</td>
+                    <td>${formatDate(entry.EcritureDate)}</td>
+                    <td>${entry.JournalCode}</td>
+                    <td>${entry.CompteNum}</td>
+                    <td>${entry.EcritureLib}</td>
+                    <td style="text-align: right;">${parseFloat(entry.Debit || 0).toFixed(2)} €</td>
+                    <td style="text-align: right;">${parseFloat(entry.Credit || 0).toFixed(2)} €</td>
+                    <td class="${entry.ValidDate ? 'validated' : 'not-validated'}">
+                        ${entry.ValidDate ? '✅ Validée' : '⏳ Brouillon'}
+                    </td>
+                    <td>
+                        ${!entry.ValidDate ? `<button class="btn btn-danger" style="padding: 6px 12px; margin: 0;" onclick="deleteEntry('${entry.EcritureNum}')">🗑️</button>` : '<span style="color: #999;">Intangible</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Format date YYYYMMDD to DD/MM/YYYY
+        function formatDate(dateStr) {
+            if (!dateStr || dateStr.length !== 8) return dateStr;
+            return `${dateStr.substr(6,2)}/${dateStr.substr(4,2)}/${dateStr.substr(0,4)}`;
+        }
+
+        // Toggle entry form
+        function toggleForm() {
+            const form = document.getElementById('entryForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            
+            if (form.style.display === 'block') {
+                // Set default dates to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('ecritureDate').value = today;
+                document.getElementById('pieceDate').value = today;
+            }
+        }
+
+        // Save new entry
+        function saveEntry() {
+            // Get form values
+            const entry = {
+                JournalCode: document.getElementById('journalCode').value,
+                JournalLib: document.getElementById('journalLib').value,
+                EcritureDate: document.getElementById('ecritureDate').value.replace(/-/g, ''),
+                CompteNum: document.getElementById('compteNum').value,
+                CompteLib: document.getElementById('compteLib').value,
+                CompAuxNum: document.getElementById('compAuxNum').value || '',
+                CompAuxLib: document.getElementById('compAuxLib').value || '',
+                PieceRef: document.getElementById('pieceRef').value,
+                PieceDate: document.getElementById('pieceDate').value.replace(/-/g, ''),
+                EcritureLib: document.getElementById('ecritureLib').value,
+                Debit: document.getElementById('debit').value || '0',
+                Credit: document.getElementById('credit').value || '0',
+                EcritureLet: document.getElementById('ecritureLet').value || '',
+                DateLet: document.getElementById('dateLet').value ? document.getElementById('dateLet').value.replace(/-/g, '') : '',
+                ValidDate: document.getElementById('validDate').value ? document.getElementById('validDate').value.replace(/-/g, '') : '',
+                Montantdevise: '',
+                Idevise: ''
+            };
+
+            const result = fecManager.addEntry(entry);
+            
+            if (result.success) {
+                alert('✅ Écriture enregistrée avec succès!\n\nNuméro: ' + result.entry.EcritureNum);
+                toggleForm();
+                refresh();
+                
+                // Reset form
+                document.getElementById('journalLib').value = '';
+                document.getElementById('compteNum').value = '';
+                document.getElementById('compteLib').value = '';
+                document.getElementById('compAuxNum').value = '';
+                document.getElementById('compAuxLib').value = '';
+                document.getElementById('pieceRef').value = '';
+                document.getElementById('ecritureLib').value = '';
+                document.getElementById('debit').value = '';
+                document.getElementById('credit').value = '';
+                document.getElementById('ecritureLet').value = '';
+                document.getElementById('dateLet').value = '';
+                document.getElementById('validDate').value = '';
+            } else {
+                alert('❌ Erreur:\n\n' + result.error);
+            }
+        }
+
+        // Delete entry
+        function deleteEntry(ecritureNum) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette écriture?')) {
+                return;
+            }
+
+            const entries = fecManager.getEntries();
+            const filtered = entries.filter(e => e.EcritureNum !== ecritureNum);
+            
+            if (fecManager.saveEntries(filtered)) {
+                alert('✅ Écriture supprimée');
+                refresh();
+            } else {
+                alert('❌ Erreur lors de la suppression');
+            }
+        }
+
+        // Download FEC (all entries)
+        function downloadFEC() {
+            const year = prompt('Année fiscale à exporter (laissez vide pour tout exporter):', new Date().getFullYear());
+            fecManager.downloadFEC(year ? parseInt(year) : null, false);
+        }
+
+        // Download FEC (validated only)
+        function downloadFECValidated() {
+            const year = prompt('Année fiscale à exporter (laissez vide pour tout exporter):', new Date().getFullYear());
+            fecManager.downloadFEC(year ? parseInt(year) : null, true);
+        }
+
+        // Load sample data for testing
+        function loadSampleData() {
+            if (!confirm('Charger des données de test? (Cela ajoutera des écritures d\'exemple)')) {
+                return;
+            }
+
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
+
+            const samples = [
+                {
+                    JournalCode: 'VE',
+                    JournalLib: 'Journal des ventes',
+                    EcritureDate: dateStr,
+                    CompteNum: '411000',
+                    CompteLib: 'Clients',
+                    CompAuxNum: 'CLI001',
+                    CompAuxLib: 'Client ABC',
+                    PieceRef: 'FA2024001',
+                    PieceDate: dateStr,
+                    EcritureLib: 'Facture client ABC',
+                    Debit: '1200.00',
+                    Credit: '0',
+                    EcritureLet: '',
+                    DateLet: '',
+                    ValidDate: dateStr,
+                    Montantdevise: '',
+                    Idevise: ''
+                },
+                {
+                    JournalCode: 'VE',
+                    JournalLib: 'Journal des ventes',
+                    EcritureDate: dateStr,
+                    CompteNum: '707000',
+                    CompteLib: 'Ventes de marchandises',
+                    CompAuxNum: '',
+                    CompAuxLib: '',
+                    PieceRef: 'FA2024001',
+                    PieceDate: dateStr,
+                    EcritureLib: 'Facture client ABC',
+                    Debit: '0',
+                    Credit: '1000.00',
+                    EcritureLet: '',
+                    DateLet: '',
+                    ValidDate: dateStr,
+                    Montantdevise: '',
+                    Idevise: ''
+                },
+                {
+                    JournalCode: 'VE',
+                    JournalLib: 'Journal des ventes',
+                    EcritureDate: dateStr,
+                    CompteNum: '445710',
+                    CompteLib: 'TVA collectée',
+                    CompAuxNum: '',
+                    CompAuxLib: '',
+                    PieceRef: 'FA2024001',
+                    PieceDate: dateStr,
+                    EcritureLib: 'TVA sur facture',
+                    Debit: '0',
+                    Credit: '200.00',
+                    EcritureLet: '',
+                    DateLet: '',
+                    ValidDate: dateStr,
+                    Montantdevise: '',
+                    Idevise: ''
+                }
+            ];
+
+            for (const sample of samples) {
+                fecManager.addEntry(sample);
+            }
+
+            alert('✅ Données de test chargées!\n\n3 écritures créées (une facture complète avec TVA)');
+            refresh();
+        }
+
+        // Clear all entries
+        function clearAllEntries() {
+            if (!confirm('⚠️ ATTENTION!\n\nCeci va supprimer TOUTES les écritures.\n\nÊtes-vous absolument sûr?')) {
+                return;
+            }
+
+            if (fecManager.saveEntries([])) {
+                alert('✅ Toutes les écritures ont été supprimées');
+                refresh();
+            }
+        }
+
+        // Refresh display
+        function refresh() {
+            refreshStats();
+            refreshEntries();
+        }
+
+        // Initialize
+        refresh();
+    </script>
+</body>
+</html>
