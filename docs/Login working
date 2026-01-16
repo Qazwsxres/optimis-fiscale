@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUMMA - Connexion</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { text-align: center; color: #2563eb; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        input:focus { outline: none; border-color: #2563eb; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover { background: #1d4ed8; }
+        .info {
+            background: #dbeafe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2563eb;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 NUMMA</h1>
+        
+        <div class="info">
+            <strong>Mode Démo:</strong><br>
+            ID: <code>demo</code> | Pass: <code>demo123</code>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Identifiant</label>
+                <input type="text" id="loginCompanyId" value="demo" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" id="loginPassword" value="demo123" required>
+            </div>
+            
+            <button type="submit">Se connecter</button>
+        </form>
+
+        <div class="footer">
+            Contact: <a href="mailto:contact@numma.fr">contact@numma.fr</a><br>
+            © 2024 NUMMA
+        </div>
+    </div>
+
+    <script>
+        console.log('=== NUMMA Login v3.0 ===');
+        
+        function handleLogin(e) {
+            console.log('=== HANDLE LOGIN CALLED ===');
+            e.preventDefault();
+            
+            const companyId = document.getElementById('loginCompanyId').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            
+            console.log('ID:', companyId);
+            console.log('Pass:', password ? '***' + password.slice(-3) : 'empty');
+            
+            if (!companyId || !password) {
+                alert('❌ Champs vides');
+                return;
+            }
+
+            if (companyId.toLowerCase() === 'demo' && password === 'demo123') {
+                console.log('✅ DEMO OK');
+                
+                const userData = {
+                    company_id: 'demo',
+                    company_name: 'Entreprise Demo',
+                    contact_name: 'Utilisateur Demo',
+                    siret: '12345678900012',
+                    email: 'demo@numma.fr',
+                    accessLevel: 'admin'
+                };
+                
+                try {
+                    localStorage.setItem('authToken', 'demo-token');
+                    localStorage.setItem('currentUser', JSON.stringify(userData));
+                    
+                    console.log('✅ localStorage OK');
+                    console.log('✅ Redirect...');
+                    
+                    alert('✅ Connexion réussie!');
+                    
+                    window.location.href = 'index.html';
+                    
+                } catch (error) {
+                    console.error('❌ Error:', error);
+                    alert('❌ Erreur: ' + error.message);
+                }
+                
+                return;
+            }
+            
+            console.log('❌ Invalid');
+            alert('❌ Identifiants incorrects\n\nUtilisez: demo / demo123');
+        }
+        
+        console.log('✅ Function defined');
+        console.log('🔗 Attaching listener...');
+        
+        const form = document.getElementById('loginForm');
+        if (form) {
+            console.log('✅ Form found');
+            form.addEventListener('submit', handleLogin);
+            console.log('✅ Listener attached');
+        } else {
+            console.error('❌ Form NOT found');
+        }
+        
+        console.log('✅ Ready!');
+    </script>
+</body>
+</html>
