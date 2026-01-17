@@ -6,7 +6,7 @@ User Management Router
 import os
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from ..database import SessionLocal, Base
 from sqlalchemy import Column, Integer, String, TIMESTAMP, func
@@ -38,12 +38,12 @@ class User(Base):
     created_at = Column(TIMESTAMP, server_default=func.now())
 
 # =====================================================
-# SCHEMAS
+# SCHEMAS (FIXED - No EmailStr)
 # =====================================================
 
 class UserCreate(BaseModel):
     name: str
-    email: EmailStr
+    email: str  # Changed from EmailStr to str
     role: str = "user"
     status: str = "invited"
 
