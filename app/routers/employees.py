@@ -8,7 +8,7 @@ import os
 from datetime import date
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 
 from ..database import SessionLocal, Base
@@ -44,13 +44,13 @@ class Employee(Base):
     created_at = Column(TIMESTAMP, server_default=func.now())
 
 # =====================================================
-# PYDANTIC SCHEMAS
+# PYDANTIC SCHEMAS (FIXED - No EmailStr)
 # =====================================================
 
 class EmployeeCreate(BaseModel):
     firstName: str
     lastName: str
-    email: EmailStr
+    email: str  # Changed from EmailStr to str
     position: str
     salary: float
     startDate: date
