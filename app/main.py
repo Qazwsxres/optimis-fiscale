@@ -21,7 +21,19 @@ from pydantic import BaseModel
 from app.models import AnalysisResult
 from app.analyzers import analyze_trial_balance
 from app.database import Base, engine
-from .routers import bank, invoices, alerts, cashflow, overdue
+
+# Import all routers (existing + new)
+from .routers import (
+    bank,
+    invoices,
+    alerts,
+    cashflow,
+    overdue,
+    employees,      # NEW
+    tasks,          # NEW
+    pointages,      # NEW
+    users           # NEW
+)
 
 # =====================================================
 # HTTPS REDIRECT MIDDLEWARE
@@ -57,7 +69,7 @@ class HTTPSRedirectMiddleware:
 # ---------------------------------------------------------------------
 # FASTAPI APP
 # ---------------------------------------------------------------------
-app = FastAPI(title="Optimis Fiscale MVP", version="0.2.1")
+app = FastAPI(title="Optimis Fiscale MVP", version="1.0.0")
 
 # =====================================================
 # MIDDLEWARE CONFIGURATION
@@ -83,7 +95,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
     max_age=3600
@@ -112,6 +124,16 @@ def create_tables():
                 Base.metadata.drop_all(bind=engine)
                 print("🗑️  Old tables dropped")
         
+        # Import new models to register them with Base
+        try:
+            from .routers.employees import Employee
+            from .routers.tasks import Task
+            from .routers.pointages import Pointage
+            from .routers.users import User
+            print("✅ New models imported")
+        except ImportError as e:
+            print(f"⚠️  Could not import new models: {e}")
+        
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables ready")
         
@@ -128,7 +150,7 @@ def get_cors_headers():
     return {
         "Access-Control-Allow-Origin": origin,
         "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
         "Access-Control-Allow-Headers": "*"
     }
 
@@ -206,6 +228,7 @@ def root():
         content={
             "ok": True,
             "service": "optimis-fiscale-api",
+            "version": "1.0.0",
             "https": "enforced"
         },
         headers=get_cors_headers()
@@ -409,13 +432,32 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
 
 
 # ---------------------------------------------------------------------
-# ROUTERS
+# INCLUDE ALL ROUTERS (EXISTING + NEW)
 # ---------------------------------------------------------------------
+
+# Existing routers
 app.include_router(bank.router)
 app.include_router(invoices.router)
 app.include_router(alerts.router)
 app.include_router(cashflow.router)
 app.include_router(overdue.router)
+
+# NEW routers for frontend integration
+app.include_router(employees.router)
+app.include_router(tasks.router)
+app.include_router(pointages.router)
+app.include_router(users.router)
+
+print("✅ All routers registered:")
+print("  - /bank")
+print("  - /invoices")
+print("  - /alerts")
+print("  - /cashflow")
+print("  - /overdue")
+print("  - /employees (NEW)")
+print("  - /tasks (NEW)")
+print("  - /pointages (NEW)")
+print("  - /users (NEW)")
 
 
 # ---------------------------------------------------------------------
@@ -508,3 +550,59 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": str(exc)},
         headers=get_cors_headers()
     )
+
+
+# =====================================================
+# API DOCUMENTATION
+# =====================================================
+@app.get("/api/routes")
+def list_routes():
+    """List all available API routes"""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, "methods") and hasattr(route, "path"):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods),
+                "name": route.name
+            })
+    
+    return JSONResponse(
+        content={
+            "total_routes": len(routes),
+            "routes": sorted(routes, key=lambda x: x["path"])
+        },
+        headers=get_cors_headers()
+    )
+
+
+# =====================================================
+# STARTUP MESSAGE
+# =====================================================
+@app.on_event("startup")
+async def startup_message():
+    print("\n" + "="*60)
+    print("🚀 NUMMA Backend API Started Successfully!")
+    print("="*60)
+    print(f"📡 Environment: {'Production' if os.getenv('RAILWAY_ENVIRONMENT') else 'Development'}")
+    print(f"🔗 CORS Origins: {', '.join(ALLOWED_ORIGINS[:3])}")
+    print(f"🔐 HTTPS: Enforced")
+    print(f"📊 Database: PostgreSQL (Railway)")
+    print(f"🤖 OpenAI: {'Enabled' if OPENAI_API_KEY else 'Disabled'}")
+    print("\n📋 Available Modules:")
+    print("  ✅ Authentication (JWT)")
+    print("  ✅ Bank Transactions")
+    print("  ✅ Invoices (Sales/Purchases)")
+    print("  ✅ Cashflow Management")
+    print("  ✅ Alerts & Notifications")
+    print("  ✅ Overdue Tracking")
+    print("  ✅ Employees (NEW)")
+    print("  ✅ Tasks (NEW)")
+    print("  ✅ Time Tracking (NEW)")
+    print("  ✅ User Management (NEW)")
+    print("  ✅ Fiscal Analysis")
+    print("  ✅ AI Chat (Albert)")
+    print("\n🌐 API Documentation: /docs")
+    print("🔍 Health Check: /health")
+    print("📚 Routes List: /api/routes")
+    print("="*60 + "\n")
