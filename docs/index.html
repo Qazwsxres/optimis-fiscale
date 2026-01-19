@@ -552,7 +552,7 @@
                     <span>Espace client</span>
                 </div>
 
-                <div class="nav-item" onclick="switchView(\'fec\')">
+                <div class="nav-item" onclick="switchView('fec')">
                     <span class="nav-icon">📊</span>
                     <span>FEC / Compta</span>
                 </div>
@@ -849,19 +849,19 @@
                             <tbody id="usersList">
                                 <tr>
                                     <td>Jean Dupont</td>
-                                    <td><a href="mailto:support@numma.fr">support@numma.fr</a></td>
+                                    <td><a href="/cdn-cgi/l/email-protection#10636560607f6264507e657d7d713e7662"><span class="__cf_email__" data-cfemail="ee9d9b9e9e819c9aae809b83838fc0889c">[email&#160;protected]</span></a></td>
                                     <td><span class="badge badge-success">Admin</span></td>
                                     <td>-</td>
                                 </tr>
                                 <tr>
                                     <td>Marie Martin</td>
-                                    <td><a href="mailto:support@numma.fr">support@numma.fr</a></td>
+                                    <td><a href="/cdn-cgi/l/email-protection#ee9d9b9e9e819c9aae809b83838fc0889c"><span class="__cf_email__" data-cfemail="0c7f797c7c637e784c627961616d226a7e">[email&#160;protected]</span></a></td>
                                     <td><span class="badge badge-warning">Comptable</span></td>
                                     <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="editUser(2)">Modifier</button></td>
                                 </tr>
                                 <tr>
                                     <td>Pierre Dubois</td>
-                                    <td><a href="mailto:support@numma.fr">support@numma.fr</a></td>
+                                    <td><a href="/cdn-cgi/l/email-protection#8bf8fefbfbe4f9ffcbe5fee6e6eaa5edf9"><span class="__cf_email__" data-cfemail="6b181e1b1b04191f2b051e06060a450d19">[email&#160;protected]</span></a></td>
                                     <td><span class="badge">Consultation</span></td>
                                     <td><button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="editUser(3)">Modifier</button></td>
                                 </tr>
@@ -2556,7 +2556,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // NUMMA Dashboard v3.0 - FEC Edition - Updated 2026-01-14
         console.log('NUMMA Dashboard loading...');
         
@@ -3742,6 +3742,23 @@
             updateClockStats();
         }, 500);
 
+        // ⭐ NUMMA v2.0 - Navigation FEC Module
+        function openFECModule() {
+            console.log('🧾 Navigation vers FEC Compta...');
+            window.location.href = 'fec-manager.html';
+        }
+
     </script>
+
+    <!-- ========================================== -->
+    <!-- NUMMA v2.0 - Notifications Professionnelles -->
+    <!-- ========================================== -->
+    
+    <!-- Système de messages professionnels (DOIT être en premier) -->
+    <script src="numma-messages.js"></script>
+    
+    <!-- Module interactif complet avec backend -->
+    <script src="numma-interactive-complete.js"></script>
+
 </body>
 </html>
