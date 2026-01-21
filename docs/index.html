@@ -2798,7 +2798,7 @@
         }
 
         function editUser(userId) {
-            alert('Edit user ' + userId);
+            showInfo('Modifier utilisateur', 'Édition du profil #' + userId);
         }
 
         // Logout
@@ -2814,13 +2814,13 @@
         // Save client info
         document.getElementById('clientInfoForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Informations enregistrées avec succès !');
+            showSuccess('Sauvegardé', 'Informations enregistrées');
         });
 
         // Add user
         document.getElementById('addUserForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Utilisateur ajouté avec succès !');
+            showMessage('users', 'invited', 'Utilisateur ajouté', 'Invitation envoyée');
             hideAddUserModal();
         });
 
@@ -2838,23 +2838,83 @@
         }
 
         function viewInvoice(id) {
-            alert('Viewing invoice #' + id);
+            showInfo('Facture #' + id, 'Chargement des détails...');
         }
 
         document.getElementById('createInvoiceForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const client = document.getElementById('invoiceClient').value;
-            alert('Facture créée pour ' + client);
+            showMessage('invoices', 'created', 'Facture créée', 'Client: ' + client);
             hideCreateInvoiceModal();
         });
 
         // Cashflow functions
         function updateCashflowChart() {
-            console.log('Updating cashflow chart...');
+            const period = parseInt(document.getElementById('cashflowPeriod').value);
+            console.log('📊 Mise à jour graphique:', period, 'jours');
+            const canvas = document.getElementById('cashflowFullChart');
+            if (!canvas) return;
+            if (window.cashflowChartInstance) window.cashflowChartInstance.destroy();
+            const data = generateCashflowData(period);
+            const ctx = canvas.getContext('2d');
+            window.cashflowChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Trésorerie (€)',
+                        data: data.values,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '€ ' + context.parsed.y.toLocaleString('fr-FR');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€ ' + value.toLocaleString('fr-FR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (typeof showSuccess === 'function') showSuccess('Graphique mis à jour', period + ' jours');
+        }
+
+        function generateCashflowData(days) {
+            const labels = [], values = [], baseValue = 45000, today = new Date();
+            let points = days <= 30 ? days : days <= 90 ? 14 : 30;
+            const interval = Math.floor(days / points);
+            for (let i = 0; i <= points; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - (days - (i * interval)));
+                labels.push(date.getDate() + ' ' + date.toLocaleDateString('fr-FR', { month: 'short' }));
+                values.push(Math.round(baseValue + Math.sin(i * 0.5) * 2000 + (i * 100)));
+            }
+            return { labels, values };
         }
 
         function refreshCashflow() {
-            alert('Actualisation de la trésorerie...');
+            showMessage('generic', 'loading', 'Actualisation', 'Chargement...');
         }
 
         function filterTransactions() {
@@ -2862,15 +2922,15 @@
         }
 
         function exportCSV() {
-            alert('Export CSV en cours...');
+            showMessage('exports', 'processing', 'Export CSV', 'Génération en cours...');
         }
 
         function exportPDF() {
-            alert('Export PDF en cours...');
+            showMessage('exports', 'processing', 'Export PDF', 'Génération en cours...');
         }
 
         function exportExcel() {
-            alert('Export Excel en cours...');
+            showMessage('exports', 'processing', 'Export Excel', 'Génération en cours...');
         }
 
         // Initialize forecast chart
@@ -3044,7 +3104,7 @@
         }
 
         function viewImportDetails(id) {
-            alert('Détails de l\'import #' + (id || 'nouveau'));
+            showInfo('Import #' + (id || 'nouveau'), 'Affichage des détails');
         }
 
         function downloadSampleBalance() {
@@ -3076,7 +3136,7 @@
 
         function markAllAlertsRead() {
             if (confirm('Marquer toutes les alertes comme lues ?')) {
-                alert('Toutes les alertes ont été marquées comme lues');
+                showSuccess('Alertes lues', 'Toutes marquées comme lues');
             }
         }
 
@@ -3120,32 +3180,32 @@
 
         // Planning functions
         function showAddTaskModal() {
-            alert('Modal "Nouvelle tâche" à implémenter\n\nChamps:\n- Titre\n- Description\n- Date échéance\n- Priorité\n- Assigné à\n- Pièces jointes');
+            showInfo('Nouvelle tâche', 'Formulaire de création de tâche');
         }
 
         function showTaskDetails(taskId) {
-            alert('Détails de la tâche #' + taskId + '\n\nAffichera:\n- Informations complètes\n- Commentaires\n- Historique\n- Documents joints');
+            showInfo('Tâche #' + taskId, 'Affichage des détails');
         }
 
         function exportPlanning() {
-            alert('Export du planning en cours...\n\nFormats disponibles:\n- PDF\n- iCal\n- Excel');
+            showMessage('exports', 'processing', 'Export planning', 'Formats disponibles');
         }
 
         function syncCalendar() {
-            alert('Synchronisation avec calendrier externe\n\nOptions:\n- Google Calendar\n- Outlook\n- Apple Calendar');
+            showInfo('Synchronisation', 'Calendrier externe');
         }
 
         // Quick Actions functions
         function generateCompleteReport() {
             if (confirm('Générer un rapport complet de votre situation financière et fiscale ?\n\nLe rapport inclura:\n- Analyse de trésorerie\n- État des factures\n- Optimisations fiscales\n- Recommandations\n\nFormat: PDF')) {
-                alert('📊 Génération du rapport en cours...\n\nVous recevrez le rapport par email dans quelques minutes.');
+                showMessage('reports', 'generating', 'Rapport en cours', 'Vous recevrez un email');
             }
         }
 
         function contactExpert() {
             if (confirm('Contacter un expert-comptable ?\n\nUn expert NUMMA vous contactera dans les 24h pour:\n- Répondre à vos questions\n- Optimiser votre fiscalité\n- Accompagner votre développement')) {
                 // Show contact form or redirect
-                alert('✅ Demande envoyée !\n\nUn expert vous contactera par email et téléphone dans les 24h.\n\nVous pouvez aussi nous joindre directement au:\n📞 01 23 45 67 89\n📧 expert@summa.fr');
+                showMessage('contact', 'expert', 'Demande envoyée', 'Un expert vous contactera dans les 24h');
             }
         }
 
@@ -3154,7 +3214,7 @@
             switchView('planning');
             setTimeout(() => {
                 if (confirm('Créer une tâche "Optimisation fiscale 2024" ?\n\nCette tâche vous guidera dans:\n- L\'analyse de vos charges déductibles\n- La révision des amortissements\n- L\'identification des crédits d\'impôt\n- La planification de fin d\'année')) {
-                    alert('✅ Tâche créée !\n\n"Optimisation fiscale 2024"\nÉchéance: 31 janvier 2025\nPriorité: Importante\n\nConsultez l\'onglet Planning pour les détails.');
+                    showMessage('tasks', 'created', 'Tâche créée', 'Optimisation fiscale 2024');
                 }
             }, 500);
         }
@@ -3162,7 +3222,7 @@
         // Alert handling functions
         function handleTVADeclaration() {
             if (confirm('Commencer la déclaration TVA T4 2024 ?\n\nVous serez guidé pour:\n1. Vérifier les montants collectés et déductibles\n2. Remplir le formulaire CA3\n3. Télétransmettre la déclaration\n\nÉchéance: 24 janvier 2025')) {
-                alert('📋 Préparation de la déclaration...\n\nVous allez être redirigé vers l\'assistant de déclaration TVA.\n\nDocuments nécessaires:\n- Relevés bancaires\n- Factures émises\n- Factures reçues');
+                showInfo('Déclaration TVA', 'Documents nécessaires: Relevés, Factures');
                 // In production, this would open the TVA declaration wizard
             }
         }
@@ -3191,48 +3251,48 @@
             event.target.style.fontWeight = '600';
             
             // In production, this would filter the task list based on status
-            alert('Filtre appliqué: ' + filter + '\n\n(En production, la liste des tâches serait filtrée)');
+            showInfo('Filtre appliqué', 'Filtre: ' + filter);
         }
 
         // RH Functions
         function showAddEmployeeModal() {
-            alert('Modal "Nouvel employé" à implémenter\n\nChamps:\n- Nom/Prénom\n- Poste\n- Type de contrat (CDI/CDD)\n- Salaire brut\n- Date de début\n- Numéro de sécurité sociale\n- Adresse\n- Coordonnées bancaires');
+            showInfo('Nouvel employé', 'Formulaire de création');
         }
 
         function viewEmployee(id) {
-            alert('Fiche employé #' + id + '\n\nAffichera:\n- Informations personnelles\n- Contrat\n- Historique des paies\n- Congés\n- Documents');
+            showInfo('Employé #' + id, 'Informations complètes');
         }
 
         function generatePayslip(employeeId) {
             if (confirm('Générer la fiche de paie de janvier 2025 pour cet employé ?')) {
-                alert('📄 Génération de la fiche de paie en cours...\n\nLa fiche sera disponible au format PDF dans quelques secondes.');
+                showMessage('payslips', 'generating', 'Fiche de paie', 'Génération PDF...');
                 // In production, would call API to generate payslip PDF
             }
         }
 
         function generateAllPayslips() {
             if (confirm('Générer toutes les fiches de paie de janvier 2025 ?\n\n5 fiches seront créées.')) {
-                alert('📄 Génération en cours...\n\n5 fiches de paie créées :\n- Marie Martin\n- Pierre Dubois\n- Sophie Laurent\n- Lucas Bernard\n- Emma Petit\n\nVous recevrez un email avec toutes les fiches en pièce jointe.');
+                showMessage('payslips', 'batch_generated', '5 fiches créées', 'Email envoyé');
             }
         }
 
         function downloadPayslip(id) {
-            alert('📥 Téléchargement de la fiche de paie: ' + id + '\n\nFormat: PDF');
+            showMessage('payslips', 'downloaded', 'Téléchargement', 'Fiche #' + id);
             // In production, would download the PDF
         }
 
         function exportDSN() {
             if (confirm('Exporter la Déclaration Sociale Nominative (DSN) ?\n\nFichier au format requis par l\'URSSAF.')) {
-                alert('📊 Export DSN en cours...\n\nFichier DSN_janvier_2025.xml généré.');
+                showMessage('payroll', 'dsn_exported', 'Export DSN', 'Fichier généré');
             }
         }
 
         function calculateCharges() {
-            alert('💰 Calcul des charges sociales\n\nTotal masse salariale: € 8,500\nCharges patronales: € 3,400 (40%)\n\nDétail:\n- URSSAF: € 2,040\n- Retraite: € 850\n- Prévoyance: € 340\n- Mutuelle: € 170');
+            showInfo('Charges sociales', 'Masse: € 8,500\nCharges: € 3,400 (40%)');
         }
 
         function manageLeaves() {
-            alert('🏖️ Gestion des congés\n\nFonctionnalités:\n- Demandes de congés\n- Validation par le manager\n- Solde CP/RTT\n- Calendrier des absences\n\n(Module complet à développer)');
+            showInfo('Gestion des congés', 'Fonctionnalités de gestion');
         }
 
         // Invoice Functions
@@ -3362,7 +3422,7 @@
             localStorage.setItem('lastInvoiceNumber', invoiceNum);
             
             // Generate PDF (in production)
-            alert('✅ Facture créée !\n\n' + invoiceData.number + '\n\nClient: ' + invoiceData.client.name + '\nMontant TTC: ' + invoiceData.totalTTC + '\n\n📄 PDF en cours de génération...');
+            showMessage('invoices', 'created', 'Facture ' + invoiceData.number, 'Client: ' + invoiceData.client.name);
             
             hideCreateInvoiceModal();
             
@@ -3373,7 +3433,7 @@
         }
 
         function previewInvoice() {
-            alert('👁️ Aperçu de la facture\n\n(Ouvrira une fenêtre de prévisualisation PDF)');
+            showInfo('Aperçu facture', 'Prévisualisation PDF');
         }
 
         document.getElementById('createInvoiceForm').addEventListener('submit', generateInvoice);
@@ -3426,7 +3486,7 @@
             const employeeName = select?.value;
             
             if (!employeeName) {
-                alert('❌ Veuillez sélectionner un employé');
+                showWarning('Sélection requise', 'Veuillez sélectionner un employé');
                 return;
             }
             
@@ -3495,7 +3555,7 @@
             }
             
             updateClockStats();
-            alert(message);
+            showInfo('Information', message);
         }
         
         function getArrivalStatus(time, employee) {
@@ -3573,7 +3633,7 @@
             employees.push(employee);
             localStorage.setItem('numma_employees', JSON.stringify(employees));
             
-            alert(`✅ Employé ${name} ajouté avec succès !`);
+            showSuccess('Employé ajouté', `${name} a été ajouté`);
             hideAddEmployeeForm();
             loadEmployeeSettingsList();
             loadEmployeeSettings();
@@ -3617,7 +3677,7 @@
             
             loadEmployeeSettingsList();
             loadEmployeeSettings();
-            alert('✅ Employé supprimé');
+            showSuccess('Employé supprimé', 'L\'employé a été supprimé');
         }
         
         // Initialize employee selector on page load
@@ -3715,7 +3775,7 @@
             const clockData = JSON.parse(localStorage.getItem('numma_clock_data') || '[]');
             
             if (clockData.length === 0) {
-                alert('❌ Aucune donnée de pointage à exporter');
+                showWarning('Aucune donnée', 'Aucun pointage à exporter');
                 return;
             }
             
@@ -3734,7 +3794,7 @@
             link.click();
             document.body.removeChild(link);
             
-            alert('📊 Export réussi!\n\nLe fichier CSV a été téléchargé.');
+            showSuccess('Export réussi', 'Fichier CSV téléchargé');
         }
         
         setTimeout(() => {
