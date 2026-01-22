@@ -2798,7 +2798,7 @@
         }
 
         function editUser(userId) {
-            showInfo('Modifier utilisateur', 'Édition du profil #' + userId);
+            showInfo('Modifier utilisateur', 'Édition #' + userId);
         }
 
         // Logout
@@ -2838,7 +2838,7 @@
         }
 
         function viewInvoice(id) {
-            showInfo('Facture #' + id, 'Chargement des détails...');
+            showInfo('Facture #' + id, 'Chargement...');
         }
 
         document.getElementById('createInvoiceForm').addEventListener('submit', function(e) {
@@ -2851,11 +2851,23 @@
         // Cashflow functions
         function updateCashflowChart() {
             const period = parseInt(document.getElementById('cashflowPeriod').value);
-            console.log('📊 Mise à jour graphique:', period, 'jours');
+            console.log('📊 Updating cashflow chart:', period, 'days');
+            
             const canvas = document.getElementById('cashflowFullChart');
-            if (!canvas) return;
-            if (window.cashflowChartInstance) window.cashflowChartInstance.destroy();
+            if (!canvas) {
+                console.error('Canvas cashflowFullChart not found');
+                return;
+            }
+            
+            // Destroy old chart if it exists
+            if (window.cashflowChartInstance) {
+                window.cashflowChartInstance.destroy();
+            }
+            
+            // Generate new data based on period
             const data = generateCashflowData(period);
+            
+            // Create new chart
             const ctx = canvas.getContext('2d');
             window.cashflowChartInstance = new Chart(ctx, {
                 type: 'line',
@@ -2897,19 +2909,43 @@
                     }
                 }
             });
-            if (typeof showSuccess === 'function') showSuccess('Graphique mis à jour', period + ' jours');
+            
+            // Show success notification
+            if (typeof showSuccess === 'function') {
+                showSuccess('Graphique mis à jour', period + ' jours affichés');
+            }
+            
+            console.log('✅ Cashflow chart updated successfully');
         }
 
         function generateCashflowData(days) {
-            const labels = [], values = [], baseValue = 45000, today = new Date();
-            let points = days <= 30 ? days : days <= 90 ? 14 : 30;
+            const labels = [];
+            const values = [];
+            const baseValue = 45000;
+            const today = new Date();
+            
+            // Determine number of points based on period
+            let points;
+            if (days <= 30) points = days;
+            else if (days <= 90) points = 14;
+            else points = 30;
+            
             const interval = Math.floor(days / points);
+            
             for (let i = 0; i <= points; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - (days - (i * interval)));
-                labels.push(date.getDate() + ' ' + date.toLocaleDateString('fr-FR', { month: 'short' }));
-                values.push(Math.round(baseValue + Math.sin(i * 0.5) * 2000 + (i * 100)));
+                
+                const day = date.getDate();
+                const month = date.toLocaleDateString('fr-FR', { month: 'short' });
+                labels.push(day + ' ' + month);
+                
+                // Generate realistic varying values
+                const variation = Math.sin(i * 0.5) * 2000 + (i * 100);
+                const randomFactor = (Math.random() - 0.5) * 500;
+                values.push(Math.round(baseValue + variation + randomFactor));
             }
+            
             return { labels, values };
         }
 
@@ -2922,15 +2958,15 @@
         }
 
         function exportCSV() {
-            showMessage('exports', 'processing', 'Export CSV', 'Génération en cours...');
+            showMessage('exports', 'processing', 'Export CSV', 'Génération...');
         }
 
         function exportPDF() {
-            showMessage('exports', 'processing', 'Export PDF', 'Génération en cours...');
+            showMessage('exports', 'processing', 'Export PDF', 'Génération...');
         }
 
         function exportExcel() {
-            showMessage('exports', 'processing', 'Export Excel', 'Génération en cours...');
+            showMessage('exports', 'processing', 'Export Excel', 'Génération...');
         }
 
         // Initialize forecast chart
@@ -2965,7 +3001,8 @@
             const ctx = document.getElementById('cashflowFullChart');
             if (!ctx) return;
 
-            new Chart(ctx, {
+            // IMPORTANT: Save to window.cashflowChartInstance so updateCashflowChart() can destroy it
+            window.cashflowChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['1 Déc', '5 Déc', '10 Déc', '15 Déc', '20 Déc', '25 Déc', '30 Déc'],
@@ -2975,13 +3012,34 @@
                         borderColor: '#2563eb',
                         backgroundColor: 'rgba(37, 99, 235, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '€ ' + context.parsed.y.toLocaleString('fr-FR');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€ ' + value.toLocaleString('fr-FR');
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -3104,7 +3162,7 @@
         }
 
         function viewImportDetails(id) {
-            showInfo('Import #' + (id || 'nouveau'), 'Affichage des détails');
+            showInfo('Import #' + (id || 'nouveau'), 'Détails');
         }
 
         function downloadSampleBalance() {
@@ -3136,7 +3194,7 @@
 
         function markAllAlertsRead() {
             if (confirm('Marquer toutes les alertes comme lues ?')) {
-                showSuccess('Alertes lues', 'Toutes marquées comme lues');
+                showSuccess('Alertes lues', 'Marquées comme lues');
             }
         }
 
@@ -3180,11 +3238,11 @@
 
         // Planning functions
         function showAddTaskModal() {
-            showInfo('Nouvelle tâche', 'Formulaire de création de tâche');
+            showInfo('Nouvelle tâche', 'Formulaire de création');
         }
 
         function showTaskDetails(taskId) {
-            showInfo('Tâche #' + taskId, 'Affichage des détails');
+            showInfo('Tâche #' + taskId, 'Détails complets');
         }
 
         function exportPlanning() {
@@ -3222,7 +3280,7 @@
         // Alert handling functions
         function handleTVADeclaration() {
             if (confirm('Commencer la déclaration TVA T4 2024 ?\n\nVous serez guidé pour:\n1. Vérifier les montants collectés et déductibles\n2. Remplir le formulaire CA3\n3. Télétransmettre la déclaration\n\nÉchéance: 24 janvier 2025')) {
-                showInfo('Déclaration TVA', 'Documents nécessaires: Relevés, Factures');
+                showInfo('Déclaration TVA', 'Documents nécessaires');
                 // In production, this would open the TVA declaration wizard
             }
         }
@@ -3288,7 +3346,7 @@
         }
 
         function calculateCharges() {
-            showInfo('Charges sociales', 'Masse: € 8,500\nCharges: € 3,400 (40%)');
+            showInfo('Charges sociales', 'Masse: € 8,500 | Charges: € 3,400');
         }
 
         function manageLeaves() {
@@ -3677,7 +3735,7 @@
             
             loadEmployeeSettingsList();
             loadEmployeeSettings();
-            showSuccess('Employé supprimé', 'L\'employé a été supprimé');
+            showSuccess('Employé supprimé', 'Suppression réussie');
         }
         
         // Initialize employee selector on page load
