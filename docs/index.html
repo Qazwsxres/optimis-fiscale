@@ -606,7 +606,7 @@
                             <div class="card">
                                 <div class="card-header">
                                     <div class="card-title">Évolution de la trésorerie</div>
-                                    <select id="periodSelect" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                                    <select id="periodSelect" onchange="updateDashboardChart()" style="padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
                                         <option value="7">7 jours</option>
                                         <option value="30">30 jours</option>
                                         <option value="90">90 jours</option>
@@ -2695,7 +2695,8 @@
             const ctx = document.getElementById('tresorerieChart');
             if (!ctx) return;
 
-            new Chart(ctx, {
+            // IMPORTANT: Save to window so updateDashboardChart() can destroy it
+            window.dashboardChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['14 Déc', '15 Déc', '16 Déc', '17 Déc', '18 Déc', '19 Déc', '20 Déc'],
@@ -2705,24 +2706,137 @@
                         borderColor: '#2563eb',
                         backgroundColor: 'rgba(37, 99, 235, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '€ ' + context.parsed.y.toLocaleString('fr-FR');
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: false
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€ ' + value.toLocaleString('fr-FR');
+                                }
+                            }
                         }
                     }
                 }
             });
+        }
+
+        // Update dashboard chart when period changes
+        function updateDashboardChart() {
+            const period = parseInt(document.getElementById('periodSelect').value);
+            console.log('📊 Updating dashboard chart:', period, 'days');
+            
+            const canvas = document.getElementById('tresorerieChart');
+            if (!canvas) {
+                console.error('Canvas tresorerieChart not found');
+                return;
+            }
+            
+            // Destroy old chart if it exists
+            if (window.dashboardChartInstance) {
+                window.dashboardChartInstance.destroy();
+            }
+            
+            // Generate new data based on period
+            const data = generateDashboardData(period);
+            
+            // Create new chart
+            const ctx = canvas.getContext('2d');
+            window.dashboardChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Trésorerie (€)',
+                        data: data.values,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '€ ' + context.parsed.y.toLocaleString('fr-FR');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€ ' + value.toLocaleString('fr-FR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Show success notification
+            if (typeof showSuccess === 'function') {
+                showSuccess('Graphique mis à jour', period + ' jours affichés');
+            }
+            
+            console.log('✅ Dashboard chart updated successfully');
+        }
+
+        function generateDashboardData(days) {
+            const labels = [];
+            const values = [];
+            const baseValue = 45000;
+            const today = new Date();
+            
+            // Determine number of points based on period
+            let points;
+            if (days <= 7) points = 7;
+            else if (days <= 30) points = 10;
+            else points = 12;
+            
+            const interval = Math.floor(days / points);
+            
+            for (let i = 0; i <= points; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - (days - (i * interval)));
+                
+                const day = date.getDate();
+                const month = date.toLocaleDateString('fr-FR', { month: 'short' });
+                labels.push(day + ' ' + month);
+                
+                // Generate realistic varying values
+                const variation = Math.sin(i * 0.5) * 2000 + (i * 100);
+                const randomFactor = (Math.random() - 0.5) * 500;
+                values.push(Math.round(baseValue + variation + randomFactor));
+            }
+            
+            return { labels, values };
         }
 
         // Load notifications based on company type and date
