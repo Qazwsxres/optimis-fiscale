@@ -1,6 +1,7 @@
 """
 Enhanced Banking Models for Bankin/Finary Integration
 Compatible with external banking aggregators
+FIXED: All 'metadata' fields renamed to 'provider_metadata'
 """
 
 from sqlalchemy import (
@@ -35,8 +36,8 @@ class BankAccount(Base):
     # Provider info
     provider = Column(String(50))  # bankin, finary, bridge, manual
     
-    # Metadata from aggregator (store full JSON response)
-    metadata = Column(JSON)
+    # FIXED: renamed from metadata to provider_metadata (SQLAlchemy reserved word)
+    provider_metadata = Column(JSON)  # Store full JSON response from aggregator
     
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
@@ -81,8 +82,8 @@ class BankTransactionEnhanced(Base):
     is_reconciled = Column(Boolean, default=False)
     is_internal_transfer = Column(Boolean, default=False)
     
-    # Metadata from aggregator
-    metadata = Column(JSON)
+    # FIXED: renamed from metadata to provider_metadata
+    provider_metadata = Column(JSON)  # Metadata from aggregator
     
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
@@ -190,8 +191,8 @@ class SyncLog(Base):
     completed_at = Column(TIMESTAMP)
     duration_seconds = Column(Integer)
     
-    # Metadata
-    metadata = Column(JSON)
+    # FIXED: renamed from metadata to provider_metadata
+    provider_metadata = Column(JSON)  # Additional sync metadata
     
     created_at = Column(TIMESTAMP, server_default=func.now())
     
@@ -292,3 +293,6 @@ class WebhookEvent(Base):
     external_event_id = Column(String(255), unique=True)
     
     received_at = Column(TIMESTAMP, server_default=func.now())
+
+
+print("✅ Banking models loaded - all metadata fields renamed to provider_metadata")
