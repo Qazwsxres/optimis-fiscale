@@ -22,17 +22,41 @@ from app.models import AnalysisResult
 from app.analyzers import analyze_trial_balance
 from app.database import Base, engine
 
-# Import all routers (existing + new)
+# Import ALL routers (11 core + 7 banking = 18 total)
 from .routers import (
+    # Core routers (11)
     bank,
     invoices,
     alerts,
     cashflow,
     overdue,
-    employees,      # NEW
-    tasks,          # NEW
-    pointages,      # NEW
-    users           # NEW
+    employees,
+    tasks,
+    pointages,
+    users,
+    email_import,
+    finance,
+    
+    # Banking routers v2.0 (7)
+    accounts,
+    router_sync as sync,
+    categories,
+    budgets,
+    analytics,
+    webhooks,
+    exports
+)
+
+# Import banking models
+from .models_banking import (
+    BankAccount,
+    BankTransactionEnhanced,
+    Category,
+    Budget,
+    SyncLog,
+    RecurringTransaction,
+    FinancialGoal,
+    WebhookEvent
 )
 
 # =====================================================
@@ -69,7 +93,11 @@ class HTTPSRedirectMiddleware:
 # ---------------------------------------------------------------------
 # FASTAPI APP
 # ---------------------------------------------------------------------
-app = FastAPI(title="Optimis Fiscale MVP", version="1.0.0")
+app = FastAPI(
+    title="NUMMA API v2.0",
+    description="API complète pour gestion PME avec intégration Bankin/Finary",
+    version="2.0.0"
+)
 
 # =====================================================
 # MIDDLEWARE CONFIGURATION
@@ -85,7 +113,7 @@ if _env_origins:
 else:
     ALLOWED_ORIGINS = [
         "https://qazwsxres.github.io",
-        "https://gestion-227fe8d8.base44.app",  # Base44 landing page
+        "https://gestion-227fe8d8.base44.app",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
         "http://localhost:5500",
@@ -102,14 +130,13 @@ app.add_middleware(
 )
 
 # =====================================================
-# DATABASE SETUP (SINGLE STARTUP EVENT)
+# DATABASE SETUP
 # =====================================================
 @app.on_event("startup")
 def create_tables():
     """Create all database tables on startup"""
-    print("🚀 Checking database schema...")
+    print("🚀 Initializing NUMMA Backend v2.0...")
     
-    # Check if we need to reset (look for old schema)
     try:
         from sqlalchemy import inspect
         inspector = inspect(engine)
@@ -118,27 +145,33 @@ def create_tables():
         if 'invoices_sales' in inspector.get_table_names():
             columns = [col['name'] for col in inspector.get_columns('invoices_sales')]
             
-            # If missing new columns, drop and recreate
             if 'client_name' not in columns or 'amount_ttc' not in columns:
                 print("⚠️  Old schema detected! Resetting database...")
                 Base.metadata.drop_all(bind=engine)
                 print("🗑️  Old tables dropped")
         
-        # Import new models to register them with Base
+        # Import router models
         try:
             from .routers.employees import Employee
             from .routers.tasks import Task
             from .routers.pointages import Pointage
             from .routers.users import User
-            print("✅ New models imported")
+            print("✅ Router models imported")
         except ImportError as e:
-            print(f"⚠️  Could not import new models: {e}")
+            print(f"⚠️  Could not import some models: {e}")
         
+        # Create all tables
         Base.metadata.create_all(bind=engine)
-        print("✅ Database tables ready")
+        print("✅ Database tables created")
+        
+        # Print summary
+        print("\n📊 Database Models:")
+        print("  ✅ Core models (7): DailyCashflow, Client, Supplier, InvoiceSale, InvoicePurchase, BankTransaction, Alert")
+        print("  ✅ Router models (4): Employee, Task, Pointage, User")
+        print("  ✅ Banking models (8): BankAccount, BankTransactionEnhanced, Category, Budget, SyncLog, RecurringTransaction, FinancialGoal, WebhookEvent")
         
     except Exception as e:
-        print(f"⚠️  Database check failed, creating tables anyway: {e}")
+        print(f"⚠️  Database error: {e}")
         Base.metadata.create_all(bind=engine)
 
 # =====================================================
@@ -205,7 +238,7 @@ def set_session_cookie(resp: Response, token: str):
         key=COOKIE_NAME,
         value=token,
         httponly=True,
-        secure=True,  # HTTPS only
+        secure=True,
         samesite="none",
         path="/",
         max_age=3600,
@@ -227,9 +260,11 @@ def root():
     return JSONResponse(
         content={
             "ok": True,
-            "service": "optimis-fiscale-api",
-            "version": "1.0.0",
-            "https": "enforced"
+            "service": "numma-api",
+            "version": "2.0.0",
+            "https": "enforced",
+            "banking_integration": True,
+            "total_routers": 18
         },
         headers=get_cors_headers()
     )
@@ -238,24 +273,22 @@ def root():
 @app.get("/health")
 def health():
     return JSONResponse(
-        content={"status": "ok"},
+        content={
+            "status": "ok",
+            "version": "2.0.0",
+            "routers": 18,
+            "banking": True
+        },
         headers=get_cors_headers()
     )
 
 
 # =====================================================
-# DATABASE RESET ENDPOINT (TEMPORARY - REMOVE AFTER USE)
+# DATABASE RESET ENDPOINT (TEMPORARY)
 # =====================================================
 @app.post("/admin/reset-database")
 def reset_database(secret_key: str):
-    """
-    ⚠️ DANGER: Drops and recreates all database tables
-    
-    Usage: POST /admin/reset-database?secret_key=YOUR_SECRET_KEY
-    
-    This endpoint should be REMOVED after fixing the database!
-    """
-    # Simple protection - use your actual SECRET_KEY
+    """⚠️ DANGER: Drops and recreates all database tables"""
     expected_secret = os.getenv("SECRET_KEY", "")
     
     if secret_key != expected_secret:
@@ -265,7 +298,7 @@ def reset_database(secret_key: str):
         print("🗑️  Dropping all tables...")
         Base.metadata.drop_all(bind=engine)
         
-        print("🔨 Creating new tables with updated schema...")
+        print("🔨 Creating new tables...")
         Base.metadata.create_all(bind=engine)
         
         print("✅ Database reset complete!")
@@ -273,19 +306,14 @@ def reset_database(secret_key: str):
         return JSONResponse(
             content={
                 "success": True,
-                "message": "Database tables dropped and recreated successfully",
-                "warning": "All data has been deleted. Remove this endpoint now!"
+                "message": "Database reset successfully"
             },
             headers=get_cors_headers()
         )
     except Exception as e:
-        print(f"❌ Database reset failed: {e}")
         return JSONResponse(
             status_code=500,
-            content={
-                "success": False,
-                "error": str(e)
-            },
+            content={"success": False, "error": str(e)},
             headers=get_cors_headers()
         )
 
@@ -431,33 +459,41 @@ async def chat(req: ChatRequest, company_id: str = Depends(require_auth)):
     )
 
 
-# ---------------------------------------------------------------------
-# INCLUDE ALL ROUTERS (EXISTING + NEW)
-# ---------------------------------------------------------------------
+# =====================================================
+# INCLUDE ALL 18 ROUTERS
+# =====================================================
 
-# Existing routers
+# Core routers (11)
 app.include_router(bank.router)
 app.include_router(invoices.router)
 app.include_router(alerts.router)
 app.include_router(cashflow.router)
 app.include_router(overdue.router)
-
-# NEW routers for frontend integration
 app.include_router(employees.router)
 app.include_router(tasks.router)
 app.include_router(pointages.router)
 app.include_router(users.router)
+app.include_router(email_import.router)
+app.include_router(finance.router)
 
-print("✅ All routers registered:")
-print("  - /bank")
-print("  - /invoices")
-print("  - /alerts")
-print("  - /cashflow")
-print("  - /overdue")
-print("  - /employees (NEW)")
-print("  - /tasks (NEW)")
-print("  - /pointages (NEW)")
-print("  - /users (NEW)")
+print("\n📦 Core routers loaded (11):")
+print("  ✅ bank, invoices, alerts, cashflow, overdue")
+print("  ✅ employees, tasks, pointages, users")
+print("  ✅ email_import, finance")
+
+# Banking routers v2.0 (7)
+app.include_router(accounts.router)
+app.include_router(sync.router)
+app.include_router(categories.router)
+app.include_router(budgets.router)
+app.include_router(analytics.router)
+app.include_router(webhooks.router)
+app.include_router(exports.router)
+
+print("\n🆕 Banking routers v2.0 loaded (7):")
+print("  ✅ accounts, sync, categories, budgets")
+print("  ✅ analytics, webhooks, exports")
+print("\n🎉 TOTAL: 18 routers loaded!")
 
 
 # ---------------------------------------------------------------------
@@ -541,18 +577,6 @@ async def test_audit(
 
 
 # =====================================================
-# GLOBAL EXCEPTION HANDLER
-# =====================================================
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content={"detail": str(exc)},
-        headers=get_cors_headers()
-    )
-
-
-# =====================================================
 # API DOCUMENTATION
 # =====================================================
 @app.get("/api/routes")
@@ -570,8 +594,21 @@ def list_routes():
     return JSONResponse(
         content={
             "total_routes": len(routes),
-            "routes": sorted(routes, key=lambda x: x["path"])
+            "routes": sorted(routes, key=lambda x: x["path"]),
+            "banking_integration": True
         },
+        headers=get_cors_headers()
+    )
+
+
+# =====================================================
+# GLOBAL EXCEPTION HANDLER
+# =====================================================
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
         headers=get_cors_headers()
     )
 
@@ -581,28 +618,44 @@ def list_routes():
 # =====================================================
 @app.on_event("startup")
 async def startup_message():
-    print("\n" + "="*60)
-    print("🚀 NUMMA Backend API Started Successfully!")
-    print("="*60)
+    print("\n" + "="*70)
+    print("🚀 NUMMA Backend API v2.0 - Ready!")
+    print("="*70)
     print(f"📡 Environment: {'Production' if os.getenv('RAILWAY_ENVIRONMENT') else 'Development'}")
-    print(f"🔗 CORS Origins: {', '.join(ALLOWED_ORIGINS[:3])}")
+    print(f"🔗 CORS: {', '.join(ALLOWED_ORIGINS[:2])}...")
     print(f"🔐 HTTPS: Enforced")
-    print(f"📊 Database: PostgreSQL (Railway)")
+    print(f"💾 Database: PostgreSQL")
     print(f"🤖 OpenAI: {'Enabled' if OPENAI_API_KEY else 'Disabled'}")
-    print("\n📋 Available Modules:")
-    print("  ✅ Authentication (JWT)")
+    print(f"🏦 Banking: ✅ Enabled")
+    
+    print("\n📋 Core Modules (11):")
+    print("  ✅ Authentication & Security")
     print("  ✅ Bank Transactions")
     print("  ✅ Invoices (Sales/Purchases)")
     print("  ✅ Cashflow Management")
     print("  ✅ Alerts & Notifications")
     print("  ✅ Overdue Tracking")
-    print("  ✅ Employees (NEW)")
-    print("  ✅ Tasks (NEW)")
-    print("  ✅ Time Tracking (NEW)")
-    print("  ✅ User Management (NEW)")
-    print("  ✅ Fiscal Analysis")
+    print("  ✅ Employees & HR")
+    print("  ✅ Tasks Management")
+    print("  ✅ Time Tracking (Pointages)")
+    print("  ✅ User Management")
+    print("  ✅ Email Import")
+    print("  ✅ Finance Routes")
     print("  ✅ AI Chat (Albert)")
+    
+    print("\n🆕 Banking Integration v2.0 (7):")
+    print("  ✅ Multi-Bank Accounts")
+    print("  ✅ Sync (Bankin/Finary/Bridge)")
+    print("  ✅ Auto-Categorization")
+    print("  ✅ Smart Budgets")
+    print("  ✅ Advanced Analytics")
+    print("  ✅ Real-time Webhooks")
+    print("  ✅ Accounting Exports (FEC)")
+    
+    print(f"\n📊 Total Routers: 18")
+    print(f"📍 Total Endpoints: ~140")
+    print(f"🗄️  Total Models: 19")
     print("\n🌐 API Documentation: /docs")
-    print("🔍 Health Check: /health")
+    print("💚 Health Check: /health")
     print("📚 Routes List: /api/routes")
-    print("="*60 + "\n")
+    print("="*70 + "\n")
