@@ -121,7 +121,7 @@
             const data = getCashflowData();
             
             if (!data || data.length === 0) {
-                showWarning('Aucune donnée à exporter');
+                alert('⚠️ Aucune donnée à exporter');
                 return;
             }
             
@@ -140,11 +140,11 @@
             
             // Download file
             downloadFile(csvContent, 'tresorerie.csv', 'text/csv');
-            showSuccess('✅ Export CSV réussi');
+            console.log('✅ Export CSV réussi');
             
         } catch (error) {
             console.error('❌ CSV export error:', error);
-            showError('Erreur lors de l\'export CSV: ' + error.message);
+            alert('❌ Erreur lors de l\'export CSV: ' + error.message);
         }
     };
     
@@ -156,7 +156,7 @@
             const data = getCashflowData();
             
             if (!data || data.length === 0) {
-                showWarning('Aucune donnée à exporter');
+                alert('⚠️ Aucune donnée à exporter');
                 return;
             }
             
@@ -219,11 +219,11 @@
                 printWindow.print();
             }, 500);
             
-            showSuccess('✅ PDF ouvert - utilisez Ctrl+P pour imprimer');
+            console.log('✅ PDF ouvert - utilisez Ctrl+P pour imprimer');
             
         } catch (error) {
             console.error('❌ PDF export error:', error);
-            showError('Erreur lors de l\'export PDF: ' + error.message);
+            alert('❌ Erreur lors de l\'export PDF: ' + error.message);
         }
     };
     
@@ -235,7 +235,7 @@
             const data = getCashflowData();
             
             if (!data || data.length === 0) {
-                showWarning('Aucune donnée à exporter');
+                alert('⚠️ Aucune donnée à exporter');
                 return;
             }
             
@@ -286,11 +286,11 @@
             
             // Download as Excel
             downloadFile(html, 'tresorerie.xls', 'application/vnd.ms-excel');
-            showSuccess('✅ Export Excel réussi');
+            console.log('✅ Export Excel réussi');
             
         } catch (error) {
             console.error('❌ Excel export error:', error);
-            showError('Erreur lors de l\'export Excel: ' + error.message);
+            alert('❌ Erreur lors de l\'export Excel: ' + error.message);
         }
     };
     

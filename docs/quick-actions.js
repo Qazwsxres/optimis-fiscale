@@ -12,8 +12,6 @@
     window.generateReport = function() {
         console.log('📊 Generating complete report...');
         
-        showInfo('⏳ Génération du rapport en cours...');
-        
         try {
             // Collect data
             const reportData = collectReportData();
@@ -26,11 +24,11 @@
             reportWindow.document.write(html);
             reportWindow.document.close();
             
-            showSuccess('✅ Rapport généré avec succès');
+            console.log('✅ Rapport généré avec succès');
             
         } catch (error) {
             console.error('❌ Report generation error:', error);
-            showError('Erreur lors de la génération du rapport: ' + error.message);
+            alert('❌ Erreur lors de la génération du rapport: ' + error.message);
         }
     };
     
@@ -51,7 +49,7 @@ Cordialement`;
         const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         
         window.location.href = mailtoLink;
-        showInfo('📧 Ouverture de votre client mail...');
+        console.log('📧 Ouverture de votre client mail...');
     };
     
     /**
@@ -60,12 +58,10 @@ Cordialement`;
     window.planOptimization = function() {
         console.log('📈 Planning optimization...');
         
-        showInfo('⏳ Analyse en cours...');
-        
         setTimeout(() => {
             const recommendations = getOptimizationRecommendations();
             showOptimizationModal(recommendations);
-        }, 1000);
+        }, 500);
     };
     
     // =====================================================

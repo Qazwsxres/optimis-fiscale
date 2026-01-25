@@ -4,6 +4,35 @@
  * Backend: https://optimis-fiscale-production.up.railway.app
  */
 
+// Simple message fallback if numma-messages doesn't exist
+if (typeof showMessage === 'undefined') {
+    window.showMessage = function(module, type, message) {
+        console.log(`[${module}] ${type}: ${message}`);
+    };
+}
+if (typeof showSuccess === 'undefined') {
+    window.showSuccess = function(title, message) {
+        console.log(`✅ ${title}: ${message || ''}`);
+    };
+}
+if (typeof showError === 'undefined') {
+    window.showError = function(title, message) {
+        console.error(`❌ ${title}: ${message || ''}`);
+        alert(`❌ ${title}\n\n${message || ''}`);
+    };
+}
+if (typeof showInfo === 'undefined') {
+    window.showInfo = function(title, message) {
+        console.log(`ℹ️ ${title}: ${message || ''}`);
+    };
+}
+
+/**
+ * NUMMA - MODULE FACTURES
+ * Gestion complète des factures avec backend
+ * Backend: https://optimis-fiscale-production.up.railway.app
+ */
+
 // =====================================================
 // CONFIGURATION
 // =====================================================
