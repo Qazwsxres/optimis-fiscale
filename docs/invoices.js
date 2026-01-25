@@ -430,14 +430,54 @@ async function downloadInvoicePDF(invoiceId) {
  * Filtre les factures
  */
 async function filterInvoices() {
-    const status = document.getElementById('filterStatus')?.value;
-    const searchTerm = document.getElementById('searchInvoice')?.value;
+    const statusSelect = document.getElementById('filterStatus');
+    const searchInput = document.getElementById('searchInvoice');
     
+    const status = statusSelect?.value;
+    const searchTerm = searchInput?.value?.toLowerCase();
+    
+    console.log('🔍 Filtering invoices:', { status, searchTerm });
+    
+    // If no filters, just reload all
+    if ((!status || status === 'all') && !searchTerm) {
+        await loadInvoices();
+        return;
+    }
+    
+    // Build filters for API
     const filters = {};
     if (status && status !== 'all') filters.status = status;
     if (searchTerm) filters.client = searchTerm;
     
     await loadInvoices(filters);
+}
+
+/**
+ * Setup invoice filters on page load
+ */
+function setupInvoiceFilters() {
+    const statusSelect = document.getElementById('filterStatus');
+    const searchInput = document.getElementById('searchInvoice');
+    
+    if (statusSelect) {
+        statusSelect.addEventListener('change', () => {
+            console.log('📊 Status filter changed:', statusSelect.value);
+            filterInvoices();
+        });
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            console.log('🔍 Search term changed:', searchInput.value);
+            // Debounce search
+            clearTimeout(window.invoiceSearchTimeout);
+            window.invoiceSearchTimeout = setTimeout(() => {
+                filterInvoices();
+            }, 500);
+        });
+    }
+    
+    console.log('✅ Invoice filters setup complete');
 }
 
 /**
@@ -504,12 +544,18 @@ if (document.readyState === 'loading') {
         if (form) {
             form.addEventListener('submit', createInvoice);
         }
+        
+        // Setup filters
+        setupInvoiceFilters();
     });
 } else {
     const form = document.getElementById('createInvoiceForm');
     if (form) {
         form.addEventListener('submit', createInvoice);
     }
+    
+    // Setup filters
+    setupInvoiceFilters();
 }
 
 // Exposer les fonctions globalement
@@ -519,5 +565,6 @@ window.createInvoice = createInvoice;
 window.viewInvoice = viewInvoice;
 window.downloadInvoicePDF = downloadInvoicePDF;
 window.filterInvoices = filterInvoices;
+window.setupInvoiceFilters = setupInvoiceFilters;
 window.showCreateInvoiceModal = showCreateInvoiceModal;
 window.hideCreateInvoiceModal = hideCreateInvoiceModal;
