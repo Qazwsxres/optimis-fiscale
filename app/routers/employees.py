@@ -1,278 +1,187 @@
 """
-Employees Router - COMPLET AVEC GET ENDPOINT
-Remplacer app/routers/employees.py par ce fichier
+COMPLETE employees.py - COPY THIS ENTIRE FILE
+Replace your app/routers/employees.py with this
 """
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from datetime import date
-from typing import Optional
-from sqlalchemy import Column, Integer, String, Date, Float
-import os
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from typing import Optional, List
+from datetime import datetime
+from pydantic import BaseModel, EmailStr
 
-router = APIRouter(prefix="/api/employees", tags=["Employees"])
+from app.database import get_db
+from app.models_extended import Employee
 
-from ..database import SessionLocal, engine, Base
+router = APIRouter(prefix="/api/employees", tags=["employees"])
 
-FRONTEND_URL = os.getenv("ALLOWED_ORIGIN", "https://qazwsxres.github.io").split(",")[0]
 
-def get_cors_headers():
-    return {
-        "Access-Control-Allow-Origin": FRONTEND_URL,
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "*"
-    }
+# ============================================================
+# PYDANTIC SCHEMAS
+# ============================================================
 
-# ============================================
-# MODEL
-# ============================================
-class Employee(Base):
-    __tablename__ = "employees"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    position = Column(String)
-    email = Column(String)
-    phone = Column(String)
-    hire_date = Column(Date)
-    salary = Column(Float)
-
-Base.metadata.create_all(bind=engine)
-
-# ============================================
-# PYDANTIC MODELS
-# ============================================
 class EmployeeCreate(BaseModel):
-    name: str
+    first_name: str
+    last_name: str
+    email: EmailStr
     position: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    hire_date: Optional[date] = None
-    salary: Optional[float] = None
+    contract_type: str = "CDI"
+    gross_salary: float
+    start_date: Optional[str] = None
 
-class EmployeeUpdate(BaseModel):
-    name: Optional[str] = None
-    position: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    salary: Optional[float] = None
 
-# ============================================
-# 🆕 GET EMPLOYEES (NOUVEAU)
-# ============================================
-@router.get("/")
-def get_employees():
-    """
-    Liste tous les employés
-    """
+class EmployeeResponse(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    position: Optional[str]
+    contract_type: str
+    gross_salary: float
+    start_date: Optional[str]
+    status: str
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================================
+# ENDPOINTS
+# ============================================================
+
+@router.get("/", response_model=List[EmployeeResponse])
+async def get_employees(
+    status: Optional[str] = Query(None),
+    contract_type: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Get all employees with filtering"""
     try:
-        with SessionLocal() as db:
-            employees = db.query(Employee).order_by(Employee.name).all()
-            
-            return JSONResponse(
-                content=[{
-                    "id": e.id,
-                    "name": e.name,
-                    "position": e.position or "",
-                    "email": e.email or "",
-                    "phone": e.phone or "",
-                    "hire_date": e.hire_date.isoformat() if e.hire_date else None,
-                    "salary": float(e.salary) if e.salary else 0
-                } for e in employees],
-                headers=get_cors_headers()
+        query = db.query(Employee)
+        
+        if status:
+            query = query.filter(Employee.status == status)
+        
+        if contract_type:
+            query = query.filter(Employee.contract_type == contract_type)
+        
+        if search:
+            search_pattern = f"%{search}%"
+            query = query.filter(
+                or_(
+                    Employee.first_name.ilike(search_pattern),
+                    Employee.last_name.ilike(search_pattern),
+                    Employee.email.ilike(search_pattern)
+                )
             )
+        
+        query = query.order_by(Employee.last_name, Employee.first_name)
+        employees = query.all()
+        
+        return [
+            EmployeeResponse(
+                id=emp.id,
+                first_name=emp.first_name,
+                last_name=emp.last_name,
+                email=emp.email,
+                position=emp.position,
+                contract_type=emp.contract_type,
+                gross_salary=float(emp.gross_salary),
+                start_date=emp.start_date.isoformat() if emp.start_date else None,
+                status=emp.status
+            )
+            for emp in employees
+        ]
+        
     except Exception as e:
         print(f"❌ Error in get_employees: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============================================
-# GET EMPLOYEE BY ID
-# ============================================
-@router.get("/{employee_id}")
-def get_employee(employee_id: int):
-    """Détails d'un employé"""
+@router.get("/{employee_id}", response_model=EmployeeResponse)
+async def get_employee(
+    employee_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get a specific employee"""
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    return EmployeeResponse(
+        id=employee.id,
+        first_name=employee.first_name,
+        last_name=employee.last_name,
+        email=employee.email,
+        position=employee.position,
+        contract_type=employee.contract_type,
+        gross_salary=float(employee.gross_salary),
+        start_date=employee.start_date.isoformat() if employee.start_date else None,
+        status=employee.status
+    )
+
+
+@router.post("/", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
+async def create_employee(
+    employee_data: EmployeeCreate,
+    db: Session = Depends(get_db)
+):
+    """Create a new employee"""
     try:
-        with SessionLocal() as db:
-            employee = db.query(Employee).filter(Employee.id == employee_id).first()
-            
-            if not employee:
-                raise HTTPException(404, "Employee not found")
-            
-            return JSONResponse(
-                content={
-                    "id": employee.id,
-                    "name": employee.name,
-                    "position": employee.position,
-                    "email": employee.email,
-                    "phone": employee.phone,
-                    "hire_date": employee.hire_date.isoformat() if employee.hire_date else None,
-                    "salary": float(employee.salary) if employee.salary else None
-                },
-                headers=get_cors_headers()
-            )
+        # Check if email exists
+        existing = db.query(Employee).filter(Employee.email == employee_data.email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already exists")
+        
+        start_date = datetime.fromisoformat(employee_data.start_date).date() if employee_data.start_date else datetime.now().date()
+        
+        new_employee = Employee(
+            first_name=employee_data.first_name,
+            last_name=employee_data.last_name,
+            email=employee_data.email,
+            position=employee_data.position,
+            contract_type=employee_data.contract_type,
+            gross_salary=employee_data.gross_salary,
+            start_date=start_date,
+            status="active"
+        )
+        
+        db.add(new_employee)
+        db.commit()
+        db.refresh(new_employee)
+        
+        print(f"✅ Employee created: {new_employee.first_name} {new_employee.last_name}")
+        
+        return EmployeeResponse(
+            id=new_employee.id,
+            first_name=new_employee.first_name,
+            last_name=new_employee.last_name,
+            email=new_employee.email,
+            position=new_employee.position,
+            contract_type=new_employee.contract_type,
+            gross_salary=float(new_employee.gross_salary),
+            start_date=new_employee.start_date.isoformat(),
+            status="active"
+        )
+        
     except HTTPException:
         raise
     except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
+        db.rollback()
+        print(f"❌ Error creating employee: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============================================
-# POST - CREATE EMPLOYEE
-# ============================================
-@router.post("/")
-def create_employee(employee: EmployeeCreate):
-    """Créer un nouvel employé"""
-    try:
-        with SessionLocal() as db:
-            new_employee = Employee(
-                name=employee.name,
-                position=employee.position,
-                email=employee.email,
-                phone=employee.phone,
-                hire_date=employee.hire_date,
-                salary=employee.salary
-            )
-            db.add(new_employee)
-            db.commit()
-            db.refresh(new_employee)
-            
-            return JSONResponse(
-                content={
-                    "id": new_employee.id,
-                    "name": new_employee.name,
-                    "message": "Employé créé"
-                },
-                headers=get_cors_headers()
-            )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
-
-
-# ============================================
-# PUT - UPDATE EMPLOYEE
-# ============================================
-@router.put("/{employee_id}")
-def update_employee(employee_id: int, employee: EmployeeUpdate):
-    """Modifier un employé"""
-    try:
-        with SessionLocal() as db:
-            emp = db.query(Employee).filter(Employee.id == employee_id).first()
-            
-            if not emp:
-                raise HTTPException(404, "Employee not found")
-            
-            if employee.name is not None:
-                emp.name = employee.name
-            if employee.position is not None:
-                emp.position = employee.position
-            if employee.email is not None:
-                emp.email = employee.email
-            if employee.phone is not None:
-                emp.phone = employee.phone
-            if employee.salary is not None:
-                emp.salary = employee.salary
-            
-            db.commit()
-            db.refresh(emp)
-            
-            return JSONResponse(
-                content={
-                    "id": emp.id,
-                    "message": "Employé modifié"
-                },
-                headers=get_cors_headers()
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
-
-
-# ============================================
-# DELETE EMPLOYEE
-# ============================================
-@router.delete("/{employee_id}")
-def delete_employee(employee_id: int):
-    """Supprimer un employé"""
-    try:
-        with SessionLocal() as db:
-            employee = db.query(Employee).filter(Employee.id == employee_id).first()
-            
-            if not employee:
-                raise HTTPException(404, "Employee not found")
-            
-            db.delete(employee)
-            db.commit()
-            
-            return JSONResponse(
-                content={"message": "Employé supprimé"},
-                headers=get_cors_headers()
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
-
-
-# ============================================
-# POST PAYSLIP (Fiche de paie)
-# ============================================
-@router.post("/{employee_id}/payslip")
-def generate_payslip(employee_id: int):
-    """Générer fiche de paie (simplifié)"""
-    try:
-        with SessionLocal() as db:
-            employee = db.query(Employee).filter(Employee.id == employee_id).first()
-            
-            if not employee:
-                raise HTTPException(404, "Employee not found")
-            
-            # Calculs simplifiés
-            gross_salary = float(employee.salary or 0)
-            social_charges = gross_salary * 0.22  # 22% charges sociales
-            net_salary = gross_salary - social_charges
-            
-            return JSONResponse(
-                content={
-                    "employee_id": employee.id,
-                    "employee_name": employee.name,
-                    "gross_salary": round(gross_salary, 2),
-                    "social_charges": round(social_charges, 2),
-                    "net_salary": round(net_salary, 2),
-                    "message": "Fiche de paie générée"
-                },
-                headers=get_cors_headers()
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
+@router.get("/health")
+async def employees_health():
+    """Health check"""
+    return {
+        "status": "ok",
+        "router": "employees",
+        "message": "Employees router with query parameter support"
+    }
 
 
 print("✅ Employees router loaded with GET endpoint")
