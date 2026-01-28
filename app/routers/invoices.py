@@ -1,328 +1,151 @@
 """
-Invoices Router - COMPLET AVEC GET ENDPOINT
-Remplacer app/routers/invoices.py par ce fichier
+COMPLETE invoices.py - COPY THIS ENTIRE FILE
+Replace your app/routers/invoices.py with this
 """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from typing import Optional, List
+from datetime import datetime
 from pydantic import BaseModel
-from datetime import date
-from typing import Optional
-import pandas as pd
-import io
-import os
 
-router = APIRouter(prefix="/api/invoices", tags=["Invoices"])
+from app.database import get_db
+from app.models_extended import InvoiceSale, InvoicePurchase
 
-from ..database import SessionLocal
-from ..models_extended import InvoiceSale, InvoicePurchase, Client, Supplier
+router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
-FRONTEND_URL = os.getenv("ALLOWED_ORIGIN", "https://qazwsxres.github.io").split(",")[0]
 
-def get_cors_headers():
-    return {
-        "Access-Control-Allow-Origin": FRONTEND_URL,
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "*"
-    }
+# ============================================================
+# PYDANTIC SCHEMAS
+# ============================================================
 
-# ============================================
-# PYDANTIC MODELS
-# ============================================
-class InvoiceCreate(BaseModel):
+class InvoiceResponse(BaseModel):
+    id: int
+    invoice_type: str
+    client_name: Optional[str] = None
     number: str
-    client_name: str
-    client_email: Optional[str] = None
-    issue_date: date
-    due_date: date
-    amount_ht: float
-    vat_rate: float
-    amount_ttc: float
-    status: str = "pending"
+    issue_date: str
+    due_date: str
+    amount_ht: Optional[float]
+    amount_ttc: Optional[float]
+    status: str
 
-# ============================================
-# 🆕 GET INVOICES (NOUVEAU)
-# ============================================
-@router.get("/")
-def get_invoices(type: Optional[str] = None):
-    """
-    Liste des factures (ventes et/ou achats)
-    
-    Query Parameters:
-    - type: 'sales' ou 'purchases' (optionnel, défaut = les deux)
-    """
+    class Config:
+        from_attributes = True
+
+
+# ============================================================
+# ENDPOINTS
+# ============================================================
+
+@router.get("/", response_model=List[InvoiceResponse])
+async def get_invoices(
+    invoice_type: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    client: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Get all invoices with filtering"""
     try:
-        with SessionLocal() as db:
-            invoices = []
+        all_invoices = []
+        
+        # Determine which types to query
+        types_to_query = []
+        if invoice_type == "sale":
+            types_to_query = [("sale", InvoiceSale)]
+        elif invoice_type == "purchase":
+            types_to_query = [("purchase", InvoicePurchase)]
+        else:
+            types_to_query = [("sale", InvoiceSale), ("purchase", InvoicePurchase)]
+        
+        # Query each type
+        for inv_type, Model in types_to_query:
+            query = db.query(Model)
             
-            # Factures ventes
-            if not type or type == "sales":
-                sales = db.query(InvoiceSale).order_by(InvoiceSale.issue_date.desc()).all()
-                for inv in sales:
-                    invoices.append({
-                        "id": inv.id,
-                        "type": "sale",
-                        "number": inv.number,
-                        "client": inv.client_name,
-                        "email": inv.client_email or "",
-                        "amount_ht": float(inv.amount_ht or 0),
-                        "vat_rate": float(inv.vat_rate or 0),
-                        "amount_ttc": float(inv.amount_ttc or 0),
-                        "issue_date": inv.issue_date.isoformat() if inv.issue_date else None,
-                        "due_date": inv.due_date.isoformat() if inv.due_date else None,
-                        "status": inv.status or "pending"
-                    })
+            if status and hasattr(Model, 'status'):
+                query = query.filter(Model.status == status)
             
-            # Factures achats
-            if not type or type == "purchases":
-                purchases = db.query(InvoicePurchase).order_by(InvoicePurchase.issue_date.desc()).all()
-                for inv in purchases:
-                    invoices.append({
-                        "id": inv.id,
-                        "type": "purchase",
-                        "number": inv.number,
-                        "supplier": inv.supplier.name if inv.supplier else "",
-                        "amount": float(inv.amount or 0),
-                        "vat": float(inv.vat or 0),
-                        "issue_date": inv.issue_date.isoformat() if inv.issue_date else None,
-                        "due_date": inv.due_date.isoformat() if inv.due_date else None,
-                        "status": inv.status or "pending"
-                    })
+            if client and hasattr(Model, 'client_name'):
+                query = query.filter(Model.client_name.ilike(f"%{client}%"))
             
-            return JSONResponse(
-                content=invoices,
-                headers=get_cors_headers()
-            )
+            if date_from and hasattr(Model, 'issue_date'):
+                query = query.filter(Model.issue_date >= date_from)
+            
+            if date_to and hasattr(Model, 'issue_date'):
+                query = query.filter(Model.issue_date <= date_to)
+            
+            query = query.order_by(Model.issue_date.desc())
+            invoices = query.all()
+            
+            for inv in invoices:
+                all_invoices.append(
+                    InvoiceResponse(
+                        id=inv.id,
+                        invoice_type=inv_type,
+                        client_name=getattr(inv, 'client_name', None),
+                        number=inv.number,
+                        issue_date=inv.issue_date.isoformat(),
+                        due_date=inv.due_date.isoformat() if inv.due_date else None,
+                        amount_ht=float(inv.amount_ht) if inv.amount_ht else None,
+                        amount_ttc=float(inv.amount_ttc) if inv.amount_ttc else None,
+                        status=inv.status
+                    )
+                )
+        
+        # Sort by date
+        all_invoices.sort(key=lambda x: x.issue_date, reverse=True)
+        
+        return all_invoices
+        
     except Exception as e:
         print(f"❌ Error in get_invoices: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============================================
-# GET SALES INVOICES
-# ============================================
-@router.get("/sales")
-def get_sales_invoices():
-    """Liste des factures de vente"""
+@router.get("/{invoice_id}")
+async def get_invoice(
+    invoice_id: int,
+    invoice_type: str = Query(..., description="sale or purchase"),
+    db: Session = Depends(get_db)
+):
+    """Get a specific invoice"""
     try:
-        with SessionLocal() as db:
-            invoices = db.query(InvoiceSale).order_by(InvoiceSale.issue_date.desc()).all()
-            
-            return JSONResponse(
-                content=[{
-                    "id": inv.id,
-                    "number": inv.number,
-                    "client_name": inv.client_name,
-                    "client_email": inv.client_email,
-                    "issue_date": inv.issue_date.isoformat() if inv.issue_date else None,
-                    "due_date": inv.due_date.isoformat() if inv.due_date else None,
-                    "amount_ht": float(inv.amount_ht or 0),
-                    "vat_rate": float(inv.vat_rate or 0),
-                    "amount_ttc": float(inv.amount_ttc or 0),
-                    "status": inv.status
-                } for inv in invoices],
-                headers=get_cors_headers()
-            )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
-
-
-# ============================================
-# GET PURCHASE INVOICES
-# ============================================
-@router.get("/purchases")
-def get_purchase_invoices():
-    """Liste des factures d'achat"""
-    try:
-        with SessionLocal() as db:
-            invoices = db.query(InvoicePurchase).order_by(InvoicePurchase.issue_date.desc()).all()
-            
-            return JSONResponse(
-                content=[{
-                    "id": inv.id,
-                    "number": inv.number,
-                    "supplier_id": inv.supplier_id,
-                    "supplier_name": inv.supplier.name if inv.supplier else "",
-                    "issue_date": inv.issue_date.isoformat() if inv.issue_date else None,
-                    "due_date": inv.due_date.isoformat() if inv.due_date else None,
-                    "amount": float(inv.amount or 0),
-                    "vat": float(inv.vat or 0),
-                    "status": inv.status
-                } for inv in invoices],
-                headers=get_cors_headers()
-            )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
-
-
-# ============================================
-# POST - UPLOAD SALES INVOICES CSV
-# ============================================
-@router.post("/sales")
-async def upload_sales_invoices(file: UploadFile = File(...)):
-    """Upload factures ventes (CSV)"""
-    try:
-        contents = await file.read()
-        df = pd.read_csv(io.BytesIO(contents))
+        Model = InvoiceSale if invoice_type == "sale" else InvoicePurchase
+        invoice = db.query(Model).filter(Model.id == invoice_id).first()
         
-        with SessionLocal() as db:
-            count = 0
-            for _, row in df.iterrows():
-                # Get or create client
-                client = db.query(Client).filter(Client.name == row['client_name']).first()
-                if not client:
-                    client = Client(
-                        name=row['client_name'],
-                        email=row.get('client_email')
-                    )
-                    db.add(client)
-                    db.flush()
-                
-                # Create invoice
-                invoice = InvoiceSale(
-                    number=row['number'],
-                    client_id=client.id,
-                    client_name=row['client_name'],
-                    client_email=row.get('client_email'),
-                    issue_date=pd.to_datetime(row['issue_date']).date(),
-                    due_date=pd.to_datetime(row['due_date']).date(),
-                    amount_ht=float(row['amount_ht']),
-                    vat_rate=float(row.get('vat_rate', 20)),
-                    amount_ttc=float(row['amount_ttc']),
-                    status=row.get('status', 'pending')
-                )
-                db.add(invoice)
-                count += 1
-            
-            db.commit()
-            
-            return JSONResponse(
-                content={
-                    "message": f"{count} factures ventes importées",
-                    "count": count
-                },
-                headers=get_cors_headers()
-            )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
-
-
-# ============================================
-# POST - UPLOAD PURCHASE INVOICES CSV
-# ============================================
-@router.post("/purchases")
-async def upload_purchase_invoices(file: UploadFile = File(...)):
-    """Upload factures achats (CSV)"""
-    try:
-        contents = await file.read()
-        df = pd.read_csv(io.BytesIO(contents))
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
         
-        with SessionLocal() as db:
-            count = 0
-            for _, row in df.iterrows():
-                # Get or create supplier
-                supplier = db.query(Supplier).filter(Supplier.name == row['supplier_name']).first()
-                if not supplier:
-                    supplier = Supplier(name=row['supplier_name'])
-                    db.add(supplier)
-                    db.flush()
-                
-                # Create invoice
-                invoice = InvoicePurchase(
-                    number=row['number'],
-                    supplier_id=supplier.id,
-                    issue_date=pd.to_datetime(row['issue_date']).date(),
-                    due_date=pd.to_datetime(row['due_date']).date(),
-                    amount=float(row['amount']),
-                    vat=float(row.get('vat', 0)),
-                    status=row.get('status', 'pending')
-                )
-                db.add(invoice)
-                count += 1
-            
-            db.commit()
-            
-            return JSONResponse(
-                content={
-                    "message": f"{count} factures achats importées",
-                    "count": count
-                },
-                headers=get_cors_headers()
-            )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
+        return InvoiceResponse(
+            id=invoice.id,
+            invoice_type=invoice_type,
+            client_name=getattr(invoice, 'client_name', None),
+            number=invoice.number,
+            issue_date=invoice.issue_date.isoformat(),
+            due_date=invoice.due_date.isoformat() if invoice.due_date else None,
+            amount_ht=float(invoice.amount_ht) if invoice.amount_ht else None,
+            amount_ttc=float(invoice.amount_ttc) if invoice.amount_ttc else None,
+            status=invoice.status
         )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error getting invoice: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============================================
-# POST - CREATE SINGLE INVOICE
-# ============================================
-@router.post("/sales/create")
-def create_invoice(invoice: InvoiceCreate):
-    """Créer une facture de vente"""
-    try:
-        with SessionLocal() as db:
-            # Get or create client
-            client = db.query(Client).filter(Client.name == invoice.client_name).first()
-            if not client:
-                client = Client(
-                    name=invoice.client_name,
-                    email=invoice.client_email
-                )
-                db.add(client)
-                db.flush()
-            
-            # Create invoice
-            new_invoice = InvoiceSale(
-                number=invoice.number,
-                client_id=client.id,
-                client_name=invoice.client_name,
-                client_email=invoice.client_email,
-                issue_date=invoice.issue_date,
-                due_date=invoice.due_date,
-                amount_ht=invoice.amount_ht,
-                vat_rate=invoice.vat_rate,
-                amount_ttc=invoice.amount_ttc,
-                status=invoice.status
-            )
-            db.add(new_invoice)
-            db.commit()
-            db.refresh(new_invoice)
-            
-            return JSONResponse(
-                content={
-                    "id": new_invoice.id,
-                    "number": new_invoice.number,
-                    "message": "Facture créée"
-                },
-                headers=get_cors_headers()
-            )
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)},
-            headers=get_cors_headers()
-        )
+@router.get("/health")
+async def invoices_health():
+    """Health check"""
+    return {
+        "status": "ok",
+        "router": "invoices",
+        "message": "Invoices router with query parameter support"
+    }
 
 
 print("✅ Invoices router loaded with GET endpoint")
